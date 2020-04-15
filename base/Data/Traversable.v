@@ -28,17 +28,21 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Polymorphic Cumulative Record Traversable__Dict t := Traversable__Dict_Build {
-  mapM__ : forall {m} {a} {b},
-  forall `{GHC.Base.Monad m}, (a -> m b) -> t a -> m (t b) ;
-  sequence__ : forall {m} {a}, forall `{GHC.Base.Monad m}, t (m a) -> m (t a) ;
-  sequenceA__ : forall {f} {a},
-  forall `{GHC.Base.Applicative f}, t (f a) -> f (t a) ;
-  traverse__ : forall {f} {a} {b},
-  forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) }.
+Set Printing Universes.
 
-Polymorphic Definition Traversable t `{GHC.Base.Functor t} `{Data.Foldable.Foldable t} :=
-  forall r__, (Traversable__Dict t -> r__) -> r__.
+Polymorphic Cumulative Record Traversable__Dict@{t1 t2 m1 m2 m3 m4} (t : Type@{t1} -> Type@{t2}) := Traversable__Dict_Build {
+  mapM__ : forall {m : Type@{m1} -> Type@{m2}} {a b : Type@{t1}},
+      forall `{GHC.Base.Monad@{m1 m2 m3} m}, (a -> m b) -> t a -> m (t b) ;
+  sequence__ : forall {m : Type@{m1} -> Type@{m4}} {a : Type@{t1}},
+      forall `{GHC.Base.Monad@{m1 m2 m3} m}, t (m a) -> m (t a) ;
+  sequenceA__ : forall {f : Type@{m1} -> Type@{m4}} {a : Type@{t1}},
+  forall `{GHC.Base.Applicative@{m1 m2 m3} f}, t (f a) -> f (t a) ;
+  traverse__ : forall {f : Type@{m1} -> Type@{m2}} {a b : Type@{t1}},
+  forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> t a -> f (t b) }.
+
+Polymorphic Definition Traversable@{t1 t2 m1 m2 m3 m4 m1' m2' n r} (t : Type@{t1} -> Type@{t2})
+            `{GHC.Base.Functor@{t1 t2 r} t} `{Data.Foldable.Foldable@{t1 t2 m1' m2' n r} t} :=
+  forall (r__ : Type@{r}), (Traversable__Dict@{t1 t2 m1 m2 m3 m4} t -> r__) -> r__.
 Existing Class Traversable.
 
 Polymorphic Definition mapM `{g__0__ : Traversable t}
@@ -54,9 +58,10 @@ Polymorphic Definition sequenceA `{g__0__ : Traversable t}
    : forall {f} {a}, forall `{GHC.Base.Applicative f}, t (f a) -> f (t a) :=
   g__0__ _ (sequenceA__ t).
 
-Polymorphic Definition traverse `{g__0__ : Traversable t}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) :=
+Polymorphic Definition traverse@{t1 t2 m1 m2 m3 m4 m1' m2' n r}
+            `{g__0__ : Traversable@{t1 t2 m1 m2 m3 m4 m1' m2' n r} t}
+  : forall {f : Type@{m1} -> Type@{m2}} {a b : Type@{t1}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> t a -> f (t b) :=
   g__0__ _ (traverse__ t).
 
 (* Converted value declarations: *)
@@ -478,35 +483,36 @@ Program Instance Traversable__Either {a} : Traversable (Data.Either.Either a) :=
            traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__Either_traverse |}.
 
-Local Polymorphic Definition Traversable__list_traverse
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f}, (a -> f b) -> list a -> f (list b) :=
+Local Polymorphic Definition Traversable__list_traverse@{m1 m2 m3}
+   : forall {f : Type@{m1} -> Type@{m2}} {a b : Type@{list.u0}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> list a -> f (list b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f =>
       let cons_f := fun x ys => GHC.Base.liftA2 cons (f x) ys in
       GHC.Base.foldr cons_f (GHC.Base.pure nil).
 
-Local Polymorphic Definition Traversable__list_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> list a -> m (list b) :=
+Local Polymorphic Definition Traversable__list_mapM@{m1 m2 m3}
+   : forall {m : Type@{m1} -> Type@{m2}} {a b : Type@{list.u0}},
+     forall `{GHC.Base.Monad@{m1 m2 m3} m}, (a -> m b) -> list a -> m (list b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__list_traverse.
 
-Local Polymorphic Definition Traversable__list_sequenceA
-   : forall {f} {a}, forall `{GHC.Base.Applicative f}, list (f a) -> f (list a) :=
+Local Polymorphic Definition Traversable__list_sequenceA@{m1 m2 m3}
+  : forall {f: Type@{m1} -> Type@{m2}} {a : Type@{list.u0}},
+    forall `{GHC.Base.Applicative@{m1 m2 m3} f}, list (f a) -> f (list a) :=
   fun {f} {a} `{GHC.Base.Applicative f} => Traversable__list_traverse GHC.Base.id.
 
-Local Polymorphic Definition Traversable__list_sequence
-   : forall {m} {a}, forall `{GHC.Base.Monad m}, list (m a) -> m (list a) :=
+Local Polymorphic Definition Traversable__list_sequence@{m1 m2 m3}
+  : forall {m : Type@{m1} -> Type@{m2}} {a : Type@{list.u0}},
+    forall `{GHC.Base.Monad@{m1 m2 m3} m}, list (m a) -> m (list a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__list_sequenceA.
 
-Polymorphic Program Instance Traversable__list : Traversable list :=
+Polymorphic Program Instance Traversable__list@{t m1 m2 m3 m4 m1' m2' n r} :
+  Traversable@{list.u0 t m1 m2 m3 m4 m1' m2' n r} list :=
   fun _ k__ =>
-    k__ {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__list_mapM ;
+    k__ {| mapM__ := fun {m} {a b} `{GHC.Base.Monad m} => Traversable__list_mapM ;
            sequence__ := fun {m} {a} `{GHC.Base.Monad m} => Traversable__list_sequence ;
-           sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-             Traversable__list_sequenceA ;
-           traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-             Traversable__list_traverse |}.
+           sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} => Traversable__list_sequenceA ;
+           traverse__ := fun {f} {a b} `{GHC.Base.Applicative f} => Traversable__list_traverse |}.
 
 Local Definition Traversable__NonEmpty_traverse
    : forall {f} {a} {b},

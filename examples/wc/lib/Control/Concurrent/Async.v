@@ -23,39 +23,41 @@ Require IO.
 
 (* Converted type declarations: *)
 
+Set Printing Universes.
+
 Inductive Concurrently a : Type
   := | MkConcurrently (runConcurrently : IO.IO a) : Concurrently a.
 
 Arguments MkConcurrently {_} _.
 
-Polymorphic Definition runConcurrently {a} (arg_0__ : Concurrently a) :=
+Definition runConcurrently {a} (arg_0__ : Concurrently a) :=
   let 'MkConcurrently runConcurrently := arg_0__ in
   runConcurrently.
 
 (* Converted value declarations: *)
 
-Polymorphic Definition concurrently {a b : Type} : IO.IO a -> IO.IO b -> IO.IO (a * b) :=
+Definition concurrently {a b : Type} : IO.IO a -> IO.IO b -> IO.IO (a * b) :=
   embed IO.Concurrently.
 
-Local Polymorphic Definition Functor__Concurrently_fmap
-   : forall {a} {b}, (a -> b) -> Concurrently a -> Concurrently b :=
+Local Definition Functor__Concurrently_fmap
+   : forall {a b}, (a -> b) -> Concurrently a -> Concurrently b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | f, MkConcurrently a => MkConcurrently (f <$> a)
       end.
 
-Local Polymorphic Definition Functor__Concurrently_op_zlzd__
-   : forall {a} {b}, a -> Concurrently b -> Concurrently a :=
+Local Definition Functor__Concurrently_op_zlzd__
+   : forall {a b}, a -> Concurrently b -> Concurrently a :=
   fun {a} {b} => Functor__Concurrently_fmap ∘ const.
 
-Polymorphic Program Instance Functor__Concurrently : Functor Concurrently :=
+Polymorphic Program Instance Functor__Concurrently@{j k} : Functor@{Concurrently.u0 j k} Concurrently :=
   fun _ k__ =>
-    k__ {| fmap__ := fun {a} {b} => Functor__Concurrently_fmap ;
+    k__ {| fmap__ := fun {a b} => Functor__Concurrently_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__Concurrently_op_zlzd__ |}.
 
-Local Polymorphic Definition Applicative__Concurrently_op_zlztzg__
-   : forall {a} {b}, Concurrently (a -> b) -> Concurrently a -> Concurrently b :=
+Local Definition Applicative__Concurrently_op_zlztzg__
+   : forall {a b : Type@{Concurrently.u0}}, Concurrently (a -> b) -> Concurrently a -> Concurrently b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
@@ -63,20 +65,19 @@ Local Polymorphic Definition Applicative__Concurrently_op_zlztzg__
           MkConcurrently ((fun '(pair f a) => f a) <$> concurrently fs as_)
       end.
 
-Local Polymorphic Definition Applicative__Concurrently_liftA2
-   : forall {a} {b} {c},
+Local Definition Applicative__Concurrently_liftA2
+   : forall {a b c : Type@{Concurrently.u0}},
      (a -> b -> c) -> Concurrently a -> Concurrently b -> Concurrently c :=
   fun {a} {b} {c} => fun f x => Applicative__Concurrently_op_zlztzg__ (fmap f x).
 
-Local Polymorphic Definition Applicative__Concurrently_op_ztzg__
-   : forall {a} {b}, Concurrently a -> Concurrently b -> Concurrently b :=
+Local Definition Applicative__Concurrently_op_ztzg__
+  : forall {a b : Type@{Concurrently.u0}}, Concurrently a -> Concurrently b -> Concurrently b :=
   fun {a} {b} => fun a1 a2 => Applicative__Concurrently_op_zlztzg__ (id <$ a1) a2.
 
-Local Polymorphic Definition Applicative__Concurrently_pure
-   : forall {a}, a -> Concurrently a :=
-  fun {a} => MkConcurrently ∘ return_.
+Local Definition Applicative__Concurrently_pure
+   : forall {a}, a -> Concurrently a := fun {a} => MkConcurrently ∘ return_.
 
-Polymorphic Program Instance Applicative__Concurrently : Applicative Concurrently :=
+Polymorphic Program Instance Applicative__Concurrently@{j k} : Applicative@{Concurrently.u0 j k} Concurrently :=
   fun _ k__ =>
     k__ {| liftA2__ := fun {a} {b} {c} => Applicative__Concurrently_liftA2 ;
            op_zlztzg____ := fun {a} {b} => Applicative__Concurrently_op_zlztzg__ ;
@@ -88,8 +89,8 @@ Local Definition Semigroup__Concurrently_op_zlzlzgzg__ {inst_a} `{Semigroup
    : (Concurrently inst_a) -> (Concurrently inst_a) -> (Concurrently inst_a) :=
   liftA2 _<<>>_.
 
-Program Instance Semigroup__Concurrently {a} `{Semigroup a}
-   : Semigroup (Concurrently a) :=
+Polymorphic Program Instance Semigroup__Concurrently@{i j} {a} `{Semigroup a}
+   : Semigroup@{i j} (Concurrently a) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__Concurrently_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Concurrently_mappend {inst_a} `{Semigroup inst_a}
@@ -97,11 +98,15 @@ Local Definition Monoid__Concurrently_mappend {inst_a} `{Semigroup inst_a}
    : (Concurrently inst_a) -> (Concurrently inst_a) -> (Concurrently inst_a) :=
   _<<>>_.
 
-Polymorphic Definition mapConcurrently {t} {a} {b} `{Traversable t}
-   : (a -> IO.IO b) -> t a -> IO.IO (t b) :=
+Polymorphic Definition mapConcurrently@{t1 t2 m2 m3 m4 m1' m2' n r}
+            {t : Type@{t1} -> Type@{t2}} {a b : Type@{t1}}
+            `{Traversable@{t1 t2 Concurrently.u0 m2 m3 m4 m1' m2' n r} t}
+  : (a -> IO.IO b) -> t a -> IO.IO (t b) :=
   fun f => runConcurrently ∘ traverse (MkConcurrently ∘ f).
 
-Polymorphic Definition forConcurrently {t} {a} {b} `{Traversable t}
+Polymorphic Definition forConcurrently@{t1 t2 m2 m3 m4 m1' m2' n r}
+            {t} {a b : Type@{t1}}
+            `{Traversable@{t1 t2 Concurrently.u0 m2 m3 m4 m1' m2' n r} t}
    : t a -> (a -> IO.IO b) -> IO.IO (t b) :=
   flip mapConcurrently.
 

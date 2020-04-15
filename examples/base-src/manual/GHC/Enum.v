@@ -43,7 +43,7 @@ Instance instance__Bounded_unit__141__ : (Bounded unit) := {
   minBound := tt ;
   maxBound := tt }.
 
-Instance instance__Enum_unit__142__ : (Enum unit) := {
+Program Instance instance__Enum_unit__142__ : (Enum unit) := {
   succ := GHC.Err.default;
   pred := GHC.Err.default;
   toEnum := fun _ => tt ;

@@ -24,8 +24,8 @@ Set Printing Universes.
 Polymorphic Cumulative Record Semigroup__Dict a := Semigroup__Dict_Build {
   op_zlzlzgzg____ : a -> a -> a }.
 
-Polymorphic Definition Semigroup@{i} (a : Type@{i}) :=
-  forall (r__ : Type@{i}), (Semigroup__Dict a -> r__) -> r__.
+Polymorphic Definition Semigroup@{i j} (a : Type@{i}) :=
+  forall (r__ : Type@{j}), (Semigroup__Dict a -> r__) -> r__.
 Existing Class Semigroup.
 
 Polymorphic Cumulative Record Monoid__Dict a := Monoid__Dict_Build {
@@ -42,8 +42,8 @@ Infix "<<>>" := (_<<>>_) (at level 99).
 
 Inductive NonEmpty a : Type := | NEcons : a -> list a -> NonEmpty a.
 
-Polymorphic Definition Monoid@{i} (a : Type@{i}) `{Semigroup a} :=
-  forall (r__ : Type@{i}), (Monoid__Dict a -> r__) -> r__.
+Polymorphic Definition Monoid@{i j} (a : Type@{i}) `{Semigroup@{i j} a} :=
+  forall (r__ : Type@{j}), (Monoid__Dict a -> r__) -> r__.
 Existing Class Monoid.
 
 Polymorphic Definition mappend `{g__0__ : Monoid a} : a -> a -> a :=
@@ -55,19 +55,19 @@ Polymorphic Definition mconcat `{g__0__ : Monoid a} : list a -> a :=
 Polymorphic Definition mempty `{g__0__ : Monoid a} : a :=
   g__0__ _ (mempty__ a).
 
-Polymorphic Cumulative Record Functor__Dict f := Functor__Dict_Build {
-  fmap__ : forall {a} {b}, (a -> b) -> f a -> f b ;
-  op_zlzd____ : forall {a} {b}, a -> f b -> f a }.
+Polymorphic Cumulative Record Functor__Dict@{i j} (f : Type@{i} -> Type@{j}) := Functor__Dict_Build {
+  fmap__ : forall {a b : Type@{i}}, (a -> b) -> f a -> f b ;
+  op_zlzd____ : forall {a b : Type@{i}}, a -> f b -> f a }.
 
 Polymorphic Definition Functor f :=
   forall r__, (Functor__Dict f -> r__) -> r__.
 Existing Class Functor.
 
-Polymorphic Cumulative Record Applicative__Dict@{i j p q m} (f : Type@{i} -> Type@{j}) := Applicative__Dict_Build {
-  liftA2__ : forall {a : Type@{p}} {b : Type@{q}} {c : Type@{m}}, (a -> b -> c) -> f a -> f b -> f c ;
-  op_zlztzg____ : forall {a : Type@{p}} {b : Type@{m}}, f (a -> b) -> f a -> f b ;
-  op_ztzg____ : forall {a : Type@{p}} {b : Type@{m}}, f a -> f b -> f b ;
-  pure__ : forall {a : Type@{m}}, a -> f a }.
+Polymorphic Cumulative Record Applicative__Dict@{i j} (f : Type@{i} -> Type@{j}) := Applicative__Dict_Build {
+  liftA2__ : forall {a : Type@{i}} {b : Type@{i}} {c : Type@{i}}, (a -> b -> c) -> f a -> f b -> f c ;
+  op_zlztzg____ : forall {a : Type@{i}} {b : Type@{i}}, f (a -> b) -> f a -> f b ;
+  op_ztzg____ : forall {a : Type@{i}} {b : Type@{i}}, f a -> f b -> f b ;
+  pure__ : forall {a : Type@{i}}, a -> f a }.
 
 Polymorphic Definition fmap `{g__0__ : Functor f}
    : forall {a} {b}, (a -> b) -> f a -> f b :=
@@ -80,8 +80,8 @@ Notation "'_<$_'" := (op_zlzd__).
 
 Infix "<$" := (_<$_) (at level 99).
 
-Polymorphic Definition Applicative f `{Functor f} :=
-  forall r__, (Applicative__Dict f -> r__) -> r__.
+Polymorphic Definition Applicative@{i j k} (f : Type@{i} -> Type@{j}) `{Functor@{i j k} f} :=
+  forall (r__ : Type@{k}), (Applicative__Dict f -> r__) -> r__.
 Existing Class Applicative.
 
 Polymorphic Definition liftA2 `{g__0__ : Applicative f}
@@ -107,13 +107,13 @@ Notation "'_*>_'" := (op_ztzg__).
 
 Infix "*>" := (_*>_) (at level 99).
 
-Polymorphic Cumulative Record Monad__Dict m := Monad__Dict_Build {
-  op_zgzg____ : forall {a} {b}, m a -> m b -> m b ;
-  op_zgzgze____ : forall {a} {b}, m a -> (a -> m b) -> m b ;
-  return___ : forall {a}, a -> m a }.
+Polymorphic Cumulative Record Monad__Dict@{i j} (m : Type@{i} -> Type@{j}) := Monad__Dict_Build {
+  op_zgzg____ : forall {a b : Type@{i}}, m a -> m b -> m b ;
+  op_zgzgze____ : forall {a b : Type@{i}}, m a -> (a -> m b) -> m b ;
+  return___ : forall {a : Type@{i}}, a -> m a }.
 
-Polymorphic Definition Monad m `{Applicative m} :=
-  forall r__, (Monad__Dict m -> r__) -> r__.
+Polymorphic Definition Monad@{i j k} (m : Type@{i} -> Type@{j}) `{Applicative@{i j k} m} :=
+  forall (r__ : Type@{k}), (Monad__Dict m -> r__) -> r__.
 Existing Class Monad.
 
 Polymorphic Definition op_zgzg__ `{g__0__ : Monad m} : forall {a} {b}, m a -> m b -> m b :=
@@ -641,7 +641,7 @@ Definition liftA3 {f} {a} {b} {c} {d} `{Applicative f}
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
   fun f a => pure f <*> a.
 
-Definition id {a} : a -> a :=
+Polymorphic Definition id {a} : a -> a :=
   fun x => x.
 
 Definition join {m} {a} `{(Monad m)} : m (m a) -> m a :=
@@ -1053,7 +1053,7 @@ Local Polymorphic Definition Semigroup__comparison_op_zlzlzgzg__
     | Gt, _ => Gt
     end.
 
-Program Instance Semigroup__comparison : Semigroup comparison :=
+Polymorphic Program Instance Semigroup__comparison : Semigroup comparison :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__comparison_op_zlzlzgzg__ |}.
 
 (* Skipping instance
@@ -1072,7 +1072,7 @@ Program Instance Semigroup__comparison : Semigroup comparison :=
 Local Definition Semigroup__unit_op_zlzlzgzg__ : unit -> unit -> unit :=
   fun arg_0__ arg_1__ => tt.
 
-Program Instance Semigroup__unit : Semigroup unit :=
+Polymorphic Program Instance Semigroup__unit : Semigroup unit :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__unit_op_zlzlzgzg__ |}.
 
 Local Definition Semigroup__arrow_op_zlzlzgzg__ {inst_b} {inst_a} `{Semigroup
@@ -1169,7 +1169,7 @@ Local Definition Monoid__comparison_mempty : comparison :=
 Local Definition Monoid__comparison_mconcat : list comparison -> comparison :=
   foldr Monoid__comparison_mappend Monoid__comparison_mempty.
 
-Program Instance Monoid__comparison : Monoid comparison :=
+Polymorphic Program Instance Monoid__comparison : Monoid comparison :=
   fun _ k__ =>
     k__ {| mappend__ := Monoid__comparison_mappend ;
            mconcat__ := Monoid__comparison_mconcat ;
@@ -1195,7 +1195,7 @@ Local Definition Monoid__unit_mconcat : list unit -> unit :=
 Local Definition Monoid__unit_mempty : unit :=
   tt.
 
-Program Instance Monoid__unit : Monoid unit :=
+Polymorphic Program Instance Monoid__unit : Monoid unit :=
   fun _ k__ =>
     k__ {| mappend__ := Monoid__unit_mappend ;
            mconcat__ := Monoid__unit_mconcat ;

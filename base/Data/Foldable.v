@@ -31,23 +31,25 @@ Import GHC.Num.Notations.
 
 Set Universe Polymorphism.
 
+Set Printing Universes.
+
 (* Converted type declarations: *)
 
-Polymorphic Cumulative Record Foldable__Dict t := Foldable__Dict_Build {
-  fold__ : forall {m}, forall `{GHC.Base.Monoid m}, t m -> m ;
-  foldMap__ : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> t a -> m ;
-  foldl__ : forall {b} {a}, (b -> a -> b) -> b -> t a -> b ;
-  foldl'__ : forall {b} {a}, (b -> a -> b) -> b -> t a -> b ;
-  foldr__ : forall {a} {b}, (a -> b -> b) -> b -> t a -> b ;
-  foldr'__ : forall {a} {b}, (a -> b -> b) -> b -> t a -> b ;
-  length__ : forall {a}, t a -> GHC.Num.Int ;
-  null__ : forall {a}, t a -> bool ;
-  product__ : forall {a}, forall `{GHC.Num.Num a}, t a -> a ;
-  sum__ : forall {a}, forall `{GHC.Num.Num a}, t a -> a ;
-  toList__ : forall {a}, t a -> list a }.
+Polymorphic Cumulative Record Foldable__Dict@{t1 t2 m1 m2 n} (t : Type@{t1} -> Type@{t2}):= Foldable__Dict_Build {
+  fold__ : forall {m : Type@{m1}}, forall `{GHC.Base.Monoid@{m1 m2} m}, t m -> m ;
+  foldMap__ : forall {m : Type@{m1}} {a : Type@{t1}}, forall `{GHC.Base.Monoid@{m1 m2} m}, (a -> m) -> t a -> m ;
+  foldl__ : forall {b : Type@{t2}} {a : Type@{t1}}, (b -> a -> b) -> b -> t a -> b ;
+  foldl'__ : forall {b : Type@{t2}} {a : Type@{t1}}, (b -> a -> b) -> b -> t a -> b ;
+  foldr__ : forall {a : Type@{t1}} {b : Type@{t2}}, (a -> b -> b) -> b -> t a -> b ;
+  foldr'__ : forall {a : Type@{t1}} {b : Type@{t2}}, (a -> b -> b) -> b -> t a -> b ;
+  length__ : forall {a : Type@{t1}}, t a -> GHC.Num.Int ;
+  null__ : forall {a : Type@{t1}}, t a -> bool ;
+  product__ : forall {a : Type@{n}}, forall `{GHC.Num.Num a}, t a -> a ;
+  sum__ : forall {a : Type@{n}}, forall `{GHC.Num.Num a}, t a -> a ;
+  toList__ : forall {a : Type@{t1}}, t a -> list a }.
 
-Definition Foldable t :=
-  forall r__, (Foldable__Dict t -> r__) -> r__.
+Polymorphic Definition Foldable@{t1 t2 m1 m2 n r} (t : Type@{t1} -> Type@{t2}) :=
+  forall (r__ : Type@{r}), (Foldable__Dict@{t1 t2 m1 m2 n} t -> r__) -> r__.
 Existing Class Foldable.
 
 Definition fold `{g__0__ : Foldable t}

@@ -10,6 +10,7 @@ Polymorphic Cumulative Class Default (a :Type) := {
   default : a
 }.
 
+Instance default_unit : Default unit := { default := tt }.
 Instance default_num {a} `{ Num a} : Default a := { default := #0 }.
 Instance default_bool : Default bool := { default := false }.
 Instance default_monoid {a} `{ Monoid a } : Default a :=

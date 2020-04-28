@@ -52,6 +52,27 @@ Polymorphic Definition Foldable@{t1 t2 m1 m2 n r} (t : Type@{t1} -> Type@{t2}) :
   forall (r__ : Type@{r}), (Foldable__Dict@{t1 t2 m1 m2 n} t -> r__) -> r__.
 Existing Class Foldable.
 
+Polymorphic Instance Foldable__beta@{t1 t2 m1 m2 n r a} (F : Type@{t1} -> Type@{t2})
+            `{Foldable@{t1 t2 m1 m2 n r} F} : Foldable@{a t2 m1 m2 n r} (fun (A : Type@{a}) => F A).
+(** An alternative definition replaces (fun A => F A) with F, but that
+    would impose the constraint that a = t1, which we do not want. *)
+intros r k. apply k, H.
+intros FF. destruct FF.
+constructor.
+- assumption.
+- intros. exact (foldMap__0 m a H0 H1 X X0).
+- intros. exact (foldl__0 b a X X0 X1).
+- intros. exact (foldl'__0 b a X X0 X1).
+- intros. exact (foldr__0 a b X X0 X1).
+- intros. exact (foldr'__0 a b X X0 X1).
+- intros. exact (length__0 a X).
+- intros. exact (null__0 a X).
+- exact product__0.
+- exact sum__0.
+- intros. exact (toList__0 a X).
+Show Universes. (* a <= t1 *)
+Defined.
+
 Definition fold `{g__0__ : Foldable t}
    : forall {m}, forall `{GHC.Base.Monoid m}, t m -> m :=
   g__0__ _ (fold__ t).

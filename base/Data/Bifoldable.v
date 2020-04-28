@@ -25,19 +25,21 @@ Import GHC.Num.Notations.
 
 Set Universe Polymorphism.
 
+Set Printing Universes.
+
 (* Converted type declarations: *)
 
-Record Bifoldable__Dict p := Bifoldable__Dict_Build {
-  bifold__ : forall {m}, forall `{GHC.Base.Monoid m}, p m m -> m ;
-  bifoldMap__ : forall {m} {a} {b},
-  forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> p a b -> m ;
-  bifoldl__ : forall {c} {a} {b},
+Record Bifoldable__Dict@{i j m} (p : Type@{i} -> Type@{i} -> Type@{j}) := Bifoldable__Dict_Build {
+  bifold__ : forall {m}, forall `{GHC.Base.Monoid@{i m} m}, p m m -> m ;
+  bifoldMap__ : forall {m} {a b : Type@{i}},
+  forall `{GHC.Base.Monoid@{i m} m}, (a -> m) -> (b -> m) -> p a b -> m ;
+  bifoldl__ : forall {c a b : Type@{i}},
   (c -> a -> c) -> (c -> b -> c) -> c -> p a b -> c ;
-  bifoldr__ : forall {a} {c} {b},
-  (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> c }.
+  bifoldr__ : forall {a c b : Type@{i}},
+      (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> c }.
 
-Definition Bifoldable p :=
-  forall r__, (Bifoldable__Dict p -> r__) -> r__.
+Polymorphic Definition Bifoldable@{i j m r} p :=
+  forall (r__ : Type@{r}), (Bifoldable__Dict@{i j m} p -> r__) -> r__.
 Existing Class Bifoldable.
 
 Definition bifold `{g__0__ : Bifoldable p}

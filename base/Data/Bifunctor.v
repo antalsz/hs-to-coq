@@ -19,25 +19,27 @@ Require GHC.Tuple.
 
 (* Converted type declarations: *)
 
-Record Bifunctor__Dict p := Bifunctor__Dict_Build {
-  bimap__ : forall {a} {b} {c} {d}, (a -> b) -> (c -> d) -> p a c -> p b d ;
-  first__ : forall {a} {b} {c}, (a -> b) -> p a c -> p b c ;
-  second__ : forall {b} {c} {a}, (b -> c) -> p a b -> p a c }.
+Set Printing Universes.
 
-Definition Bifunctor p :=
-  forall r__, (Bifunctor__Dict p -> r__) -> r__.
+Polymorphic Record Bifunctor__Dict@{i j} (p : Type@{i} -> Type@{i} -> Type@{j}) := Bifunctor__Dict_Build {
+  bimap__ : forall {a b c d : Type@{i}}, (a -> b) -> (c -> d) -> p a c -> p b d ;
+  first__ : forall {a b c : Type@{i}}, (a -> b) -> p a c -> p b c ;
+  second__ : forall {b c a : Type@{i}}, (b -> c) -> p a b -> p a c }.
+
+Polymorphic Definition Bifunctor@{i j k} p :=
+  forall (r__ : Type@{k}), (Bifunctor__Dict@{i j} p -> r__) -> r__.
 Existing Class Bifunctor.
 
-Definition bimap `{g__0__ : Bifunctor p}
-   : forall {a} {b} {c} {d}, (a -> b) -> (c -> d) -> p a c -> p b d :=
+Polymorphic Definition bimap@{i j k} `{g__0__ : Bifunctor@{i j k} p}
+   : forall {a b c d : Type@{i}}, (a -> b) -> (c -> d) -> p a c -> p b d :=
   g__0__ _ (bimap__ p).
 
-Definition first `{g__0__ : Bifunctor p}
-   : forall {a} {b} {c}, (a -> b) -> p a c -> p b c :=
+Definition first@{i j k} `{g__0__ : Bifunctor@{i j k} p}
+   : forall {a b c : Type@{i}}, (a -> b) -> p a c -> p b c :=
   g__0__ _ (first__ p).
 
-Definition second `{g__0__ : Bifunctor p}
-   : forall {b} {c} {a}, (b -> c) -> p a b -> p a c :=
+Definition second@{i j k} `{g__0__ : Bifunctor@{i j k} p}
+   : forall {b c a : Type@{i}}, (b -> c) -> p a b -> p a c :=
   g__0__ _ (second__ p).
 
 (* Converted value declarations: *)

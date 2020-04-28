@@ -1,6 +1,8 @@
 Require Import GHC.Base.
 
-Require Import ITree.ITree.
+From ITree.Core Require Import ITreeDefinition Subevent.
+Constraint list.u0 <= ITreeDefinition.observe.u0.
+
 From ExtLib.Structures Require Functor Applicative Monad.
 
 Require Import Monads.

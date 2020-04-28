@@ -28,6 +28,8 @@ Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
+Set Printing Universes.
+
 (* Converted type declarations: *)
 
 Inductive WrappedMonoid m : Type
@@ -1657,9 +1659,9 @@ Program Instance Monoid__Option {a} `{GHC.Base.Semigroup a}
            GHC.Base.mconcat__ := Monoid__Option_mconcat ;
            GHC.Base.mempty__ := Monoid__Option_mempty |}.
 
-Local Definition Traversable__Option_traverse
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f}, (a -> f b) -> Option a -> f (Option b) :=
+Local Polymorphic Definition Traversable__Option_traverse@{m1 m2 m3}
+   : forall {f} {a b : Type@{Option.u0}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> Option a -> f (Option b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
@@ -1667,19 +1669,19 @@ Local Definition Traversable__Option_traverse
       | _, Mk_Option None => GHC.Base.pure (Mk_Option None)
       end.
 
-Local Definition Traversable__Option_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> Option a -> m (Option b) :=
+Local Polymorphic Definition Traversable__Option_mapM@{m1 m2 m3}
+   : forall {m} {a b : Type@{Option.u0}},
+     forall `{GHC.Base.Monad@{m1 m2 m3} m}, (a -> m b) -> Option a -> m (Option b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Option_traverse.
 
-Local Definition Traversable__Option_sequenceA
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f}, Option (f a) -> f (Option a) :=
+Local Polymorphic Definition Traversable__Option_sequenceA@{m1 m2 m3}
+   : forall {f} {a : Type@{Option.u0}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, Option (f a) -> f (Option a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
     Traversable__Option_traverse GHC.Base.id.
 
-Local Definition Traversable__Option_sequence
-   : forall {m} {a}, forall `{GHC.Base.Monad m}, Option (m a) -> m (Option a) :=
+Local Polymorphic Definition Traversable__Option_sequence@{m1 m2 m3}
+   : forall {m} {a : Type@{Option.u0}}, forall `{GHC.Base.Monad@{m1 m2 m3} m}, Option (m a) -> m (Option a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Option_sequenceA.
 
 Local Definition Foldable__Option_foldMap
@@ -1784,7 +1786,7 @@ Program Instance Functor__Option : GHC.Base.Functor Option :=
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Option_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Option_op_zlzd__ |}.
 
-Program Instance Traversable__Option : Data.Traversable.Traversable Option :=
+Polymorphic Program Instance Traversable__Option : Data.Traversable.Traversable Option :=
   fun _ k__ =>
     k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
              Traversable__Option_mapM ;

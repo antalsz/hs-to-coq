@@ -59,9 +59,18 @@ Polymorphic Cumulative Record Functor__Dict@{i j} (f : Type@{i} -> Type@{j}) := 
   fmap__ : forall {a b : Type@{i}}, (a -> b) -> f a -> f b ;
   op_zlzd____ : forall {a b : Type@{i}}, a -> f b -> f a }.
 
-Polymorphic Definition Functor f :=
-  forall r__, (Functor__Dict f -> r__) -> r__.
+Polymorphic Definition Functor@{i j k} f :=
+  forall (r__ : Type@{k}), (Functor__Dict@{i j} f -> r__) -> r__.
 Existing Class Functor.
+
+Polymorphic Instance Functor__beta@{i j k a} (F : Type@{i} -> Type@{j})
+            `{Functor@{i j k} F} : Functor@{a j k} (fun A => F A).
+intros r k. apply k, H.
+intros FF. destruct FF.
+constructor.
+- intros a b. exact (fmap__0 a b).
+- intros a b. exact (op_zlzd____0 a b).
+Defined.
 
 Polymorphic Cumulative Record Applicative__Dict@{i j} (f : Type@{i} -> Type@{j}) := Applicative__Dict_Build {
   liftA2__ : forall {a : Type@{i}} {b : Type@{i}} {c : Type@{i}}, (a -> b -> c) -> f a -> f b -> f c ;
@@ -83,6 +92,17 @@ Infix "<$" := (_<$_) (at level 99).
 Polymorphic Definition Applicative@{i j k} (f : Type@{i} -> Type@{j}) `{Functor@{i j k} f} :=
   forall (r__ : Type@{k}), (Applicative__Dict f -> r__) -> r__.
 Existing Class Applicative.
+
+Polymorphic Instance Applicative__eta@{i j k a} (F : Type@{i} -> Type@{j})
+            `{Applicative@{i j k} F} `{Functor@{a j k} (fun A => F A)} : Applicative@{a j k} (fun A => F A).
+intros r k. apply k, H0.
+intros AF. destruct AF.
+constructor.
+- intros a b c. exact (liftA2__0 a b c).
+- intros a b. exact (op_zlztzg____0 a b).
+- intros a b. exact (op_ztzg____0 a b).
+- intros a. exact (pure__0 a).
+Defined.
 
 Polymorphic Definition liftA2 `{g__0__ : Applicative f}
    : forall {a} {b} {c}, (a -> b -> c) -> f a -> f b -> f c :=
@@ -115,6 +135,17 @@ Polymorphic Cumulative Record Monad__Dict@{i j} (m : Type@{i} -> Type@{j}) := Mo
 Polymorphic Definition Monad@{i j k} (m : Type@{i} -> Type@{j}) `{Applicative@{i j k} m} :=
   forall (r__ : Type@{k}), (Monad__Dict m -> r__) -> r__.
 Existing Class Monad.
+
+Polymorphic Instance Monad__beta@{i j k a} (F : Type@{i} -> Type@{j})
+             `{Monad@{i j k} F} `{Applicative@{a j k} (fun A => F A)} :
+  Monad@{a j k} (fun A => F A).
+intros r k. apply k, H1.
+intros MF. destruct MF.
+constructor.
+- intros a b. exact (op_zgzg____0 a b).
+- intros a b. exact (op_zgzgze____0 a b).
+- intros a. exact (return___0 a).
+Defined.
 
 Polymorphic Definition op_zgzg__ `{g__0__ : Monad m} : forall {a} {b}, m a -> m b -> m b :=
   g__0__ _ (op_zgzg____ m).
@@ -783,7 +814,7 @@ Local Polymorphic Definition Functor__list_op_zlzd__
    : forall {a} {b}, a -> list b -> list a :=
   fun {a} {b} => Functor__list_fmap ∘ const.
 
-Polymorphic Program Instance Functor__list : Functor list :=
+Polymorphic Program Instance Functor__list@{j k} : Functor@{list.u0 j k} list :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__list_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__list_op_zlzd__ |}.

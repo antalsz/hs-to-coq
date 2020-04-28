@@ -27,14 +27,17 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Record Bitraversable__Dict t := Bitraversable__Dict_Build {
-  bitraverse__ : forall {f} {a} {c} {b} {d},
-  forall `{GHC.Base.Applicative f},
+Set Printing Universes.
+
+Polymorphic Record Bitraversable__Dict@{t1 t2 m1 m2 m3}
+            (t : Type@{t1} -> Type@{t1} -> Type@{t2}) := Bitraversable__Dict_Build {
+  bitraverse__ : forall {f} {a c b d : Type@{t1}},
+  forall `{GHC.Base.Applicative@{m1 m2 m3} f},
   (a -> f c) -> (b -> f d) -> t a b -> f (t c d) }.
 
-Definition Bitraversable t `{Data.Bifunctor.Bifunctor t}
-  `{Data.Bifoldable.Bifoldable t} :=
-  forall r__, (Bitraversable__Dict t -> r__) -> r__.
+Definition Bitraversable@{t1 t2 m1 m2 m3 m' r} t `{Data.Bifunctor.Bifunctor@{t1 t2 r} t}
+  `{@Data.Bifoldable.Bifoldable@{t1 t2 m' r} t} :=
+  forall (r__ : Type@{r}), (Bitraversable__Dict@{t1 t2 m1 m2 m3} t -> r__) -> r__.
 Existing Class Bitraversable.
 
 Definition bitraverse `{g__0__ : Bitraversable t}
@@ -123,9 +126,9 @@ Program Instance Bitraversable__Const
     k__ {| bitraverse__ := fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
              Bitraversable__Const_bitraverse |}.
 
-Local Definition Bitraversable__Either_bitraverse
-   : forall {f} {a} {c} {b} {d},
-     forall `{GHC.Base.Applicative f},
+Local Polymorphic Definition Bitraversable__Either_bitraverse@{t1 t2 m1 m2 m3}
+   : forall {f} {a c b d : Type@{t1}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f},
      (a -> f c) ->
      (b -> f d) -> Data.Either.Either a b -> f (Data.Either.Either c d) :=
   fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
@@ -135,7 +138,7 @@ Local Definition Bitraversable__Either_bitraverse
       | _, g, Data.Either.Right b => Data.Either.Right Data.Functor.<$> g b
       end.
 
-Program Instance Bitraversable__Either : Bitraversable Data.Either.Either :=
+Polymorphic Program Instance Bitraversable__Either : Bitraversable Data.Either.Either :=
   fun _ k__ =>
     k__ {| bitraverse__ := fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
              Bitraversable__Either_bitraverse |}.

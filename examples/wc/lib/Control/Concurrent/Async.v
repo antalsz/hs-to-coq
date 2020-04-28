@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require Import ITree.ITree.
+From ITree.Core Require Import ITreeDefinition Subevent.
 
 (* Converted imports: *)
 
@@ -40,7 +40,7 @@ Definition concurrently {a b : Type} : IO.IO a -> IO.IO b -> IO.IO (a * b) :=
   embed IO.Concurrently.
 
 Local Definition Functor__Concurrently_fmap
-   : forall {a b}, (a -> b) -> Concurrently a -> Concurrently b :=
+  : forall {a b}, (a -> b) -> Concurrently a -> Concurrently b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with

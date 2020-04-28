@@ -22,10 +22,12 @@ Import GHC.Base.Notations.
 
 (* Converted value declarations: *)
 
-Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
+Set Printing Universes.
+
+Polymorphic Definition void@{i j k} {f} {a} `{GHC.Base.Functor@{i j k} f} : f a -> f unit :=
   fun x => tt GHC.Base.<$ x.
 
-Definition op_zlzdzg__ {f} {a} {b} `{GHC.Base.Functor f}
+Polymorphic Definition op_zlzdzg__@{i j k} {f} {a b : Type@{i}} `{GHC.Base.Functor@{i j k} f}
    : (a -> b) -> f a -> f b :=
   GHC.Base.fmap.
 
@@ -33,7 +35,7 @@ Notation "'_<$>_'" := (op_zlzdzg__).
 
 Infix "<$>" := (_<$>_) (at level 99).
 
-Definition op_zlzazg__ {f} {a} {b} `{GHC.Base.Functor f}
+Polymorphic Definition op_zlzazg__@{i j k} {f} {a b : Type@{i}} `{GHC.Base.Functor@{i j k} f}
    : f a -> (a -> b) -> f b :=
   fun as_ f => f <$> as_.
 
@@ -41,7 +43,8 @@ Notation "'_<&>_'" := (op_zlzazg__).
 
 Infix "<&>" := (_<&>_) (at level 99).
 
-Definition op_zdzg__ {f} {a} {b} `{GHC.Base.Functor f} : f a -> b -> f b :=
+Polymorphic Definition op_zdzg__@{i j k} {f} {a b : Type@{i}} `{GHC.Base.Functor@{i j k} f}
+  : f a -> b -> f b :=
   GHC.Base.flip _GHC.Base.<$_.
 
 Notation "'_$>_'" := (op_zdzg__).

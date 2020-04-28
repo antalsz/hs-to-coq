@@ -1,7 +1,7 @@
 Require GHC.Char.
 Require Import GHC.Base.
 
-Require Import ITree.ITree.
+From ITree.Core Require Import ITreeDefinition Subevent.
 
 Require Import IO.
 

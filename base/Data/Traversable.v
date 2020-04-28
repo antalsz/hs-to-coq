@@ -36,14 +36,28 @@ Polymorphic Cumulative Record Traversable__Dict@{t1 t2 m1 m2 m3 m4} (t : Type@{t
   sequence__ : forall {m : Type@{m1} -> Type@{m4}} {a : Type@{t1}},
       forall `{GHC.Base.Monad@{m1 m2 m3} m}, t (m a) -> m (t a) ;
   sequenceA__ : forall {f : Type@{m1} -> Type@{m4}} {a : Type@{t1}},
-  forall `{GHC.Base.Applicative@{m1 m2 m3} f}, t (f a) -> f (t a) ;
+      forall `{GHC.Base.Applicative@{m1 m2 m3} f}, t (f a) -> f (t a) ;
   traverse__ : forall {f : Type@{m1} -> Type@{m2}} {a b : Type@{t1}},
-  forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> t a -> f (t b) }.
+      forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> t a -> f (t b) }.
 
 Polymorphic Definition Traversable@{t1 t2 m1 m2 m3 m4 m1' m2' n r} (t : Type@{t1} -> Type@{t2})
             `{GHC.Base.Functor@{t1 t2 r} t} `{Data.Foldable.Foldable@{t1 t2 m1' m2' n r} t} :=
   forall (r__ : Type@{r}), (Traversable__Dict@{t1 t2 m1 m2 m3 m4} t -> r__) -> r__.
 Existing Class Traversable.
+
+Polymorphic Instance Traversable__beta@{t1 t2 m1 m2 m3 m4 m1' m2' n r a}
+            (F : Type@{t1} -> Type@{t2}) `{Traversable@{t1 t2 m1 m2 m3 m4 m1' m2' n r} F}
+            `{GHC.Base.Functor@{a t2 r} (fun A => F A)}
+            `{Data.Foldable.Foldable@{a t2 m1' m2' n r} (fun A => F A)}
+            {Ap} `{GHC.Base.Applicative@{m1 m2 m3} Ap} :
+  Traversable@{a t2 m1 m2 m3 m4 m1' m2' n r} (fun (A : Type@{a}) => F A).
+intros r k. apply k, H1.
+intros TF. destruct TF. constructor.
+- intros. exact (mapM__0 m a b H6 H7 H8 X X0).
+- intros. exact (sequence__0 m a H6 H7 H8 X).
+- intros. exact (sequenceA__0 f a H6 H7 X).
+- intros. exact (traverse__0 f a b H6 H7 X X0).
+Defined.
 
 Polymorphic Definition mapM `{g__0__ : Traversable t}
    : forall {m} {a} {b},
@@ -441,9 +455,9 @@ Program Instance Traversable__pair_type {a}
            traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__pair_type_traverse |}.
 
-Local Definition Traversable__Either_traverse {inst_a}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
+Local Polymorphic Definition Traversable__Either_traverse@{m1 m2 m3} {inst_a : Type@{Data.Either.Either.u0}}
+   : forall {f} {a b : Type@{Data.Either.Either.u1}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f},
      (a -> f b) ->
      (Data.Either.Either inst_a) a -> f ((Data.Either.Either inst_a) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
@@ -453,35 +467,49 @@ Local Definition Traversable__Either_traverse {inst_a}
       | f, Data.Either.Right y => Data.Either.Right Data.Functor.<$> f y
       end.
 
-Local Definition Traversable__Either_mapM {inst_a}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
+Local Polymorphic Definition Traversable__Either_mapM@{m1 m2 m3} {inst_a : Type@{Data.Either.Either.u0}}
+   : forall {m} {a b : Type@{Data.Either.Either.u1}},
+     forall `{GHC.Base.Monad@{m1 m2 m3} m},
      (a -> m b) ->
      (Data.Either.Either inst_a) a -> m ((Data.Either.Either inst_a) b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Either_traverse.
 
-Local Definition Traversable__Either_sequenceA {inst_a}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
+Local Polymorphic Definition Traversable__Either_sequenceA@{m1 m2 m3} {inst_a : Type@{Data.Either.Either.u0}}
+   : forall {f} {a : Type@{Data.Either.Either.u1}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f},
      (Data.Either.Either inst_a) (f a) -> f ((Data.Either.Either inst_a) a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
     Traversable__Either_traverse GHC.Base.id.
 
-Local Definition Traversable__Either_sequence {inst_a}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m},
+Local Polymorphic Definition Traversable__Either_sequence@{m1 m2 m3} {inst_a : Type@{Data.Either.Either.u0}}
+   : forall {m} {a : Type@{Data.Either.Either.u1}},
+     forall `{GHC.Base.Monad@{m1 m2 m3} m},
      (Data.Either.Either inst_a) (m a) -> m ((Data.Either.Either inst_a) a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Either_sequenceA.
 
-Program Instance Traversable__Either {a} : Traversable (Data.Either.Either a) :=
+Polymorphic Program Instance Traversable__Either {a} : Traversable (Data.Either.Either a) :=
   fun _ k__ =>
-    k__ {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-             Traversable__Either_mapM ;
+    k__ {| mapM__ := fun {m} {a b} `{GHC.Base.Monad m} => Traversable__Either_mapM ;
            sequence__ := fun {m} {a} `{GHC.Base.Monad m} => Traversable__Either_sequence ;
-           sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-             Traversable__Either_sequenceA ;
-           traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-             Traversable__Either_traverse |}.
+           sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Either_sequenceA ;
+           traverse__ := fun {f} {a b} `{GHC.Base.Applicative f} => Traversable__Either_traverse |}.
+(*
+Polymorphic Program Instance Traversable__Either@{t m1 m2 m3 m4 m1' m2' n r l} {a : Type@{Data.Either.Either.u0}}
+  : Traversable@{Data.Either.Either.u1 t m1 m2 m3 m4 m1' m2' n r} (Data.Either.Either@{} a) :=
+  fun (r : Type@{r}) (k__ : Traversable__Dict@{Data.Either.Either.u1 t m1 m2 m3 m4} (Data.Either.Either a) -> r) =>
+    k__ {| mapM__ := fun {m : Type@{m1} -> Type@{m2}} {a b : Type@{Data.Either.Either.u1}}
+                       `{GHC.Base.Monad@{m1 m2 m3} m} =>
+                       Traversable__Either_mapM@{m1 m2 m3} ;
+           sequence__ := fun {m : Type@{m1} -> Type@{m4}} {a : Type@{Data.Either.Either.u1}}
+                           `{GHC.Base.Monad@{m1 m2 m3} m} =>
+                           Traversable__Either_sequence@{m1 m2 m3} ;
+           sequenceA__ := fun {f : Type@{m1} -> Type@{m4}} {a : Type@{Data.Either.Either.u1}}
+                            `{GHC.Base.Applicative@{m1 m2 m3} f} =>
+                            Traversable__Either_sequenceA@{m1 m2 m3} ;
+           traverse__ := fun {f : Type@{m1} -> Type@{m2}} {a b : Type@{Data.Either.Either.u1}}
+                           `{GHC.Base.Applicative@{m1 m2 m3} f} =>
+                           Traversable__Either_traverse@{m1 m2 m3} |}.
+*)
 
 Local Polymorphic Definition Traversable__list_traverse@{m1 m2 m3}
    : forall {f : Type@{m1} -> Type@{m2}} {a b : Type@{list.u0}},
@@ -555,9 +583,9 @@ Program Instance Traversable__NonEmpty : Traversable GHC.Base.NonEmpty :=
            traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__NonEmpty_traverse |}.
 
-Local Definition Traversable__option_traverse
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f}, (a -> f b) -> option a -> f (option b) :=
+Local Polymorphic Definition Traversable__option_traverse@{m1 m2 m3}
+   : forall {f} {a b : Type@{option.u0}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, (a -> f b) -> option a -> f (option b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
@@ -565,22 +593,23 @@ Local Definition Traversable__option_traverse
       | f, Some x => Some Data.Functor.<$> f x
       end.
 
-Local Definition Traversable__option_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> option a -> m (option b) :=
+Local Polymorphic Definition Traversable__option_mapM@{m1 m2 m3}
+   : forall {m} {a b : Type@{option.u0}},
+     forall `{GHC.Base.Monad@{m1 m2 m3} m}, (a -> m b) -> option a -> m (option b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__option_traverse.
 
-Local Definition Traversable__option_sequenceA
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f}, option (f a) -> f (option a) :=
+Local Polymorphic Definition Traversable__option_sequenceA@{m1 m2 m3}
+   : forall {f} {a : Type@{option.u0}},
+     forall `{GHC.Base.Applicative@{m1 m2 m3} f}, option (f a) -> f (option a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
     Traversable__option_traverse GHC.Base.id.
 
-Local Definition Traversable__option_sequence
-   : forall {m} {a}, forall `{GHC.Base.Monad m}, option (m a) -> m (option a) :=
+Local Polymorphic Definition Traversable__option_sequence@{m1 m2 m3}
+   : forall {m} {a}, forall `{GHC.Base.Monad@{m1 m2 m3} m}, option (m a) -> m (option a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__option_sequenceA.
 
-Program Instance Traversable__option : Traversable option :=
+Polymorphic Program Instance Traversable__option@{t m1 m2 m3 m4 m1' m2' n r}
+  : Traversable@{option.u0 t m1 m2 m3 m4 m1' m2' n r} option :=
   fun _ k__ =>
     k__ {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
              Traversable__option_mapM ;

@@ -1,0 +1,3 @@
+rename value Counter.Counter = Counter.MkCounter
+
+order Counter.Functor__Counter Counter.Applicative__Counter_liftA2 Counter.Applicative__Counter Counter.Monad__Counter

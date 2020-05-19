@@ -1,0 +1,13 @@
+-Q . Proofs
+-Q ../../log/lib ""
+-Q ../../../base ""
+-Q ../../../base-thy  Proofs
+-Q ../../transformers/lib ""
+-Q ../../transformers/theories  Proofs
+-arg -w -arg -masking-absolute-name
+Freer.v
+LogIn.v
+LogExtInd.v
+Counter.v
+CounterExtInd.v
+SetExtInd.v

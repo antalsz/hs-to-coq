@@ -1,0 +1,3 @@
+rename value Log.Output = Log.MkOutput
+
+order Log.Functor__Output Log.Applicative__Output_liftA2 Log.Applicative__Output Log.Monad__Output

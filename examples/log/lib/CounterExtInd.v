@@ -26,12 +26,11 @@ Definition CounterExt :=
 
 (* Converted value declarations: *)
 
-Definition interp_ext {a} : CounterExt a -> Counter.Counter a :=
-  fix interp_ext (arg_0__ : CounterExt a) : Counter.Counter a
-        := match arg_0__ with
-           | Freer.Ret a => GHC.Base.return_ a
-           | Freer.Vis Inc k => Counter.inc GHC.Base.>> interp_ext (k tt)
-           end.
+Fixpoint interp_ext {a} (arg_0__ : CounterExt a) : Counter.Counter a
+           := match arg_0__ with
+              | Freer.Ret a => GHC.Base.return_ a
+              | Freer.Vis Inc k => Counter.inc GHC.Base.>> interp_ext (k tt)
+              end.
 
 Definition inc : CounterExt unit :=
   Freer.Vis Inc Freer.Ret.

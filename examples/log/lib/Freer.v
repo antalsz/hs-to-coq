@@ -33,12 +33,12 @@ Definition ret {x} {e} : x -> Freer e x :=
 Definition vis {e} {x} : e x -> Freer e x :=
   fun m => Vis m ret.
 
-Definition bind {e} {x} {y} : Freer e x -> (x -> Freer e y) -> Freer e y :=
-  fix bind (arg_0__ : Freer e x) (arg_1__ : (x -> Freer e y)) : Freer e y
-        := match arg_0__, arg_1__ with
-           | Ret x, f => f x
-           | Vis e k, f => Vis e (fun x => bind (k x) f)
-           end.
+Fixpoint bind {e} {x} {y} (arg_0__ : Freer e x) (arg_1__ : (x -> Freer e y))
+           : Freer e y
+           := match arg_0__, arg_1__ with
+              | Ret x, f => f x
+              | Vis e k, f => Vis e (fun x => bind (k x) f)
+              end.
 
 Local Definition Monad__Freer_op_zgzgze__ {inst_e}
    : forall {a} {b},

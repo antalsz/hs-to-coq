@@ -31,3 +31,6 @@ union = Union
 
 powerSet :: SetExt a -> SetExt (MySet.Set a)
 powerSet = PowerSet
+
+member :: Eq a => a -> SetExt a -> Bool
+member a s = MySet.member a (interp_ext s)

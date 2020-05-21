@@ -18,11 +18,11 @@ Module Type CounterSig.
   Declare Instance Counter_applicative : Applicative Counter.
   Declare Instance Counter_monad : Monad Counter.
 
-  Axiom inc_bind_l : forall A (m n : Counter A), GE A (m >> n) m.
-  Axiom inc_bind_r : forall A (m n : Counter A), GE A (m >> n) n.
+  Axiom inc_bind_l : forall (m : Counter unit), GE unit (Inc >> m) Inc.
+  Axiom inc_bind_r : forall (m : Counter unit), GE unit (m >> Inc) Inc.
 End CounterSig.
 
-Module CounterImpl <: CounterSig.
+Module CounterImpl : CounterSig.
   Definition WF {A} (m : Counter.Counter A) : Prop :=
     forall n B (p : Counter.Counter B),
       let (_, a) := Counter.runC (p >> m) n in
@@ -124,6 +124,8 @@ Module CounterImpl <: CounterSig.
     apply pure_WF.
   Defined.
 
+  Print Assumptions Counter_applicative.
+
   Local Lemma return_WF : forall a x,
       WF (@return_ _ _ _ _ a x).
   Proof.
@@ -164,29 +166,27 @@ Module CounterImpl <: CounterSig.
     apply return_WF.
   Defined.
 
-  Theorem inc_bind_l : forall A (m n : Counter A), GE A (m >> n) m.
+  Theorem inc_bind_l : forall (m : Counter unit), GE unit (Inc >> m) Inc.
   Proof.
-    intros A m n i.
-    destruct m, n. simpl.
-    specialize (w0 i A x).
-    revert w0. cbn. tauto.
+    intros m i. destruct m. simpl.
+    specialize (w i unit Counter.inc).
+    revert w. cbn. tauto.
   Qed.
   
-  Theorem inc_bind_r : forall A (m n : Counter A), GE A (m >> n) n.
+  Theorem inc_bind_r : forall (m : Counter unit), GE unit (m >> Inc) Inc.
   Proof.
-    intros A m n i.
-    destruct m, n. simpl.
-    specialize (w0 i A x0).
+    intros m i. destruct m. simpl.
+    specialize (w i unit Counter.inc).
+    revert w. cbn.
+    remember (Counter.runC x) as cx.
   Admitted.
 End CounterImpl.
 
-Module CounterTheorems (S : CounterSig).
+Import CounterImpl.
 
-  Lemma compute_ex1 :
-    S.GE _ (S.Inc >> S.Inc) S.Inc.
-  Proof.
-    apply S.inc_bind_l.
-  Qed.
-
-End CounterTheorems.
+Lemma compute_ex1 :
+  GE _ (Inc >> Inc) Inc.
+Proof.
+  apply inc_bind_l.
+Qed.
       

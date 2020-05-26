@@ -3,6 +3,8 @@
 [![Travis CI Build
 Status](https://travis-ci.org/antalsz/hs-to-coq.svg?branch=master)](https://travis-ci.org/antalsz/hs-to-coq)
 
+Join our discussion on: [![Zulip](https://img.shields.io/badge/Zulip-chat-informational.svg)](https://coq.zulipchat.com/#narrow/stream/240767-hs-to-coq-devs.20.26.20users)
+
 This repository contains a converter from Haskell code to equivalent
 Coq code, as part of the [CoreSpec] component of the [DeepSpec]
 project.

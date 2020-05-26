@@ -160,16 +160,15 @@ Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
-Definition nequal : IntSet -> IntSet -> bool :=
-  fix nequal (arg_0__ arg_1__ : IntSet) : bool
-        := match arg_0__, arg_1__ with
-           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
-                                                                      r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
-           | Nil, Nil => false
-           | _, _ => true
-           end.
+Fixpoint nequal (arg_0__ arg_1__ : IntSet) : bool
+           := match arg_0__, arg_1__ with
+              | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
+                  orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
+                                                                         r2)))
+              | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
+              | Nil, Nil => false
+              | _, _ => true
+              end.
 
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m => Coq.NArith.BinNat.N.ldiff i (2 * m - 1 % N).
@@ -183,76 +182,74 @@ Definition match_ : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
 Definition nomatch : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
   fun i p m => (mask i m) GHC.Base./= p.
 
-Definition subsetCmp : IntSet -> IntSet -> comparison :=
-  fix subsetCmp (arg_0__ arg_1__ : IntSet) : comparison
-        := match arg_0__, arg_1__ with
-           | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
-               let subsetCmpEq :=
-                 match pair (subsetCmp l1 l2) (subsetCmp r1 r2) with
-                 | pair Gt _ => Gt
-                 | pair _ Gt => Gt
-                 | pair Eq Eq => Eq
-                 | _ => Lt
-                 end in
-               let subsetCmpLt :=
-                 if nomatch p1 p2 m2 : bool then Gt else
-                 if zero p1 m2 : bool then subsetCmp t1 l2 else
-                 subsetCmp t1 r2 in
-               if shorter m1 m2 : bool then Gt else
-               if shorter m2 m1 : bool
-               then match subsetCmpLt with
-                    | Gt => Gt
+Fixpoint subsetCmp (arg_0__ arg_1__ : IntSet) : comparison
+           := match arg_0__, arg_1__ with
+              | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
+                  let subsetCmpEq :=
+                    match pair (subsetCmp l1 l2) (subsetCmp r1 r2) with
+                    | pair Gt _ => Gt
+                    | pair _ Gt => Gt
+                    | pair Eq Eq => Eq
                     | _ => Lt
-                    end else
-               if p1 GHC.Base.== p2 : bool then subsetCmpEq else
-               Gt
-           | _, _ =>
-               match arg_0__, arg_1__ with
-               | Bin _ _ _ _, _ => Gt
-               | Tip kx1 bm1, Tip kx2 bm2 =>
-                   if kx1 GHC.Base./= kx2 : bool then Gt else
-                   if bm1 GHC.Base.== bm2 : bool then Eq else
-                   if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 : bool
-                   then Lt else
-                   Gt
-               | (Tip kx _ as t1), Bin p m l r =>
-                   if nomatch kx p m : bool then Gt else
-                   if zero kx m : bool then match subsetCmp t1 l with | Gt => Gt | _ => Lt end else
-                   match subsetCmp t1 r with
-                   | Gt => Gt
-                   | _ => Lt
-                   end
-               | Tip _ _, Nil => Gt
-               | Nil, Nil => Eq
-               | Nil, _ => Lt
-               end
-           end.
+                    end in
+                  let subsetCmpLt :=
+                    if nomatch p1 p2 m2 : bool then Gt else
+                    if zero p1 m2 : bool then subsetCmp t1 l2 else
+                    subsetCmp t1 r2 in
+                  if shorter m1 m2 : bool then Gt else
+                  if shorter m2 m1 : bool
+                  then match subsetCmpLt with
+                       | Gt => Gt
+                       | _ => Lt
+                       end else
+                  if p1 GHC.Base.== p2 : bool then subsetCmpEq else
+                  Gt
+              | _, _ =>
+                  match arg_0__, arg_1__ with
+                  | Bin _ _ _ _, _ => Gt
+                  | Tip kx1 bm1, Tip kx2 bm2 =>
+                      if kx1 GHC.Base./= kx2 : bool then Gt else
+                      if bm1 GHC.Base.== bm2 : bool then Eq else
+                      if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 : bool
+                      then Lt else
+                      Gt
+                  | (Tip kx _ as t1), Bin p m l r =>
+                      if nomatch kx p m : bool then Gt else
+                      if zero kx m : bool then match subsetCmp t1 l with | Gt => Gt | _ => Lt end else
+                      match subsetCmp t1 r with
+                      | Gt => Gt
+                      | _ => Lt
+                      end
+                  | Tip _ _, Nil => Gt
+                  | Nil, Nil => Eq
+                  | Nil, _ => Lt
+                  end
+              end.
 
-Definition isSubsetOf : IntSet -> IntSet -> bool :=
-  fix isSubsetOf (arg_0__ arg_1__ : IntSet) : bool
-        := match arg_0__, arg_1__ with
-           | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
-               if shorter m1 m2 : bool then false else
-               if shorter m2 m1 : bool
-               then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
-                          then isSubsetOf t1 l2
-                          else isSubsetOf t1 r2) else
-               andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2) (isSubsetOf r1 r2))
-           | _, _ =>
-               match arg_0__, arg_1__ with
-               | Bin _ _ _ _, _ => false
-               | Tip kx1 bm1, Tip kx2 bm2 =>
-                   andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2)
-                         GHC.Base.==
-                         #0)
-               | (Tip kx _ as t1), Bin p m l r =>
-                   if nomatch kx p m : bool then false else
-                   if zero kx m : bool then isSubsetOf t1 l else
-                   isSubsetOf t1 r
-               | Tip _ _, Nil => false
-               | Nil, _ => true
-               end
-           end.
+Fixpoint isSubsetOf (arg_0__ arg_1__ : IntSet) : bool
+           := match arg_0__, arg_1__ with
+              | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
+                  if shorter m1 m2 : bool then false else
+                  if shorter m2 m1 : bool
+                  then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
+                             then isSubsetOf t1 l2
+                             else isSubsetOf t1 r2) else
+                  andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2) (isSubsetOf r1 r2))
+              | _, _ =>
+                  match arg_0__, arg_1__ with
+                  | Bin _ _ _ _, _ => false
+                  | Tip kx1 bm1, Tip kx2 bm2 =>
+                      andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2)
+                            GHC.Base.==
+                            #0)
+                  | (Tip kx _ as t1), Bin p m l r =>
+                      if nomatch kx p m : bool then false else
+                      if zero kx m : bool then isSubsetOf t1 l else
+                      isSubsetOf t1 r
+                  | Tip _ _, Nil => false
+                  | Nil, _ => true
+                  end
+              end.
 
 Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
   fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
@@ -263,24 +260,22 @@ Definition indexOfTheOnlyBit :=
 Definition lowestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
 
-Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin (arg_0__ : IntSet) : option Key
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
-           | Bin _ _ l _ => unsafeFindMin l
-           end.
+Fixpoint unsafeFindMin (arg_0__ : IntSet) : option Key
+           := match arg_0__ with
+              | Nil => None
+              | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
+              | Bin _ _ l _ => unsafeFindMin l
+              end.
 
 Definition highestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
 
-Definition unsafeFindMax : IntSet -> option Key :=
-  fix unsafeFindMax (arg_0__ : IntSet) : option Key
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
-           | Bin _ _ _ r => unsafeFindMax r
-           end.
+Fixpoint unsafeFindMax (arg_0__ : IntSet) : option Key
+           := match arg_0__ with
+              | Nil => None
+              | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
+              | Bin _ _ _ r => unsafeFindMax r
+              end.
 
 Definition revNatSafe n :=
   Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
@@ -443,16 +438,15 @@ Definition toDescList : IntSet -> list Key :=
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
-Definition equal : IntSet -> IntSet -> bool :=
-  fix equal (arg_0__ arg_1__ : IntSet) : bool
-        := match arg_0__, arg_1__ with
-           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
-                                                                         r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
-           | Nil, Nil => true
-           | _, _ => false
-           end.
+Fixpoint equal (arg_0__ arg_1__ : IntSet) : bool
+           := match arg_0__, arg_1__ with
+              | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
+                  andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
+                                                                            r2)))
+              | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
+              | Nil, Nil => true
+              | _, _ => false
+              end.
 
 Definition empty : IntSet :=
   Nil.
@@ -521,18 +515,18 @@ Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
     let m := branchMask p1 p2 in
     let p := mask p1 m in if zero p1 m : bool then Bin p m t1 t2 else Bin p m t2 t1.
 
-Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
-  fix insertBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet) : IntSet
-        := match arg_0__, arg_1__, arg_2__ with
-           | kx, bm, (Bin p m l r as t) =>
-               if nomatch kx p m : bool then link kx (Tip kx bm) p t else
-               if zero kx m : bool then Bin p m (insertBM kx bm l) r else
-               Bin p m l (insertBM kx bm r)
-           | kx, bm, (Tip kx' bm' as t) =>
-               if kx' GHC.Base.== kx : bool then Tip kx' (bm Data.Bits..|.(**) bm') else
-               link kx (Tip kx bm) kx' t
-           | kx, bm, Nil => Tip kx bm
-           end.
+Fixpoint insertBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet)
+           : IntSet
+           := match arg_0__, arg_1__, arg_2__ with
+              | kx, bm, (Bin p m l r as t) =>
+                  if nomatch kx p m : bool then link kx (Tip kx bm) p t else
+                  if zero kx m : bool then Bin p m (insertBM kx bm l) r else
+                  Bin p m l (insertBM kx bm r)
+              | kx, bm, (Tip kx' bm' as t) =>
+                  if kx' GHC.Base.== kx : bool then Tip kx' (bm Data.Bits..|.(**) bm') else
+                  link kx (Tip kx bm) kx' t
+              | kx, bm, Nil => Tip kx bm
+              end.
 
 Program Fixpoint union (arg_0__ arg_1__ : IntSet) {measure (size_nat arg_0__ +
                         size_nat arg_1__)} : IntSet
@@ -819,19 +813,19 @@ Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
     | p, m, l, r => Bin p m l r
     end.
 
-Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
-  fix deleteBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet) : IntSet
-        := match arg_0__, arg_1__, arg_2__ with
-           | kx, bm, (Bin p m l r as t) =>
-               if nomatch kx p m : bool then t else
-               if zero kx m : bool then bin p m (deleteBM kx bm l) r else
-               bin p m l (deleteBM kx bm r)
-           | kx, bm, (Tip kx' bm' as t) =>
-               if kx' GHC.Base.== kx : bool
-               then tip kx (Data.Bits.xor bm' (bm' Data.Bits..&.(**) bm)) else
-               t
-           | _, _, Nil => Nil
-           end.
+Fixpoint deleteBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet)
+           : IntSet
+           := match arg_0__, arg_1__, arg_2__ with
+              | kx, bm, (Bin p m l r as t) =>
+                  if nomatch kx p m : bool then t else
+                  if zero kx m : bool then bin p m (deleteBM kx bm l) r else
+                  bin p m l (deleteBM kx bm r)
+              | kx, bm, (Tip kx' bm' as t) =>
+                  if kx' GHC.Base.== kx : bool
+                  then tip kx (Data.Bits.xor bm' (bm' Data.Bits..&.(**) bm)) else
+                  t
+              | _, _, Nil => Nil
+              end.
 
 Definition delete : Key -> IntSet -> IntSet :=
   fun x => deleteBM (prefixOf x) (bitmapOf x).
@@ -882,18 +876,17 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
-Definition filter : (Key -> bool) -> IntSet -> IntSet :=
-  fix filter (predicate : (Key -> bool)) (t : IntSet) : IntSet
-        := let bitPred :=
-             fun kx bm bi =>
-               if predicate (kx GHC.Num.+ bi) : bool
-               then bm Data.Bits..|.(**) bitmapOfSuffix bi else
-               bm in
-           match t with
-           | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
-           | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
-           | Nil => Nil
-           end.
+Fixpoint filter (predicate : (Key -> bool)) (t : IntSet) : IntSet
+           := let bitPred :=
+                fun kx bm bi =>
+                  if predicate (kx GHC.Num.+ bi) : bool
+                  then bm Data.Bits..|.(**) bitmapOfSuffix bi else
+                  bm in
+              match t with
+              | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
+              | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
+              | Nil => Nil
+              end.
 
 Program Fixpoint intersection (arg_0__ arg_1__ : IntSet) {measure (size_nat
                                arg_0__ +

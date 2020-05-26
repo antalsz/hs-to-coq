@@ -17,7 +17,7 @@ import Data.Traversable
 import HsToCoq.Util.Monad
 import Data.Function
 import Data.Maybe
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.List.NonEmpty (NonEmpty (..), fromList)
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 
@@ -66,6 +66,12 @@ data ConvertedModuleDeclarations =
                               }
   deriving (Eq, Ord, Show, Data)
 
+annotateFixpoint :: [Binder] -> (Maybe Term) -> [Binder]
+annotateFixpoint [] _ = []
+annotateFixpoint ((Inferred e n):tl) (Just (Arrow x y)) = (Typed Generalizable e (fromList [n]) x):(annotateFixpoint tl (Just y))
+annotateFixpoint (a:tl) (Just (Arrow _ y)) = a:(annotateFixpoint tl (Just y))
+annotateFixpoint x _ = x
+
 convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup HsGroup{..} = do
   mod                 <- view currentModule
@@ -103,12 +109,15 @@ convertHsGroup HsGroup{..} = do
                                                             (cdef^.convDefType)
                                                             (cdef^.convDefBody) NotExistingClass
                              in pure $
-                                [ if useProgram
-                                  then ProgramSentence (DefinitionSentence def) obl
-                                  else DefinitionSentence def ] ++
+                                [ case (cdef^.convDefBody) of
+                                    Fix (FixOne (FixBody qual bind ord mterm term))
+                                      -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ annotateFixpoint (toList (bind)) (cdef^.convDefType)) ord mterm term)] [])
+                                    _ -> if useProgram
+                                         then ProgramSentence (DefinitionSentence def) obl
+                                         else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
-                   (\_ _ ->  -- TODO add a warming that the top-level pattern was skipped
+                   (\_ _ ->  -- TODO add a warning that the top-level pattern was skipped
                       pure (Nothing,[]) --convUnsupported' "top-level pattern bindings"
                            )
                    (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))

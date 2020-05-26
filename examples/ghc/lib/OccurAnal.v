@@ -627,26 +627,20 @@ Definition betterLB : NodeScore -> NodeScore -> bool :=
         false
     end.
 
-Definition chooseLoopBreaker
-   : bool ->
-     NodeScore ->
-     list LetrecNode ->
-     list LetrecNode ->
-     list LetrecNode -> (list LetrecNode * list LetrecNode)%type :=
-  fix chooseLoopBreaker (arg_0__ : bool) (arg_1__ : NodeScore) (arg_2__ arg_3__
-                         arg_4__
-                          : list LetrecNode) : (list LetrecNode * list LetrecNode)%type
-        := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-           | _, _, loop_nodes, acc, nil => pair loop_nodes acc
-           | approx_lb, loop_sc, loop_nodes, acc, cons node nodes =>
-               let sc := nd_score (Digraph.node_payload node) in
-               if andb approx_lb (rank sc GHC.Base.== rank loop_sc) : bool
-               then chooseLoopBreaker approx_lb loop_sc (cons node loop_nodes) acc nodes else
-               if betterLB sc loop_sc : bool
-               then chooseLoopBreaker approx_lb sc (cons node nil) (Coq.Init.Datatypes.app
-                                                                    loop_nodes acc) nodes else
-               chooseLoopBreaker approx_lb loop_sc loop_nodes (cons node acc) nodes
-           end.
+Fixpoint chooseLoopBreaker (arg_0__ : bool) (arg_1__ : NodeScore) (arg_2__
+                            arg_3__ arg_4__
+                             : list LetrecNode) : (list LetrecNode * list LetrecNode)%type
+           := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+              | _, _, loop_nodes, acc, nil => pair loop_nodes acc
+              | approx_lb, loop_sc, loop_nodes, acc, cons node nodes =>
+                  let sc := nd_score (Digraph.node_payload node) in
+                  if andb approx_lb (rank sc GHC.Base.== rank loop_sc) : bool
+                  then chooseLoopBreaker approx_lb loop_sc (cons node loop_nodes) acc nodes else
+                  if betterLB sc loop_sc : bool
+                  then chooseLoopBreaker approx_lb sc (cons node nil) (Coq.Init.Datatypes.app
+                                                                       loop_nodes acc) nodes else
+                  chooseLoopBreaker approx_lb loop_sc loop_nodes (cons node acc) nodes
+              end.
 
 Definition argCtxt : OccEnv -> list OneShots -> (OccEnv * list OneShots)%type :=
   fun arg_0__ arg_1__ =>

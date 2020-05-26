@@ -62,60 +62,54 @@ Instance Util_HasDebugCallStack : HasDebugCallStack := tt.
 
 (* Converted value declarations: *)
 
-Definition zipWithLazy {a} {b} {c}
-   : (a -> b -> c) -> list a -> list b -> list c :=
-  fix zipWithLazy (arg_0__ : (a -> b -> c)) (arg_1__ : list a) (arg_2__ : list b)
-        : list c
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, nil, _ => nil
-           | f, cons a as_, cons b bs => cons (f a b) (zipWithLazy f as_ bs)
-           | _, _, _ => GHC.Err.patternFailure
-           end.
+Fixpoint zipWithLazy {a} {b} {c} (arg_0__ : (a -> b -> c)) (arg_1__ : list a)
+                     (arg_2__ : list b) : list c
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, nil, _ => nil
+              | f, cons a as_, cons b bs => cons (f a b) (zipWithLazy f as_ bs)
+              | _, _, _ => GHC.Err.patternFailure
+              end.
 
 Definition zipWithEqual {a} {b} {c}
    : GHC.Base.String -> (a -> b -> c) -> list a -> list b -> list c :=
   fun arg_0__ => GHC.List.zipWith.
 
-Definition zipWithAndUnzip {a} {b} {c} {d}
-   : (a -> b -> (c * d)%type) -> list a -> list b -> (list c * list d)%type :=
-  fix zipWithAndUnzip (arg_0__ : (a -> b -> (c * d)%type)) (arg_1__ : list a)
-                      (arg_2__ : list b) : (list c * list d)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | f, cons a as_, cons b bs =>
-               let 'pair rs1 rs2 := zipWithAndUnzip f as_ bs in
-               let 'pair r1 r2 := f a b in
-               pair (cons r1 rs1) (cons r2 rs2)
-           | _, _, _ => pair nil nil
-           end.
+Fixpoint zipWithAndUnzip {a} {b} {c} {d} (arg_0__ : (a -> b -> (c * d)%type))
+                         (arg_1__ : list a) (arg_2__ : list b) : (list c * list d)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | f, cons a as_, cons b bs =>
+                  let 'pair rs1 rs2 := zipWithAndUnzip f as_ bs in
+                  let 'pair r1 r2 := f a b in
+                  pair (cons r1 rs1) (cons r2 rs2)
+              | _, _, _ => pair nil nil
+              end.
 
 Definition zipWith4Equal {a} {b} {c} {d} {e}
    : GHC.Base.String ->
      (a -> b -> c -> d -> e) -> list a -> list b -> list c -> list d -> list e :=
   fun arg_0__ => Data.OldList.zipWith4.
 
-Definition zipWith3Lazy {a} {b} {c} {d}
-   : (a -> b -> c -> d) -> list a -> list b -> list c -> list d :=
-  fix zipWith3Lazy (arg_0__ : (a -> b -> c -> d)) (arg_1__ : list a) (arg_2__
-                     : list b) (arg_3__ : list c) : list d
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | _, nil, _, _ => nil
-           | f, cons a as_, cons b bs, cons c cs =>
-               cons (f a b c) (zipWith3Lazy f as_ bs cs)
-           | _, _, _, _ => GHC.Err.patternFailure
-           end.
+Fixpoint zipWith3Lazy {a} {b} {c} {d} (arg_0__ : (a -> b -> c -> d)) (arg_1__
+                        : list a) (arg_2__ : list b) (arg_3__ : list c) : list d
+           := match arg_0__, arg_1__, arg_2__, arg_3__ with
+              | _, nil, _, _ => nil
+              | f, cons a as_, cons b bs, cons c cs =>
+                  cons (f a b c) (zipWith3Lazy f as_ bs cs)
+              | _, _, _, _ => GHC.Err.patternFailure
+              end.
 
 Definition zipWith3Equal {a} {b} {c} {d}
    : GHC.Base.String ->
      (a -> b -> c -> d) -> list a -> list b -> list c -> list d :=
   fun arg_0__ => GHC.List.zipWith3.
 
-Definition zipLazy {a} {b} : list a -> list b -> list (a * b)%type :=
-  fix zipLazy (arg_0__ : list a) (arg_1__ : list b) : list (a * b)%type
-        := match arg_0__, arg_1__ with
-           | nil, _ => nil
-           | cons x xs, cons y ys => cons (pair x y) (zipLazy xs ys)
-           | _, _ => GHC.Err.patternFailure
-           end.
+Fixpoint zipLazy {a} {b} (arg_0__ : list a) (arg_1__ : list b) : list (a *
+                                                                       b)%type
+           := match arg_0__, arg_1__ with
+              | nil, _ => nil
+              | cons x xs, cons y ys => cons (pair x y) (zipLazy xs ys)
+              | _, _ => GHC.Err.patternFailure
+              end.
 
 Definition zipEqual {a} {b}
    : GHC.Base.String -> list a -> list b -> list (a * b)%type :=
@@ -167,54 +161,50 @@ Definition thenCmp : comparison -> comparison -> comparison :=
 Definition thdOf3 {a} {b} {c} : (a * b * c)%type -> c :=
   fun '(pair (pair _ _) c) => c.
 
-Definition takeList {b} {a} : list b -> list a -> list a :=
-  fix takeList (arg_0__ : list b) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | nil, _ => nil
-           | cons _ xs, ls =>
-               match ls with
-               | nil => nil
-               | cons y ys => cons y (takeList xs ys)
-               end
-           end.
+Fixpoint takeList {b} {a} (arg_0__ : list b) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | nil, _ => nil
+              | cons _ xs, ls =>
+                  match ls with
+                  | nil => nil
+                  | cons y ys => cons y (takeList xs ys)
+                  end
+              end.
 
-Definition stretchZipWith {a} {b} {c}
-   : (a -> bool) -> b -> (a -> b -> c) -> list a -> list b -> list c :=
-  fix stretchZipWith (arg_0__ : (a -> bool)) (arg_1__ : b) (arg_2__
-                       : (a -> b -> c)) (arg_3__ : list a) (arg_4__ : list b) : list c
-        := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-           | _, _, _, nil, _ => nil
-           | p, z, f, cons x xs, ys =>
-               if p x : bool then cons (f x z) (stretchZipWith p z f xs ys) else
-               match ys with
-               | nil => nil
-               | cons y ys => cons (f x y) (stretchZipWith p z f xs ys)
-               end
-           end.
+Fixpoint stretchZipWith {a} {b} {c} (arg_0__ : (a -> bool)) (arg_1__ : b)
+                        (arg_2__ : (a -> b -> c)) (arg_3__ : list a) (arg_4__ : list b) : list c
+           := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+              | _, _, _, nil, _ => nil
+              | p, z, f, cons x xs, ys =>
+                  if p x : bool then cons (f x z) (stretchZipWith p z f xs ys) else
+                  match ys with
+                  | nil => nil
+                  | cons y ys => cons (f x y) (stretchZipWith p z f xs ys)
+                  end
+              end.
 
-Definition splitEithers {a} {b}
-   : list (Data.Either.Either a b) -> (list a * list b)%type :=
-  fix splitEithers (arg_0__ : list (Data.Either.Either a b)) : (list a *
-                                                                list b)%type
-        := match arg_0__ with
-           | nil => pair nil nil
-           | cons e es =>
-               let 'pair xs ys := splitEithers es in
-               match e with
-               | Data.Either.Left x => pair (cons x xs) ys
-               | Data.Either.Right y => pair xs (cons y ys)
-               end
-           end.
+Fixpoint splitEithers {a} {b} (arg_0__ : list (Data.Either.Either a b)) : (list
+                                                                           a *
+                                                                           list b)%type
+           := match arg_0__ with
+              | nil => pair nil nil
+              | cons e es =>
+                  let 'pair xs ys := splitEithers es in
+                  match e with
+                  | Data.Either.Left x => pair (cons x xs) ys
+                  | Data.Either.Right y => pair xs (cons y ys)
+                  end
+              end.
 
-Definition splitAtList {b} {a} : list b -> list a -> (list a * list a)%type :=
-  fix splitAtList (arg_0__ : list b) (arg_1__ : list a) : (list a * list a)%type
-        := match arg_0__, arg_1__ with
-           | nil, xs => pair nil xs
-           | _, (nil as xs) => pair xs xs
-           | cons _ xs, cons y ys =>
-               let 'pair ys' ys'' := splitAtList xs ys in
-               pair (cons y ys') ys''
-           end.
+Fixpoint splitAtList {b} {a} (arg_0__ : list b) (arg_1__ : list a) : (list a *
+                                                                      list a)%type
+           := match arg_0__, arg_1__ with
+              | nil, xs => pair nil xs
+              | _, (nil as xs) => pair xs xs
+              | cons _ xs, cons y ys =>
+                  let 'pair ys' ys'' := splitAtList xs ys in
+                  pair (cons y ys') ys''
+              end.
 
 Definition split : GHC.Char.Char -> GHC.Base.String -> list GHC.Base.String :=
   GHC.DeferredFix.deferredFix2 (fun split
@@ -268,26 +258,23 @@ Definition sizedComplement {bv} `{Data.Bits.Bits bv} : bv -> bv -> bv :=
 Definition singleton {a} : a -> list a :=
   fun x => cons x nil.
 
-Definition seqList {a} {b} : list a -> b -> b :=
-  fix seqList (arg_0__ : list a) (arg_1__ : b) : b
-        := match arg_0__, arg_1__ with
-           | nil, b => b
-           | cons x xs, b => GHC.Prim.seq x (seqList xs b)
-           end.
+Fixpoint seqList {a} {b} (arg_0__ : list a) (arg_1__ : b) : b
+           := match arg_0__, arg_1__ with
+              | nil, b => b
+              | cons x xs, b => GHC.Prim.seq x (seqList xs b)
+              end.
 
-Definition partitionWith {a} {b} {c}
-   : (a -> Data.Either.Either b c) -> list a -> (list b * list c)%type :=
-  fix partitionWith (arg_0__ : (a -> Data.Either.Either b c)) (arg_1__ : list a)
-        : (list b * list c)%type
-        := match arg_0__, arg_1__ with
-           | _, nil => pair nil nil
-           | f, cons x xs =>
-               let 'pair bs cs := partitionWith f xs in
-               match f x with
-               | Data.Either.Left b => pair (cons b bs) cs
-               | Data.Either.Right c => pair bs (cons c cs)
-               end
-           end.
+Fixpoint partitionWith {a} {b} {c} (arg_0__ : (a -> Data.Either.Either b c))
+                       (arg_1__ : list a) : (list b * list c)%type
+           := match arg_0__, arg_1__ with
+              | _, nil => pair nil nil
+              | f, cons x xs =>
+                  let 'pair bs cs := partitionWith f xs in
+                  match f x with
+                  | Data.Either.Left b => pair (cons b bs) cs
+                  | Data.Either.Right c => pair bs (cons c cs)
+                  end
+              end.
 
 Definition partitionByList {a}
    : list bool -> list a -> (list a * list a)%type :=
@@ -333,13 +320,12 @@ Definition only {a} `{GHC.Err.Default a} : list a -> a :=
 Definition notNull {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => false | _ => true end.
 
-Definition neLength {a} {b} : list a -> list b -> bool :=
-  fix neLength (arg_0__ : list a) (arg_1__ : list b) : bool
-        := match arg_0__, arg_1__ with
-           | nil, nil => false
-           | cons _ xs, cons _ ys => neLength xs ys
-           | _, _ => true
-           end.
+Fixpoint neLength {a} {b} (arg_0__ : list a) (arg_1__ : list b) : bool
+           := match arg_0__, arg_1__ with
+              | nil, nil => false
+              | cons _ xs, cons _ ys => neLength xs ys
+              | _, _ => true
+              end.
 
 Definition ncgDebugIsOn : bool :=
   false.
@@ -359,31 +345,25 @@ Definition mapFst {a} {c} {b}
     let cont_0__ arg_1__ := let 'pair x y := arg_1__ in cons (pair (f x) y) nil in
     Coq.Lists.List.flat_map cont_0__ xys.
 
-Definition mapAndUnzip3 {a} {b} {c} {d}
-   : (a -> (b * c * d)%type) -> list a -> (list b * list c * list d)%type :=
-  fix mapAndUnzip3 (arg_0__ : (a -> (b * c * d)%type)) (arg_1__ : list a) : (list
-                                                                             b *
-                                                                             list c *
-                                                                             list d)%type
-        := match arg_0__, arg_1__ with
-           | _, nil => pair (pair nil nil) nil
-           | f, cons x xs =>
-               let 'pair (pair rs1 rs2) rs3 := mapAndUnzip3 f xs in
-               let 'pair (pair r1 r2) r3 := f x in
-               pair (pair (cons r1 rs1) (cons r2 rs2)) (cons r3 rs3)
-           end.
+Fixpoint mapAndUnzip3 {a} {b} {c} {d} (arg_0__ : (a -> (b * c * d)%type))
+                      (arg_1__ : list a) : (list b * list c * list d)%type
+           := match arg_0__, arg_1__ with
+              | _, nil => pair (pair nil nil) nil
+              | f, cons x xs =>
+                  let 'pair (pair rs1 rs2) rs3 := mapAndUnzip3 f xs in
+                  let 'pair (pair r1 r2) r3 := f x in
+                  pair (pair (cons r1 rs1) (cons r2 rs2)) (cons r3 rs3)
+              end.
 
-Definition mapAndUnzip {a} {b} {c}
-   : (a -> (b * c)%type) -> list a -> (list b * list c)%type :=
-  fix mapAndUnzip (arg_0__ : (a -> (b * c)%type)) (arg_1__ : list a) : (list b *
-                                                                        list c)%type
-        := match arg_0__, arg_1__ with
-           | _, nil => pair nil nil
-           | f, cons x xs =>
-               let 'pair rs1 rs2 := mapAndUnzip f xs in
-               let 'pair r1 r2 := f x in
-               pair (cons r1 rs1) (cons r2 rs2)
-           end.
+Fixpoint mapAndUnzip {a} {b} {c} (arg_0__ : (a -> (b * c)%type)) (arg_1__
+                       : list a) : (list b * list c)%type
+           := match arg_0__, arg_1__ with
+              | _, nil => pair nil nil
+              | f, cons x xs =>
+                  let 'pair rs1 rs2 := mapAndUnzip f xs in
+                  let 'pair r1 r2 := f x in
+                  pair (cons r1 rs1) (cons r2 rs2)
+              end.
 
 Axiom makeRelativeTo : GHC.Base.String -> GHC.Base.String -> GHC.Base.String.
 
@@ -434,15 +414,14 @@ Definition fst3 {a} {d} {b} {c}
     | f, pair (pair a b) c => pair (pair (f a) b) c
     end.
 
-Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}
-   : (acc -> a -> b -> acc) -> acc -> list a -> list b -> acc :=
-  fix foldl2 (arg_0__ : acc -> a -> b -> acc) (arg_1__ : acc) (arg_2__ : list a)
-             (arg_3__ : list b) : acc
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | _, z, nil, nil => z
-           | k, z, cons a as_, cons b bs => foldl2 k (k z a b) as_ bs
-           | _, _, _, _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
-           end.
+Fixpoint foldl2 {acc} {a} {b} `{GHC.Err.Default acc} (arg_0__
+                  : acc -> a -> b -> acc) (arg_1__ : acc) (arg_2__ : list a) (arg_3__ : list b)
+           : acc
+           := match arg_0__, arg_1__, arg_2__, arg_3__ with
+              | _, z, nil, nil => z
+              | k, z, cons a as_, cons b bs => foldl2 k (k z a b) as_ bs
+              | _, _, _, _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
+              end.
 
 Definition firstM {m} {a} {c} {b} `{GHC.Base.Monad m}
    : (a -> m c) -> (a * b)%type -> m (c * b)%type :=
@@ -458,28 +437,26 @@ Definition first3M {m} {a} {d} {b} {c} `{GHC.Base.Monad m}
     | f, pair (pair x y) z => GHC.Base.liftM (fun x' => pair (pair x' y) z) (f x)
     end.
 
-Definition filterOut {a} : (a -> bool) -> list a -> list a :=
-  fix filterOut (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | p, cons x xs => if p x : bool then filterOut p xs else cons x (filterOut p xs)
-           end.
+Fixpoint filterOut {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | _, nil => nil
+              | p, cons x xs => if p x : bool then filterOut p xs else cons x (filterOut p xs)
+              end.
 
-Definition filterByLists {a} : list bool -> list a -> list a -> list a :=
-  fix filterByLists (arg_0__ : list bool) (arg_1__ arg_2__ : list a) : list a
-        := match arg_0__, arg_1__, arg_2__ with
-           | cons true bs, cons x xs, cons _ ys => cons x (filterByLists bs xs ys)
-           | cons false bs, cons _ xs, cons y ys => cons y (filterByLists bs xs ys)
-           | _, _, _ => nil
-           end.
+Fixpoint filterByLists {a} (arg_0__ : list bool) (arg_1__ arg_2__ : list a)
+           : list a
+           := match arg_0__, arg_1__, arg_2__ with
+              | cons true bs, cons x xs, cons _ ys => cons x (filterByLists bs xs ys)
+              | cons false bs, cons _ xs, cons y ys => cons y (filterByLists bs xs ys)
+              | _, _, _ => nil
+              end.
 
-Definition filterByList {a} : list bool -> list a -> list a :=
-  fix filterByList (arg_0__ : list bool) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | cons true bs, cons x xs => cons x (filterByList bs xs)
-           | cons false bs, cons _ xs => filterByList bs xs
-           | _, _ => nil
-           end.
+Fixpoint filterByList {a} (arg_0__ : list bool) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | cons true bs, cons x xs => cons x (filterByList bs xs)
+              | cons false bs, cons _ xs => filterByList bs xs
+              | _, _ => nil
+              end.
 
 Definition exactLog2 : GHC.Num.Integer -> option GHC.Num.Integer :=
   fun x =>
@@ -493,13 +470,12 @@ Definition exactLog2 : GHC.Num.Integer -> option GHC.Num.Integer :=
          then None
          else Some (pow2 x).
 
-Definition equalLength {a} {b} : list a -> list b -> bool :=
-  fix equalLength (arg_0__ : list a) (arg_1__ : list b) : bool
-        := match arg_0__, arg_1__ with
-           | nil, nil => true
-           | cons _ xs, cons _ ys => equalLength xs ys
-           | _, _ => false
-           end.
+Fixpoint equalLength {a} {b} (arg_0__ : list a) (arg_1__ : list b) : bool
+           := match arg_0__, arg_1__ with
+              | nil, nil => true
+              | cons _ xs, cons _ ys => equalLength xs ys
+              | _, _ => false
+              end.
 
 Definition eqMaybeBy {a} : (a -> a -> bool) -> option a -> option a -> bool :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -509,13 +485,13 @@ Definition eqMaybeBy {a} : (a -> a -> bool) -> option a -> option a -> bool :=
     | _, _, _ => false
     end.
 
-Definition eqListBy {a} : (a -> a -> bool) -> list a -> list a -> bool :=
-  fix eqListBy (arg_0__ : (a -> a -> bool)) (arg_1__ arg_2__ : list a) : bool
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, nil, nil => true
-           | eq, cons x xs, cons y ys => andb (eq x y) (eqListBy eq xs ys)
-           | _, _, _ => false
-           end.
+Fixpoint eqListBy {a} (arg_0__ : (a -> a -> bool)) (arg_1__ arg_2__ : list a)
+           : bool
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, nil, nil => true
+              | eq, cons x xs, cons y ys => andb (eq x y) (eqListBy eq xs ys)
+              | _, _, _ => false
+              end.
 
 Definition dropWhileEndLE {a} : (a -> bool) -> list a -> list a :=
   fun p =>
@@ -533,13 +509,12 @@ Definition dropTail {a} : nat -> list a -> list a :=
                  end in
     go (Coq.Lists.List.skipn n xs) xs.
 
-Definition dropList {b} {a} : list b -> list a -> list a :=
-  fix dropList (arg_0__ : list b) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | nil, xs => xs
-           | _, (nil as xs) => xs
-           | cons _ xs, cons _ ys => dropList xs ys
-           end.
+Fixpoint dropList {b} {a} (arg_0__ : list b) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | nil, xs => xs
+              | _, (nil as xs) => xs
+              | cons _ xs, cons _ ys => dropList xs ys
+              end.
 
 Axiom debugIsOn : bool.
 
@@ -552,14 +527,14 @@ Definition count {a} : (a -> bool) -> list a -> nat :=
                  end in
     go #0.
 
-Definition compareLength {a} {b} : list a -> list b -> comparison :=
-  fix compareLength (arg_0__ : list a) (arg_1__ : list b) : comparison
-        := match arg_0__, arg_1__ with
-           | nil, nil => Eq
-           | cons _ xs, cons _ ys => compareLength xs ys
-           | nil, _ => Lt
-           | _, nil => Gt
-           end.
+Fixpoint compareLength {a} {b} (arg_0__ : list a) (arg_1__ : list b)
+           : comparison
+           := match arg_0__, arg_1__ with
+              | nil, nil => Eq
+              | cons _ xs, cons _ ys => compareLength xs ys
+              | nil, _ => Lt
+              | _, nil => Gt
+              end.
 
 Definition leLength {a} {b} : list a -> list b -> bool :=
   fun xs ys =>
@@ -577,33 +552,30 @@ Definition ltLength {a} {b} : list a -> list b -> bool :=
     | Gt => false
     end.
 
-Definition cmpList {a}
-   : (a -> a -> comparison) -> list a -> list a -> comparison :=
-  fix cmpList (arg_0__ : (a -> a -> comparison)) (arg_1__ arg_2__ : list a)
-        : comparison
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, nil, nil => Eq
-           | _, nil, _ => Lt
-           | _, _, nil => Gt
-           | cmp, cons a as_, cons b bs =>
-               match cmp a b with
-               | Eq => cmpList cmp as_ bs
-               | xxx => xxx
-               end
-           end.
+Fixpoint cmpList {a} (arg_0__ : (a -> a -> comparison)) (arg_1__ arg_2__
+                   : list a) : comparison
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, nil, nil => Eq
+              | _, nil, _ => Lt
+              | _, _, nil => Gt
+              | cmp, cons a as_, cons b bs =>
+                  match cmp a b with
+                  | Eq => cmpList cmp as_ bs
+                  | xxx => xxx
+                  end
+              end.
 
 Definition chkAppend {a} : list a -> list a -> list a :=
   fun xs ys =>
     if Data.Foldable.null ys : bool then xs else
     Coq.Init.Datatypes.app xs ys.
 
-Definition changeLast {a} : list a -> a -> list a :=
-  fix changeLast (arg_0__ : list a) (arg_1__ : a) : list a
-        := match arg_0__, arg_1__ with
-           | nil, _ => Panic.panic (GHC.Base.hs_string__ "changeLast")
-           | cons _ nil, x => cons x nil
-           | cons x xs, x' => cons x (changeLast xs x')
-           end.
+Fixpoint changeLast {a} (arg_0__ : list a) (arg_1__ : a) : list a
+           := match arg_0__, arg_1__ with
+              | nil, _ => Panic.panic (GHC.Base.hs_string__ "changeLast")
+              | cons _ nil, x => cons x nil
+              | cons x xs, x' => cons x (changeLast xs x')
+              end.
 
 Definition capitalise : GHC.Base.String -> GHC.Base.String :=
   fun arg_0__ => match arg_0__ with | nil => nil | cons c cs => cons c cs end.
@@ -652,14 +624,13 @@ Definition listLengthCmp {a} : list a -> nat -> comparison :=
   let atLen := fun arg_0__ => match arg_0__ with | nil => Eq | _ => Gt end in
   let atEnd := Lt in atLength atLen atEnd.
 
-Definition all2 {a} {b} : (a -> b -> bool) -> list a -> list b -> bool :=
-  fix all2 (arg_0__ : (a -> b -> bool)) (arg_1__ : list a) (arg_2__ : list b)
-        : bool
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, nil, nil => true
-           | p, cons x xs, cons y ys => andb (p x y) (all2 p xs ys)
-           | _, _, _ => false
-           end.
+Fixpoint all2 {a} {b} (arg_0__ : (a -> b -> bool)) (arg_1__ : list a) (arg_2__
+                : list b) : bool
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, nil, nil => true
+              | p, cons x xs, cons y ys => andb (p x y) (all2 p xs ys)
+              | _, _, _ => false
+              end.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Util.Show__OverridingBool' *)

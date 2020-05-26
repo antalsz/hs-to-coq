@@ -176,70 +176,67 @@ Definition addCrossCoCalls
 Definition both : CallArityRes -> CallArityRes -> CallArityRes :=
   fun r1 r2 => addCrossCoCalls (domRes r1) (domRes r2) (lubRes r1 r2).
 
-Definition callArityAnal
-   : BasicTypes.Arity ->
-     Core.VarSet -> Core.CoreExpr -> (CallArityRes * Core.CoreExpr)%type :=
-  fix callArityAnal (arg_0__ : BasicTypes.Arity) (arg_1__ : Core.VarSet) (arg_2__
-                      : Core.CoreExpr) : (CallArityRes * Core.CoreExpr)%type
-        := let j_26__ :=
-             match arg_0__, arg_1__, arg_2__ with
-             | arity, int, Core.Lam v e =>
-                 let 'pair ae e' := callArityAnal (arity GHC.Num.- #1) (Core.delVarSet int v)
-                                      e in
-                 pair ae (Core.Lam v e')
-             | arity, int, Core.App e (Core.Mk_Type t) =>
-                 Control.Arrow.arrow_second (fun e => Core.App e (Core.Mk_Type t)) (callArityAnal
-                                                                                    arity int e)
-             | arity, int, Core.App e1 e2 =>
-                 let 'pair ae2 e2' := callArityAnal #0 int e2 in
-                 let ae2' :=
-                   if CoreUtils.exprIsTrivial e2 : bool then calledMultipleTimes ae2 else
-                   ae2 in
-                 let 'pair ae1 e1' := callArityAnal (arity GHC.Num.+ #1) int e1 in
-                 let final_ae := both ae1 ae2' in pair final_ae (Core.App e1' e2')
-             | arity, int, Core.Case scrut bndr ty alts =>
-                 let 'pair scrut_ae scrut' := callArityAnal #0 int scrut in
-                 let go :=
-                   fun '(pair (pair dc bndrs) e) =>
-                     let 'pair ae e' := callArityAnal arity int e in
-                     pair ae (pair (pair dc bndrs) e') in
-                 let 'pair alt_aes alts' := GHC.List.unzip (GHC.Base.map go alts) in
-                 let alt_ae := lubRess alt_aes in
-                 let final_ae := both scrut_ae alt_ae in
-                 pair final_ae (Core.Case scrut' bndr ty alts')
-             | arity, int, Core.Let bind e =>
-                 let int_body := addInterestingBinds int bind in
-                 let 'pair ae_body e' := callArityAnal arity int_body e in
-                 let 'pair final_ae bind' := callArityBind1 (boringBinds bind) ae_body int
-                                               bind in
-                 pair final_ae (Core.Let bind' e')
-             | _, _, _ => GHC.Err.patternFailure
-             end in
-           let j_30__ :=
-             match arg_0__, arg_1__, arg_2__ with
-             | num_3__, int, Core.Lam v e =>
-                 let 'pair ae e' := callArityAnal #0 (Core.delVarSet int v) e in
-                 let ae' := calledMultipleTimes ae in
-                 if num_3__ GHC.Base.== #0 : bool then pair ae' (Core.Lam v e') else
-                 j_26__
-             | _, _, _ => j_26__
-             end in
-           match arg_0__, arg_1__, arg_2__ with
-           | _, _, (Core.Lit _ as e) => pair emptyArityRes e
-           | _, _, (Core.Mk_Type _ as e) => pair emptyArityRes e
-           | _, _, (Core.Mk_Coercion _ as e) => pair emptyArityRes e
-           | arity, int, Core.Cast e co =>
-               Control.Arrow.arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
-           | arity, int, (Core.Mk_Var v as e) =>
-               if Core.elemVarSet v int : bool then pair (unitArityRes v arity) e else
-               pair emptyArityRes e
-           | arity, int, Core.Lam v e =>
-               if negb (Core.isId v) : bool
-               then Control.Arrow.arrow_second (Core.Lam v) (callArityAnal arity
-                                                                           (Core.delVarSet int v) e) else
-               j_30__
-           | _, _, _ => j_30__
-           end.
+Fixpoint callArityAnal (arg_0__ : BasicTypes.Arity) (arg_1__ : Core.VarSet)
+                       (arg_2__ : Core.CoreExpr) : (CallArityRes * Core.CoreExpr)%type
+           := let j_26__ :=
+                match arg_0__, arg_1__, arg_2__ with
+                | arity, int, Core.Lam v e =>
+                    let 'pair ae e' := callArityAnal (arity GHC.Num.- #1) (Core.delVarSet int v)
+                                         e in
+                    pair ae (Core.Lam v e')
+                | arity, int, Core.App e (Core.Mk_Type t) =>
+                    Control.Arrow.arrow_second (fun e => Core.App e (Core.Mk_Type t)) (callArityAnal
+                                                                                       arity int e)
+                | arity, int, Core.App e1 e2 =>
+                    let 'pair ae2 e2' := callArityAnal #0 int e2 in
+                    let ae2' :=
+                      if CoreUtils.exprIsTrivial e2 : bool then calledMultipleTimes ae2 else
+                      ae2 in
+                    let 'pair ae1 e1' := callArityAnal (arity GHC.Num.+ #1) int e1 in
+                    let final_ae := both ae1 ae2' in pair final_ae (Core.App e1' e2')
+                | arity, int, Core.Case scrut bndr ty alts =>
+                    let 'pair scrut_ae scrut' := callArityAnal #0 int scrut in
+                    let go :=
+                      fun '(pair (pair dc bndrs) e) =>
+                        let 'pair ae e' := callArityAnal arity int e in
+                        pair ae (pair (pair dc bndrs) e') in
+                    let 'pair alt_aes alts' := GHC.List.unzip (GHC.Base.map go alts) in
+                    let alt_ae := lubRess alt_aes in
+                    let final_ae := both scrut_ae alt_ae in
+                    pair final_ae (Core.Case scrut' bndr ty alts')
+                | arity, int, Core.Let bind e =>
+                    let int_body := addInterestingBinds int bind in
+                    let 'pair ae_body e' := callArityAnal arity int_body e in
+                    let 'pair final_ae bind' := callArityBind1 (boringBinds bind) ae_body int
+                                                  bind in
+                    pair final_ae (Core.Let bind' e')
+                | _, _, _ => GHC.Err.patternFailure
+                end in
+              let j_30__ :=
+                match arg_0__, arg_1__, arg_2__ with
+                | num_3__, int, Core.Lam v e =>
+                    let 'pair ae e' := callArityAnal #0 (Core.delVarSet int v) e in
+                    let ae' := calledMultipleTimes ae in
+                    if num_3__ GHC.Base.== #0 : bool then pair ae' (Core.Lam v e') else
+                    j_26__
+                | _, _, _ => j_26__
+                end in
+              match arg_0__, arg_1__, arg_2__ with
+              | _, _, (Core.Lit _ as e) => pair emptyArityRes e
+              | _, _, (Core.Mk_Type _ as e) => pair emptyArityRes e
+              | _, _, (Core.Mk_Coercion _ as e) => pair emptyArityRes e
+              | arity, int, Core.Cast e co =>
+                  Control.Arrow.arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
+              | arity, int, (Core.Mk_Var v as e) =>
+                  if Core.elemVarSet v int : bool then pair (unitArityRes v arity) e else
+                  pair emptyArityRes e
+              | arity, int, Core.Lam v e =>
+                  if negb (Core.isId v) : bool
+                  then Control.Arrow.arrow_second (Core.Lam v) (callArityAnal arity
+                                                                              (Core.delVarSet int v) e) else
+                  j_30__
+              | _, _, _ => j_30__
+              end.
 
 Definition callArityRHS : Core.CoreExpr -> Core.CoreExpr :=
   Data.Tuple.snd GHC.Base.∘ callArityAnal #0 Core.emptyVarSet.
@@ -341,25 +338,22 @@ Definition callArityBind
         pair final_ae (Core.Rec binds')
     end.
 
-Definition callArityTopLvl
-   : list Core.Var ->
-     Core.VarSet -> list Core.CoreBind -> (CallArityRes * list Core.CoreBind)%type :=
-  fix callArityTopLvl (arg_0__ : list Core.Var) (arg_1__ : Core.VarSet) (arg_2__
-                        : list Core.CoreBind) : (CallArityRes * list Core.CoreBind)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | exported, _, nil =>
-               pair (calledMultipleTimes (pair UnVarGraph.emptyUnVarGraph (Core.mkVarEnv
-                                                (Coq.Lists.List.flat_map (fun v => cons (pair v #0) nil) exported))))
-                    nil
-           | exported, int1, cons b bs =>
-               let int' := addInterestingBinds int1 b in
-               let int2 := Core.bindersOf b in
-               let exported' :=
-                 Coq.Init.Datatypes.app (GHC.List.filter Core.isExportedId int2) exported in
-               let 'pair ae1 bs' := callArityTopLvl exported' int' bs in
-               let 'pair ae2 b' := callArityBind (boringBinds b) ae1 int1 b in
-               pair ae2 (cons b' bs')
-           end.
+Fixpoint callArityTopLvl (arg_0__ : list Core.Var) (arg_1__ : Core.VarSet)
+                         (arg_2__ : list Core.CoreBind) : (CallArityRes * list Core.CoreBind)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | exported, _, nil =>
+                  pair (calledMultipleTimes (pair UnVarGraph.emptyUnVarGraph (Core.mkVarEnv
+                                                   (Coq.Lists.List.flat_map (fun v => cons (pair v #0) nil) exported))))
+                       nil
+              | exported, int1, cons b bs =>
+                  let int' := addInterestingBinds int1 b in
+                  let int2 := Core.bindersOf b in
+                  let exported' :=
+                    Coq.Init.Datatypes.app (GHC.List.filter Core.isExportedId int2) exported in
+                  let 'pair ae1 bs' := callArityTopLvl exported' int' bs in
+                  let 'pair ae2 b' := callArityBind (boringBinds b) ae1 int1 b in
+                  pair ae2 (cons b' bs')
+              end.
 
 Definition callArityAnalProgram
    : DynFlags.DynFlags -> Core.CoreProgram -> Core.CoreProgram :=

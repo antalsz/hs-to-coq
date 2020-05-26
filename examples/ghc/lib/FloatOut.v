@@ -254,18 +254,15 @@ Definition add_stats : FloatStats -> FloatStats -> FloatStats :=
         FlS (a1 GHC.Num.+ a2) (b1 GHC.Num.+ b2) (c1 GHC.Num.+ c2)
     end.
 
-Definition floatList {a} {b}
-   : (a -> (FloatStats * FloatBinds * b)%type) ->
-     list a -> (FloatStats * FloatBinds * list b)%type :=
-  fix floatList (arg_0__ : (a -> (FloatStats * FloatBinds * b)%type)) (arg_1__
-                  : list a) : (FloatStats * FloatBinds * list b)%type
-        := match arg_0__, arg_1__ with
-           | _, nil => pair (pair zeroStats emptyFloats) nil
-           | f, cons a as_ =>
-               let 'pair (pair fs_a binds_a) b := f a in
-               let 'pair (pair fs_as binds_as) bs := floatList f as_ in
-               pair (pair (add_stats fs_a fs_as) (plusFloats binds_a binds_as)) (cons b bs)
-           end.
+Fixpoint floatList {a} {b} (arg_0__ : (a -> (FloatStats * FloatBinds * b)%type))
+                   (arg_1__ : list a) : (FloatStats * FloatBinds * list b)%type
+           := match arg_0__, arg_1__ with
+              | _, nil => pair (pair zeroStats emptyFloats) nil
+              | f, cons a as_ =>
+                  let 'pair (pair fs_a binds_a) b := f a in
+                  let 'pair (pair fs_as binds_as) bs := floatList f as_ in
+                  pair (pair (add_stats fs_a fs_as) (plusFloats binds_a binds_as)) (cons b bs)
+              end.
 
 Definition sum_stats : list FloatStats -> FloatStats :=
   fun xs => Data.Foldable.foldr add_stats zeroStats xs.

@@ -103,23 +103,19 @@ Definition zipFB {a} {b} {c} {d}
    : ((a * b)%type -> c -> d) -> a -> b -> c -> d :=
   fun c => fun x y r => c (pair x y) r.
 
-Definition zip3 {a} {b} {c}
-   : list a -> list b -> list c -> list (a * b * c)%type :=
-  fix zip3 (arg_0__ : list a) (arg_1__ : list b) (arg_2__ : list c) : list (a * b
-                                                                            *
-                                                                            c)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | cons a as_, cons b bs, cons c cs => cons (pair (pair a b) c) (zip3 as_ bs cs)
-           | _, _, _ => nil
-           end.
+Fixpoint zip3 {a} {b} {c} (arg_0__ : list a) (arg_1__ : list b) (arg_2__
+                : list c) : list (a * b * c)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | cons a as_, cons b bs, cons c cs => cons (pair (pair a b) c) (zip3 as_ bs cs)
+              | _, _, _ => nil
+              end.
 
-Definition zip {a} {b} : list a -> list b -> list (a * b)%type :=
-  fix zip (arg_0__ : list a) (arg_1__ : list b) : list (a * b)%type
-        := match arg_0__, arg_1__ with
-           | nil, _bs => nil
-           | _as, nil => nil
-           | cons a as_, cons b bs => cons (pair a b) (zip as_ bs)
-           end.
+Fixpoint zip {a} {b} (arg_0__ : list a) (arg_1__ : list b) : list (a * b)%type
+           := match arg_0__, arg_1__ with
+              | nil, _bs => nil
+              | _as, nil => nil
+              | cons a as_, cons b bs => cons (pair a b) (zip as_ bs)
+              end.
 
 Definition unzip3 {a} {b} {c}
    : list (a * b * c)%type -> (list a * list b * list c)%type :=
@@ -146,12 +142,11 @@ Definition takeWhileFB {a} {b}
    : (a -> bool) -> (a -> b -> b) -> b -> a -> b -> b :=
   fun p c n => fun x r => if p x : bool then c x r else n.
 
-Definition takeWhile {a} : (a -> bool) -> list a -> list a :=
-  fix takeWhile (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | p, cons x xs => if p x : bool then cons x (takeWhile p xs) else nil
-           end.
+Fixpoint takeWhile {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | _, nil => nil
+              | p, cons x xs => if p x : bool then cons x (takeWhile p xs) else nil
+              end.
 
 Definition takeFB {a} {b}
    : (a -> b -> b) -> b -> a -> (GHC.Num.Int -> b) -> GHC.Num.Int -> b :=
@@ -168,14 +163,14 @@ Definition strictUncurryScanr {a} {b} {c}
    : (a -> b -> c) -> (a * b)%type -> c :=
   fun f pair_ => let 'pair x y := pair_ in f x y.
 
-Definition span {a} : (a -> bool) -> list a -> (list a * list a)%type :=
-  fix span (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a * list a)%type
-        := match arg_0__, arg_1__ with
-           | _, (nil as xs) => pair xs xs
-           | p, (cons x xs' as xs) =>
-               if p x : bool then let 'pair ys zs := span p xs' in pair (cons x ys) zs else
-               pair nil xs
-           end.
+Fixpoint span {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a *
+                                                                list a)%type
+           := match arg_0__, arg_1__ with
+              | _, (nil as xs) => pair xs xs
+              | p, (cons x xs' as xs) =>
+                  if p x : bool then let 'pair ys zs := span p xs' in pair (cons x ys) zs else
+                  pair nil xs
+              end.
 
 Definition scanrFB {a} {b} {c}
    : (a -> b -> b) -> (b -> c -> c) -> a -> (b * c)%type -> (b * c)%type :=
@@ -185,18 +180,17 @@ Definition scanrFB {a} {b} {c}
       | x, pair r est => pair (f x r) (c r est)
       end.
 
-Definition scanr1 {a} `{_ : GHC.Err.Default a}
-   : (a -> a -> a) -> list a -> list a :=
-  fix scanr1 (arg_0__ : a -> a -> a) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | _, cons x nil => cons x nil
-           | f, cons x xs =>
-               match scanr1 f xs with
-               | (cons q _ as qs) => cons (f x q) qs
-               | _ => GHC.Err.patternFailure
-               end
-           end.
+Fixpoint scanr1 {a} `{_ : GHC.Err.Default a} (arg_0__ : a -> a -> a) (arg_1__
+                  : list a) : list a
+           := match arg_0__, arg_1__ with
+              | _, nil => nil
+              | _, cons x nil => cons x nil
+              | f, cons x xs =>
+                  match scanr1 f xs with
+                  | (cons q _ as qs) => cons (f x q) qs
+                  | _ => GHC.Err.patternFailure
+                  end
+              end.
 
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
@@ -251,22 +245,20 @@ Definition tooLarge {a} `{_ : GHC.Err.Default a} : GHC.Num.Int -> a :=
     GHC.Err.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
                                                            (GHC.Base.hs_string__ "!!: index too large")).
 
-Definition or : list bool -> bool :=
-  fix or (arg_0__ : list bool) : bool
-        := match arg_0__ with
-           | nil => false
-           | cons x xs => orb x (or xs)
-           end.
+Fixpoint or (arg_0__ : list bool) : bool
+           := match arg_0__ with
+              | nil => false
+              | cons x xs => orb x (or xs)
+              end.
 
 Definition null {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => true | cons _ _ => false end.
 
-Definition notElem {a} `{(Eq_ a)} : a -> list a -> bool :=
-  fix notElem (arg_0__ : a) (arg_1__ : list a) : bool
-        := match arg_0__, arg_1__ with
-           | _, nil => true
-           | x, cons y ys => andb (x /= y) (notElem x ys)
-           end.
+Fixpoint notElem {a} `{(Eq_ a)} (arg_0__ : a) (arg_1__ : list a) : bool
+           := match arg_0__, arg_1__ with
+              | _, nil => true
+              | x, cons y ys => andb (x /= y) (notElem x ys)
+              end.
 
 Definition negIndex {a} `{_ : GHC.Err.Default a} : a :=
   GHC.Err.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
@@ -285,12 +277,12 @@ Notation "'_!!_'" := (op_znzn__).
 
 Infix "!!" := (_!!_) (at level 99).
 
-Definition lookup {a} {b} `{(Eq_ a)} : a -> list (a * b)%type -> option b :=
-  fix lookup (arg_0__ : a) (arg_1__ : list (a * b)%type) : option b
-        := match arg_0__, arg_1__ with
-           | _key, nil => None
-           | key, cons (pair x y) xys => if key == x : bool then Some y else lookup key xys
-           end.
+Fixpoint lookup {a} {b} `{(Eq_ a)} (arg_0__ : a) (arg_1__ : list (a * b)%type)
+           : option b
+           := match arg_0__, arg_1__ with
+              | _key, nil => None
+              | key, cons (pair x y) xys => if key == x : bool then Some y else lookup key xys
+              end.
 
 Definition lengthFB {x}
    : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
@@ -299,12 +291,11 @@ Definition lengthFB {x}
     | _, r => fun a => r (a GHC.Num.+ #1)
     end.
 
-Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
-  fix lenAcc (arg_0__ : list a) (arg_1__ : GHC.Num.Int) : GHC.Num.Int
-        := match arg_0__, arg_1__ with
-           | nil, n => n
-           | cons _ ys, n => lenAcc ys (n GHC.Num.+ #1)
-           end.
+Fixpoint lenAcc {a} (arg_0__ : list a) (arg_1__ : GHC.Num.Int) : GHC.Num.Int
+           := match arg_0__, arg_1__ with
+              | nil, n => n
+              | cons _ ys, n => lenAcc ys (n GHC.Num.+ #1)
+              end.
 
 Definition length {a} : list a -> GHC.Num.Int :=
   fun xs => lenAcc xs #0.
@@ -340,14 +331,13 @@ Definition flipSeqScanl' {a} {b} : a -> b -> a :=
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
   fun c p x r => if p x : bool then c x r else r.
 
-Definition filter {a} : (a -> bool) -> list a -> list a :=
-  fix filter (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | _pred, nil => nil
-           | pred, cons x xs =>
-               if pred x : bool then cons x (filter pred xs) else
-               filter pred xs
-           end.
+Fixpoint filter {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | _pred, nil => nil
+              | pred, cons x xs =>
+                  if pred x : bool then cons x (filter pred xs) else
+                  filter pred xs
+              end.
 
 Definition errorEmptyList {a} `{_ : GHC.Err.Default a} : String -> a :=
   fun fun_ =>
@@ -424,19 +414,17 @@ Definition tail {a} `{_ : GHC.Err.Default a} : list a -> list a :=
     | nil => errorEmptyList (GHC.Base.hs_string__ "tail")
     end.
 
-Definition elem {a} `{(Eq_ a)} : a -> list a -> bool :=
-  fix elem (arg_0__ : a) (arg_1__ : list a) : bool
-        := match arg_0__, arg_1__ with
-           | _, nil => false
-           | x, cons y ys => orb (x == y) (elem x ys)
-           end.
+Fixpoint elem {a} `{(Eq_ a)} (arg_0__ : a) (arg_1__ : list a) : bool
+           := match arg_0__, arg_1__ with
+              | _, nil => false
+              | x, cons y ys => orb (x == y) (elem x ys)
+              end.
 
-Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
-  fix dropWhile (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | p, (cons x xs' as xs) => if p x : bool then dropWhile p xs' else xs
-           end.
+Fixpoint dropWhile {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
+           := match arg_0__, arg_1__ with
+              | _, nil => nil
+              | p, (cons x xs' as xs) => if p x : bool then dropWhile p xs' else xs
+              end.
 
 Definition constScanl {a} {b} : a -> b -> a :=
   const.
@@ -444,15 +432,15 @@ Definition constScanl {a} {b} : a -> b -> a :=
 Definition concat {a} : list (list a) -> list a :=
   foldr Coq.Init.Datatypes.app nil.
 
-Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
-  fix break (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a * list a)%type
-        := match arg_0__, arg_1__ with
-           | _, (nil as xs) => pair xs xs
-           | p, (cons x xs' as xs) =>
-               if p x : bool then pair nil xs else
-               let 'pair ys zs := break p xs' in
-               pair (cons x ys) zs
-           end.
+Fixpoint break {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a *
+                                                                 list a)%type
+           := match arg_0__, arg_1__ with
+              | _, (nil as xs) => pair xs xs
+              | p, (cons x xs' as xs) =>
+                  if p x : bool then pair nil xs else
+                  let 'pair ys zs := break p xs' in
+                  pair (cons x ys) zs
+              end.
 
 Definition badHead {a} `{_ : GHC.Err.Default a} : a :=
   errorEmptyList (GHC.Base.hs_string__ "head").
@@ -460,26 +448,23 @@ Definition badHead {a} `{_ : GHC.Err.Default a} : a :=
 Definition head {a} `{_ : GHC.Err.Default a} : list a -> a :=
   fun arg_0__ => match arg_0__ with | cons x _ => x | nil => badHead end.
 
-Definition any {a} : (a -> bool) -> list a -> bool :=
-  fix any (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
-        := match arg_0__, arg_1__ with
-           | _, nil => false
-           | p, cons x xs => orb (p x) (any p xs)
-           end.
+Fixpoint any {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
+           := match arg_0__, arg_1__ with
+              | _, nil => false
+              | p, cons x xs => orb (p x) (any p xs)
+              end.
 
-Definition and : list bool -> bool :=
-  fix and (arg_0__ : list bool) : bool
-        := match arg_0__ with
-           | nil => true
-           | cons x xs => andb x (and xs)
-           end.
+Fixpoint and (arg_0__ : list bool) : bool
+           := match arg_0__ with
+              | nil => true
+              | cons x xs => andb x (and xs)
+              end.
 
-Definition all {a} : (a -> bool) -> list a -> bool :=
-  fix all (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
-        := match arg_0__, arg_1__ with
-           | _, nil => true
-           | p, cons x xs => andb (p x) (all p xs)
-           end.
+Fixpoint all {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
+           := match arg_0__, arg_1__ with
+              | _, nil => true
+              | p, cons x xs => andb (p x) (all p xs)
+              end.
 
 Module Notations.
 Notation "'_GHC.List.!!_'" := (op_znzn__).

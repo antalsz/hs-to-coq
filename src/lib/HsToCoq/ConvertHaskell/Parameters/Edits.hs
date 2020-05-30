@@ -9,7 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, exceptInEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -18,7 +18,7 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   TerminationArgument(..),
   NormalizedPattern(), getNormalizedPattern, normalizePattern,
   Rewrite(..), Rewrites,
-  Edit(..), addEdit, buildEdits,
+  Edit(..), addEdit, buildEdits, subtractEdits,
   useProgram,
   Phase(..),
 ) where
@@ -40,6 +40,7 @@ import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as M
 import           Data.Set                          (Set)
 import qualified Data.Set                          as S
+import           Data.List                         ((\\))
 
 import           HsToCoq.Util.GHC.Module
 
@@ -161,6 +162,7 @@ data Edit = TypeSynonymTypeEdit              Ident Ident
           | SetTypeEdit                      Qualid (Maybe Term)
           | CollapseLetEdit                  Qualid
           | InEdit                           Qualid Edit
+          | ExceptInEdit                     (NonEmpty Qualid) Edit
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -210,11 +212,60 @@ data Edits = Edits { _typeSynonymTypes               :: !(Map Ident Ident)
                    , _replacedTypes                  :: !(Map Qualid (Maybe Term)) -- Instead of setTypes
                    , _collapsedLets                  :: !(Set Qualid)
                    , _inEdits                        :: !(Map Qualid Edits)
+                   , _exceptInEdits                  :: !(Map Qualid Edits)
                    }
            deriving (Eq, Ord, Show, Generic)
 instance Semigroup Edits where (<>)   = (%<>)
 instance Monoid    Edits where mempty = gmempty
 makeLenses ''Edits
+
+{-
+   Given two Edits structures, compute their "difference".
+   The difference is computed component-wise.
+   This is used for ExceptIn edits -- applying an edit everywhere except in
+   one or more specified definitions.
+   Note that for most kinds of edits, it doesn't make sense to use ExceptIn.
+   For these edits, subtractEdits simply returns the corresponding component of
+   the first argument.
+-}
+subtractEdits :: Edits -> Edits -> Edits
+subtractEdits edits1 edits2 =
+  Edits {
+    _typeSynonymTypes               = edits1^.typeSynonymTypes
+  , _dataTypeArguments              = edits1^.dataTypeArguments 
+  , _termination                    = edits1^.termination
+  , _redefinitions                  = edits1^.redefinitions
+  , _additions                      = edits1^.additions
+  , _skipped                        = edits1^.skipped
+  , _skippedConstructors            = edits1^.skippedConstructors
+  , _skippedClasses                 = edits1^.skippedClasses
+  , _skippedMethods                 = edits1^.skippedMethods
+  , _skippedEquations               = edits1^.skippedEquations
+  , _skippedCasePatterns            = (edits1^.skippedCasePatterns) S.\\ (edits2^.skippedCasePatterns)
+  , _skippedModules                 = edits1^.skippedModules
+  , _importedModules                = edits1^.importedModules
+  , _axiomatizedModules             = edits1^.axiomatizedModules
+  , _axiomatizedOriginalModuleNames = edits1^.axiomatizedOriginalModuleNames
+  , _axiomatizedDefinitions         = edits1^.axiomatizedDefinitions
+  , _unaxiomatizedDefinitions       = edits1^.unaxiomatizedDefinitions
+  , _hasManualNotation              = edits1^.hasManualNotation        -- ?
+  , _additionalScopes               = edits1^.additionalScopes         -- ?
+  , _orders                         = edits1^.orders
+  , _classKinds                     = edits1^.classKinds
+  , _dataKinds                      = edits1^.dataKinds
+  , _deleteUnusedTypeVariables      = edits1^.deleteUnusedTypeVariables -- ?
+  , _renamings                      = (edits1^.renamings) M.\\ (edits2^.renamings)
+  , _rewrites                       = (edits1^.rewrites) \\ (edits2^.rewrites)
+  , _obligations                    = edits1^.obligations
+  , _coinductiveTypes               = edits1^.coinductiveTypes
+  , _renamedModules                 = edits1^.renamedModules
+  , _simpleClasses                  = edits1^.simpleClasses
+  , _inlinedMutuals                 = edits1^.inlinedMutuals
+  , _replacedTypes                  = edits1^.replacedTypes
+  , _collapsedLets                  = edits1^.collapsedLets
+  , _inEdits                        = edits1^.inEdits
+  , _exceptInEdits                  = edits1^.exceptInEdits 
+  }
 
 -- Derived edits
 useProgram :: Qualid -> Edits -> Bool
@@ -282,6 +333,7 @@ descDuplEdit = \case
   SetTypeEdit                      qid _        -> duplicateQ_for  "set types"                                      qid
   CollapseLetEdit                  qid          -> duplicateQ_for  "collapsed lets"                                 qid
   InEdit                           _ _          -> error "In Edits are never duplicates"
+  ExceptInEdit                     _ _          -> error "ExceptIn Edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -325,7 +377,27 @@ addEdit e = case e of
   OrderEdit                        idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                      rewrite          -> return . (rewrites %~ (rewrite:))
   InEdit                           qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
+  ExceptInEdit                     qids edit        -> addExceptInEdit qids edit
 
+
+addExceptInEdit :: MonadError String m => 
+  (NonEmpty Qualid) -- the Qualids to which this edit should not apply
+  -> Edit           -- the edit itself
+  -> Edits -> m Edits
+addExceptInEdit qids edit =
+  
+  -- add the edit globally
+  -- addEditGlobally :: Edits -> m Edits
+  let addEditGlobally = addEdit edit in
+
+  -- for each qid in the list of to-be-excluded qids, add an entry (qid, edit)
+  -- to the exceptInEdits map
+  foldl aux addEditGlobally (toList qids)
+  where
+     -- f             :: Edits -> m Edits
+     -- currentQidFun :: Edits -> m Edits
+    aux f qid = let currentQidFun = exceptInEdits.at qid.non mempty %%~ (addEdit edit) in
+        \edits -> (currentQidFun edits) >>= f
 
 defName :: CoqDefinition -> Qualid
 defName (CoqDefinitionDef (DefinitionDef _ x _ _ _ _))              = x

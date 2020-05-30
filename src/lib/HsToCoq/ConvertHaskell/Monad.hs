@@ -213,10 +213,14 @@ withCurrentDefinition newDef act = do
     local_edits <- view (edits.inEdits.at newDef.non mempty)
     let edits_in_scope = local_edits <> global_edits
     
+    -- Subtract out the edits to be excluded for this definition.
+    excluded_edits <- view (edits.exceptInEdits.at newDef.non mempty)
+    let edits_final = subtractEdits edits_in_scope excluded_edits
+    
     _leniency      <- view leniency
     _currentModule <- view currentModule
     runCounterT . runReaderT act $ LocalEnv
-        { _localEnvEdits             = edits_in_scope
+        { _localEnvEdits             = edits_final
         , _localEnvLeniency          = _leniency
         , _localEnvCurrentModule     = _currentModule
         , _localEnvCurrentDefinition = newDef

@@ -317,7 +317,7 @@ Edit :: { Edit }
   | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                      $3 $4                                 }
   | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
   | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
-  | except 'in' Some(Qualid) Edit                         { ExceptInEdit                     $3 $4                                 }
+  | except 'in' SepBy1(Qualid, ',') Edit                  { ExceptInEdit                     $3 $4                                 }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

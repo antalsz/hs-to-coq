@@ -233,7 +233,7 @@ subtractEdits edits1 edits2 =
   Edits {
     _typeSynonymTypes               = edits1^.typeSynonymTypes
   , _dataTypeArguments              = edits1^.dataTypeArguments 
-  , _termination                    = edits1^.termination
+  , _termination                    = (edits1^.termination) M.\\ (edits2^.termination)
   , _redefinitions                  = edits1^.redefinitions
   , _additions                      = edits1^.additions
   , _skipped                        = edits1^.skipped

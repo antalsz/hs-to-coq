@@ -1204,8 +1204,8 @@ Effect:
 Meta-edits
 ----------
 
-Localizing edits - restrict scope of an edit
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``in`` edit - restrict scope of an edit to a single definition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. index::
    single: in, edit
@@ -1227,6 +1227,40 @@ Examples:
 
      in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
      in Util.exactLog2 termination pow2 deferred
+
+``except in`` edit - exclude definitions from an edit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: except in, edit
+
+
+Format:
+ | **except in** *qualified_names* *edit*
+
+Effect:
+
+  This is essentially the opposite of an ``in`` edit. The given edit is applied as normal,
+  except during the translation of the given definition(s). This is most useful to rename
+  or rewrite a definition everywhere except within one or more functions. In addition, it 
+  can be used when there is a local function with the same name in multiple definitions,
+  in order to give termination arguments to all occurrences of that local function except
+  those in the specified definitions.
+
+  As with ``in`` edits, while all edits are allowed, for many edits it doesn't make sense to
+  apply ``except in``.
+
+
+Examples:
+  .. code-block:: shell
+
+     except in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
+     except in Util.exactLog2 termination pow2 deferred
+     except in ModuleName.def_1 skip case pattern _
+
+     # Multiple qualified names are separated with commas
+     except in ModuleName.def_1, ModuleName.def_2 rename type GHC.Types.[] = list
+
 
 Deprecated edits
 ----------------

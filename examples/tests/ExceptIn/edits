@@ -1,0 +1,36 @@
+# This edit works.
+except in ExceptIn.bar, ExceptIn.baz rename value ExceptIn.A = ExceptIn.X
+
+
+# The following edit has a couple of issues; see below for more information.
+except in ExceptIn.Test1, ExceptIn.bar, ExceptIn.baz rename type ExceptIn.Test1 = ExceptIn.Test2
+
+# 1.
+# In the type signature of ExceptIn.bar and ExceptIn.baz, Test1 is renamed to
+# Test2, even though we excluded ExceptIn.bar and ExceptIn.baz when we specified
+# the rename edit.
+
+# This is not an issue specific to "except in" edits, but rather with the fact that
+# local edits are not taken into account when translating signatures. This has been
+# documented; see issue #156 on github (https://github.com/antalsz/hs-to-coq/issues/156).
+
+# 2.
+# In the declaration of Test1 (Inductive Test1 : Type), "Test1" is renamed to
+# "Test2", even though we excluded ExceptIn.Test1 when we specified the rename
+# edit. Since there is already a data type called Test2, the new definition of
+# Test2 (i.e. the definition of Test1 before the renaming) is removed by
+# hs-to-coq and does not appear at all in the resulting Coq code.
+
+# Why does the renaming happen, despite the fact that we excluded ExceptIn.Test1?
+# Note that when we specified ExceptIn.Test1 in the "except in" edit, we told
+# hs-to-coq not to rename Test1 to Test2 *inside* the definition of Test1, but
+# the declaration is not considered to be inside the definition.
+
+# Perhaps it would make sense to consider the declaration to be part of the
+# definition, so that we can prevent the name in the declaration from
+# being renamed.
+
+
+
+
+

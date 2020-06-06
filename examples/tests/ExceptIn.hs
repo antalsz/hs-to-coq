@@ -1,10 +1,8 @@
 module ExceptIn(Test1(..), Test2(..), test1_1, test1_2, foo, bar, baz) where
 
     data Test1 = A Int | B String
-        deriving Show
 
     data Test2 = X Int | Y String
-        deriving Show
 
     test1_1 :: Test1
     test1_1 = A 5

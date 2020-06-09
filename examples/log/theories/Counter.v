@@ -28,3 +28,8 @@ Proof.
   - intros x. cbn. intros. lia.
 Qed.
 
+Theorem commutativity : forall A (m1 m2 : Counter A),
+  m1 >> m2 ≊ m2 >> m1.
+Abort.
+
+Definition m1 : Counter unit := MkCounter (fun _ => (tt, #0)).

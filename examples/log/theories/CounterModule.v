@@ -22,19 +22,31 @@ Module Type CounterSig.
   Axiom inc_bind_r : forall (m : Counter unit), GE unit (m >> Inc) Inc.
 End CounterSig.
 
+Open Scope Z_scope.
+
 Module CounterImpl : CounterSig.
   Definition WF {A} (m : Counter.Counter A) : Prop :=
+    exists i, forall n,
+        i >= 0 /\
+        let (_, n') := Counter.runC m n in (n' = n + i).
+
+(*  Definition m1 : Counter.Counter unit :=
+    Counter.MkCounter (fun n => if n == 0 then (tt, 100) else (tt, n+1)).
+  Definition m2 := Counter.inc. *)
+  
+(*  Definition WF {A} (m : Counter.Counter A) : Prop :=
     forall n B (p : Counter.Counter B),
       let (_, a) := Counter.runC (p >> m) n in
       let (_, b) := Counter.runC p n in
-      (a >= b)%Z.
+      (a >= b)%Z. *)
   
   Definition Counter A := { x : Counter.Counter A | WF x }.
+  Unset Printing Notations.
 
   Program Definition Inc : Counter unit := Counter.inc.
   Next Obligation.
-    intros n B p. cbn.
-    destruct (Counter.runC p n). lia.
+    exists 1. intros n. split; [lia|].
+    cbn. reflexivity.
   Defined.
 
   Program Definition GE A (m1 m2 : Counter A) : Prop :=
@@ -57,11 +69,10 @@ Module CounterImpl : CounterSig.
       WF x ->
       WF (@fmap _ _ a b f x).
   Proof.
-    intros. intros n B p. cbn.
-    destruct (Counter.runC p n).
-    destruct x. cbn.
-    specialize (H i unit (return_ tt)). revert H.
-    simpl. destruct (runC i). tauto.
+    intros. destruct H.
+    exists x0. intros n. cbn.
+    specialize (H n). intuition.
+    destruct (Counter.runC x n); assumption.
   Qed.
 
   Program Instance Counter_functor : Functor Counter :=
@@ -79,9 +90,7 @@ Module CounterImpl : CounterSig.
   Local Lemma pure_WF : forall a x,
       WF (@pure _ _ _ a x).
   Proof.
-    intros a x n B p. cbn.
-    destruct (Counter.runC p n).
-    simpl. lia.
+    exists 0. intros n. cbn. lia.
   Qed.
 
   Local Lemma ap_WF : forall a b f x,
@@ -89,13 +98,12 @@ Module CounterImpl : CounterSig.
       WF x ->
       WF (@op_zlztzg__ _ _ _ a b f x).
   Proof.
-    intros a b f x Hf Hx n B p. cbn.
-    destruct (Counter.runC p n).
-    specialize (Hf i _ (return_ tt)). revert Hf.
-    simpl. destruct (Counter.runC f i).
-    specialize (Hx i0 _ (return_ tt)). revert Hx.
-    simpl. destruct (Counter.runC x i0).
-    intros; lia.
+    intros a b f x Hf Hx.
+    destruct Hf, Hx.
+    exists (x0 + x1). intros n. cbn.
+    specialize (H n). destruct (Counter.runC f n).
+    specialize (H0 i). destruct (Counter.runC x i).
+    lia.
   Qed.
 
   Program Instance Counter_applicative : Applicative Counter :=
@@ -132,12 +140,71 @@ Module CounterImpl : CounterSig.
     apply pure_WF.
   Qed.
 
+  Lemma counter_increment_from : forall A (m : Counter.Counter A) n1 n2,
+      WF m ->
+      let (_, i) := Counter.runC m n1 in
+      let (_, j) := Counter.runC m n2 in
+      j + n1 = i + n2.
+  Proof.
+    intros. destruct H.
+    assert (forall n : Int, x >= 0 /\ (let (_, n') := Counter.runC m n in n' = n + x)) by assumption.
+    specialize (H n1). specialize (H0 n2).
+    destruct (Counter.runC m n1). destruct (Counter.runC m n2). lia.
+  Qed.
+
+  Lemma counter_increment_from_0 : forall A (m : Counter.Counter A) n,
+      WF m ->
+      let (_, i) := Counter.runC m 0 in
+      let (_, j) := Counter.runC m n in
+      j = i + n.
+  Proof.
+    intros. pose proof (counter_increment_from A m 0 n H).
+    destruct (Counter.runC m 0). destruct (Counter.runC m n). lia.
+  Qed.
+
+  Import Counter.
+  Definition m1 : Counter Int := MkCounter (fun n => (n, n)).
+  Definition m2 : Int -> Counter unit := fun x => MkCounter (fun n => (tt, n + Z.max x 0)).
+
+  Goal WF m1.
+  Proof.
+    exists 0. intros. cbn. split; lia.
+  Qed.
+
+  Goal forall a, WF (m2 a).
+  Proof.
+    intros. exists (Z.max a 0).
+    intros. cbn. split; lia.
+  Qed.
+
+  Definition x := runC (m1 >>= m2) 1.
+  Compute x.
+
   Local Lemma bind_WF : forall a b m k,
       WF m ->
       (forall x, WF (k x)) ->
       WF (@op_zgzgze__ _ _ _ _ a b m k).
   Proof.
-    intros a b m k Hm Hk n B p. cbn.
+    intros a b m k Hm Hk.
+    assert (WF m) by assumption.
+    destruct Hm. unfold WF. cbn.
+    specialize (H0 0). destruct (Counter.runC m 0) eqn:Hm0. pose proof Hk.
+    specialize (Hk a0). destruct Hk. specialize (H2 i).
+    destruct (Counter.runC (k a0) i) eqn:Hka0i. exists i0. intros.
+    intuition. subst. destruct (Counter.runC m n) eqn:Hmn.
+    pose proof (counter_increment_from_0 _ m n H).
+    pose proof (counter_increment_from _ (k a1) i x (H1 a1)).
+    specialize (H1 a1). destruct H1. specialize (H1 i).
+    destruct (Counter.runC (k a1) i).
+    destruct (Counter.runC (k a1) i1). intuition. subst.
+    rewrite Hm0, Hmn in H2. subst.
+    rewrite Hm0 in H1. rewrite Hmn in H1.
+    assert (i1 = i + n).
+    { pose proof counter_increment_from_0.
+    destruct (Counter.runC (k a0) i). split.
+    2: { intuition. subst. rewrite <- Z.add_assoc. reflexivity.
+    - assert (x + x0 >= 0).
+    
     destruct (Counter.runC p n).
     specialize (Hm i _ (return_ tt)). revert Hm. simpl.
     destruct (Counter.runC m i).

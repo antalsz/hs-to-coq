@@ -4,4 +4,4 @@
 -Q ../../containers/lib   ""
 -Q ../../containers/theories  ""
 -Q ../../transformers/lib  ""
-Freer.v FreerPlus.v Log.v LogExtInd.v Counter.v CounterExtInd.v MySet.v SetExtInd.v Structures.v
+Freer.v Log.v LogExtInd.v Counter.v CounterExtInd.v MySet.v SetExtInd.v Structures.v

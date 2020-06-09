@@ -1,36 +1,52 @@
-{-# LANGUAGE KindSignatures, GADTs, MultiParamTypeClasses #-}
+{-# LANGUAGE KindSignatures, GADTs, MultiParamTypeClasses, ExistentialQuantification #-}
 module SetExtInd where
 
 import qualified MySet
 
-data SetExt :: * -> * where
-  Empty :: SetExt a
-  Singleton :: a -> SetExt a
-  Add :: Eq a => a -> SetExt a -> SetExt a
-  Union :: Eq a => SetExt a -> SetExt a -> SetExt a
-  PowerSet :: SetExt a -> SetExt (MySet.Set a)
+data SetMethod :: * -> * where
+  Empty :: SetMethod a
+  Singleton :: a -> SetMethod a
+  Add :: Eq a => a -> FreerF SetMethod a -> SetMethod a
+  Union :: Eq a => FreerF SetMethod a -> FreerF SetMethod a -> SetMethod a
+  PowerSet :: Eq a => FreerF SetMethod a -> SetMethod (FreerF SetMethod a)
 
-interp_ext :: SetExt a -> MySet.Set a
-interp_ext Empty = MySet.empty
-interp_ext (Singleton a) = MySet.singleton a
-interp_ext (Add a s) = MySet.add a $ interp_ext s
-interp_ext (Union s1 s2) = MySet.union (interp_ext s1) (interp_ext s2)
-interp_ext (PowerSet s) = MySet.powerSet $ interp_ext s
+data FreerF e r = forall x. FMap (x -> r) (e x)
+
+instance Functor (FreerF e) where
+  fmap f (FMap g x) = FMap (f . g) x
+
+type SetExt a = FreerF SetMethod a
+
+reify_set :: Eq a => MySet.Set a -> SetExt a
+reify_set s = go $ MySet.toList s
+  where go :: Eq a => [a] -> SetExt a
+        go []       = empty
+        go (x : xs) = add x (go xs)
+
+reflect_set :: Eq a => SetExt a -> MySet.Set a
+reflect_set (FMap _ Empty) = MySet.empty
+reflect_set (FMap f (Singleton a)) = MySet.singleton $ f a
+reflect_set (FMap f (Add a s)) =
+  MySet.add (f a) (reflect_set $ fmap f s)
+reflect_set (FMap f (Union s1 s2)) =
+  MySet.union (reflect_set $ fmap f s1) (reflect_set $ fmap f s2)
+reflect_set (FMap f (PowerSet s)) =
+  fmap (f . reify_set) $ MySet.powerSet $ reflect_set s
 
 empty :: SetExt a
-empty = Empty
+empty = FMap id Empty
 
 singleton :: a -> SetExt a
-singleton = Singleton
+singleton = FMap id . Singleton
 
 add :: Eq a => a -> SetExt a -> SetExt a
-add = Add
+add a = FMap id . Add a
 
 union :: Eq a => SetExt a -> SetExt a -> SetExt a
-union = Union
+union s1 =  FMap id . Union s1
 
-powerSet :: SetExt a -> SetExt (MySet.Set a)
-powerSet = PowerSet
+powerSet :: Eq a => SetExt a -> SetExt (SetExt a)
+powerSet = FMap id . PowerSet
 
 member :: Eq a => a -> SetExt a -> Bool
-member a s = MySet.member a (interp_ext s)
+member a s = MySet.member a (reflect_set s)

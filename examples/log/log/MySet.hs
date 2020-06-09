@@ -1,7 +1,10 @@
-module MySet (Set, empty, singleton, add, union, member, powerSet) where
+module MySet (Set, empty, singleton, add, union, member, powerSet, toList) where
 
 -- totally inefficient set
 newtype Set a = Set [a]
+
+instance Functor Set where
+  fmap f (Set s) = Set $ fmap f s
 
 empty :: Set a
 empty = Set []
@@ -18,6 +21,9 @@ union (Set s1) (Set s2) = Set $ s1 ++ filter (\x -> not $ member x (Set s1)) s2
 
 member :: Eq a => a -> Set a -> Bool
 member a (Set s) = any ((==) a) s
+
+toList :: Set a -> [a]
+toList (Set s) = s
 
 -- totally faked power set
 powerSet :: Set a -> Set (Set a)

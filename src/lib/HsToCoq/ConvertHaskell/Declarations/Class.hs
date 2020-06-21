@@ -103,14 +103,15 @@ convertAssociatedType classArgs FamilyDecl{..} = do
 
 convertAssociatedTypeDefault :: ConversionMonad r m => [Qualid] -> TyFamDefltEqn GhcRn -> m (Qualid, Term)
 convertAssociatedTypeDefault classArgs FamEqn{..} = do
-  args <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats
+  n <- var TypeNS (unLoc feqn_tycon)
+  args <- withCurrentDefinition n (convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats)
   unless (classArgs == foldMap (toListOf binderIdents) args) $
     convUnsupportedIn_lname "associated type family defaults with argument lists that differ from the class's"
                             "associated type equation"
                             feqn_tycon
-  n <- var TypeNS (unLoc feqn_tycon)
-  (,) <$> n
-      <*> withCurrentDefinition n $ convertLType feqn_rhs
+  ty <- withCurrentDefinition n $ convertLType feqn_rhs
+  pure (n, ty)
+
   -- Skipping feqn_fixity
     
 convertClassDecl :: ConversionMonad r m

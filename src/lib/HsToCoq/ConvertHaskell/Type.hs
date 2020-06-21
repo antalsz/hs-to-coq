@@ -34,14 +34,14 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertLHsTyVarBndrs :: ConversionMonad r m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
+convertLHsTyVarBndrs :: LocalConvMonad r m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
   UserTyVar   tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
   KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
-convertType :: ConversionMonad r m => HsType GhcRn -> m Term
+convertType :: LocalConvMonad r m => HsType GhcRn -> m Term
 convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
   tyBody      <- convertLType ty
@@ -144,12 +144,12 @@ convertType (HsSumTy _) =
 
 --------------------------------------------------------------------------------
 
-convertLType :: ConversionMonad r m => LHsType GhcRn -> m Term
+convertLType :: LocalConvMonad r m => LHsType GhcRn -> m Term
 convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigTypeWithExcls :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> [Qualid] -> m Term
+convertLHsSigTypeWithExcls :: LocalConvMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> [Qualid] -> m Term
 convertLHsSigTypeWithExcls utvm (HsIB hs_itvs hs_lty _) excls = do
   coq_itvs <- traverse (var TypeNS) hs_itvs
   coq_ty   <- convertLType hs_lty
@@ -162,10 +162,10 @@ convertLHsSigTypeWithExcls utvm (HsIB hs_itvs hs_lty _) excls = do
 
   pure $ maybeForall coq_binders coq_ty
 
-convertLHsSigType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
+convertLHsSigType :: LocalConvMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
 convertLHsSigType utvm sigTy = convertLHsSigTypeWithExcls utvm sigTy []
 
-convertLHsSigWcType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigWcType GhcRn -> m Term
+convertLHsSigWcType :: LocalConvMonad r m => UnusedTyVarMode -> LHsSigWcType GhcRn -> m Term
 convertLHsSigWcType utvm (HsWC wcs hsib)
   | null wcs  = convertLHsSigType utvm hsib
   | otherwise = convUnsupported' "type wildcards"

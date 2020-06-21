@@ -31,7 +31,8 @@ instance HasBV Qualid SynBody where
   bvOf (SynBody name args oty def) =
     binder name <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)
 
-convertSynDecl :: ConversionMonad r m
+-- might make sense to use ConversionMonad instead
+convertSynDecl :: LocalConvMonad r m
                => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> LHsType GhcRn
                -> m SynBody
 convertSynDecl name args def  = do

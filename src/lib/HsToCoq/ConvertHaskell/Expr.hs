@@ -879,6 +879,8 @@ convertTypedBinding convHsTy FunBind{..}   = do
               let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
                   peelForall ty                = ([], ty)
               in maybe ([], Nothing) (second Just . peelForall) convHsTy
+              -- in maybe ([], Nothing) (second Just . peelForall) (Just $ Qualid $ Bare "test")
+
 
         let tryCollapseLet defn = do
               view (edits.collapsedLets.contains name) >>= \case

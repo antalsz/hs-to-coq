@@ -71,8 +71,8 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = f
 
   -- Only the explicit tyvars are available before renaming, so they're all we
   -- need to consider
-  params <- maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
-  args   <- traverse convertLType $ hsConDeclArgTys details
+  params <- withCurrentDefinition con $ maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
+  args   <- withCurrentDefinition con (traverse convertLType $ hsConDeclArgTys details)
 
   case details of
     RecCon (L _ fields) ->
@@ -96,8 +96,9 @@ convertConDecl curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
     conName         <- conNameOrSkip hsName
     utvm            <- unusedTyVarModeFor conName
     (_, curTypArgs) <- collectArgs curType
-    conTy           <- maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
-                       (mapMaybe termHead curTypArgs)
+    conTy           <- withCurrentDefinition conName 
+                       (maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
+                         (mapMaybe termHead curTypArgs))
     storeConstructorFields conName $ NonRecordFields 0   -- This is a hack
     pure (conName, [], Just conTy)
 
@@ -146,7 +147,7 @@ rewriteDataTypeArguments dta bs = do
 
 --------------------------------------------------------------------------------
 
-convertDataDefn :: ConversionMonad r m
+convertDataDefn :: LocalConvMonad r m
                 => Term -> [Binder] -> HsDataDefn GhcRn
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
@@ -178,7 +179,7 @@ convertDataDecl name tvs defn = do
 
   let curType  = appList (Qualid coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)
-                     <$> convertDataDefn curType conIndices defn
+                     <$> withCurrentDefinition coqName (convertDataDefn curType conIndices defn)
 
   conNames <- filterM (view . (edits.skippedConstructors.:notContains)) [con | (con,_,_) <- cons]
   storeConstructors coqName conNames

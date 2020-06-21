@@ -80,9 +80,9 @@ collectSigsWithErrors =
         multiplesError _ (Right sig) =
           pure sig
 
-convertSignature :: ConversionMonad r m => UnusedTyVarMode -> HsSignature -> m Signature
-convertSignature utvm (HsSignature sigTy _hsFix) = do
-  Signature <$> convertLHsSigType utvm sigTy <*> pure Nothing
+convertSignature :: ConversionMonad r m => Qualid -> UnusedTyVarMode -> HsSignature -> m Signature
+convertSignature coqName utvm (HsSignature sigTy _hsFix) = do
+  withCurrentDefinition coqName (Signature <$> convertLHsSigType utvm sigTy <*> pure Nothing)
 
 -- Incorporates @set type …@ edits ('replacedTypes') for all bindings that
 -- /already had/ a type signature; use 'lookupSig' to get the rest.
@@ -95,7 +95,7 @@ convertSignatures = fmap (M.fromList . catMaybes) . traverse conv . M.toList whe
       Just Nothing   -> pure Nothing
       Nothing -> do
         utvm <- unusedTyVarModeFor coqName
-        Just . (coqName,) <$> convertSignature utvm hsSig
+        Just . (coqName,) <$> convertSignature coqName utvm hsSig
 
 -- Incorporates @set type …@ edits ('replacedTypes') for all bindings that
 -- /already had/ a type signature; use 'lookupSig' to get the rest.

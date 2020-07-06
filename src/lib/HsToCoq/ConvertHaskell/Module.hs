@@ -242,9 +242,6 @@ convertModules sources = do
   -- Collect modules with the same post-`rename module` name
   mergedModulesNELs <-  traverse (foldrM buildGroups (emptyRnGroup, emptyRnGroup, mempty, mempty))
                     =<< M.fromListWith (<>)
-                    {- <$> traverse 
-                      (\(name, group, exports) -> 
-                      (renameModule name, (name, group, exports))) sources -}
                     <$> traverse (((\(name,_,_) -> renameModule name) <&&&> pure . pure @NonEmpty)) sources
 
   cmods <- for (M.toList mergedModulesNELs) $ \(name, (axGrp, convGrp, mode, combinedExports)) -> 

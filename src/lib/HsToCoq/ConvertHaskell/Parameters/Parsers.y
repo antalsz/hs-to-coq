@@ -93,6 +93,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   pattern         { TokWord    "pattern"        }
   original        { TokWord    "original"       }
   name            { TokWord    "name"           }
+  promote         { TokWord    "promote"        }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   -- Tokens: Coq terms
@@ -316,6 +317,8 @@ Edit :: { Edit }
   | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                      $3 $4                                 }
   | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
   | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
+  | promote Qualid                                        { PromoteEdit                      $2                                    }
+
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

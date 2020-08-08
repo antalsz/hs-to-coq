@@ -9,7 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, promotions,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -161,6 +161,7 @@ data Edit = TypeSynonymTypeEdit              Ident Ident
           | SetTypeEdit                      Qualid (Maybe Term)
           | CollapseLetEdit                  Qualid
           | InEdit                           Qualid Edit
+          | PromoteEdit                      Qualid
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -210,6 +211,7 @@ data Edits = Edits { _typeSynonymTypes               :: !(Map Ident Ident)
                    , _replacedTypes                  :: !(Map Qualid (Maybe Term)) -- Instead of setTypes
                    , _collapsedLets                  :: !(Set Qualid)
                    , _inEdits                        :: !(Map Qualid Edits)
+                   , _promotions                     :: !(Set Qualid)
                    }
            deriving (Eq, Ord, Show, Generic)
 instance Semigroup Edits where (<>)   = (%<>)
@@ -282,6 +284,7 @@ descDuplEdit = \case
   SetTypeEdit                      qid _        -> duplicateQ_for  "set types"                                      qid
   CollapseLetEdit                  qid          -> duplicateQ_for  "collapsed lets"                                 qid
   InEdit                           _ _          -> error "In Edits are never duplicates"
+  PromoteEdit                      _            -> error "Promote edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -325,6 +328,7 @@ addEdit e = case e of
   OrderEdit                        idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                      rewrite          -> return . (rewrites %~ (rewrite:))
   InEdit                           qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
+  PromoteEdit                      qid              -> addFresh e promotions                             qid                         ()
 
 
 defName :: CoqDefinition -> Qualid

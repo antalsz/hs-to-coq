@@ -18,6 +18,7 @@ import HsToCoq.Util.Monad
 import Data.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty (..), fromList)
+import Data.List ((\\))
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 
@@ -81,11 +82,13 @@ convertHsGroup HsGroup{..} = do
                           | otherwise           = gcatch
   handler             <- whenPermissive axiomatizeBinding
 
-  convertedTyClDecls <- convertModuleTyClDecls
+  promotions          <- view (edits.promotions)
+
+  convertedTyClDeclsTmp <- convertModuleTyClDecls
                      .  map unLoc
                      $  concatMap group_tyclds hs_tyclds
                          -- Ignore roles
-  convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
+  (convertedValDecls, promotedDecls)  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
       ValBindsIn{} ->
         convUnsupported' "pre-renaming `ValBindsIn' construct post renaming"
@@ -129,18 +132,21 @@ convertHsGroup HsGroup{..} = do
                       CoqAxiomDef            _   -> pure ()
                       CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
-        let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
+        let promotedSentences = [ (name, sentences) | (Just name, sentences) <- defns, name `S.member` promotions ]
+        let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ] \\ promotedSentences
 
         let defnsMap = M.fromList namedSentences
         let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
         -- TODO: We use 'topoSortByVariablesBy' later in 'moduleDeclarations' --
         -- is this 'topoSortEnvironment' really necessary?
 
-        pure $ unnamedSentences ++ ordered
+        pure $ (unnamedSentences ++ ordered, concat [sents | (_, sents) <- promotedSentences])
 
   convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
 
   (convertedAddedTyCls,convertedAddedDecls) <- view (edits.additions.at mod.non ([],[]))
+
+  let convertedTyClDecls = convertedTyClDeclsTmp ++ promotedDecls
 
   pure ConvertedModuleDeclarations{..}
   where

@@ -48,7 +48,7 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 -- Take the instance head and make it into a valid identifier.
 convertInstanceName :: ConversionMonad r m => LHsType GhcRn -> m Qualid
 convertInstanceName n = do
-    coqType <- convertLType n
+    coqType <- withCurrentDefinition (Bare "") $ convertLType n -- revisit if needed
     qual <- Qualified . moduleNameText <$> view currentModule
     case skip coqType of
         Left err -> throwProgramError $ "Cannot derive instance name from `" ++ showP coqType ++ "': " ++ err
@@ -127,11 +127,12 @@ data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
                                  }
                   deriving (Eq, Ord, Show, Read)
 
+-- TODO use LocalConvMonad instead?
 convertClsInstDeclInfo :: ConversionMonad r m => ClsInstDecl GhcRn -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   utvm          <- unusedTyVarModeFor instanceName
-  instanceHead  <- convertLHsSigType utvm cid_poly_ty
+  instanceHead  <- withCurrentDefinition instanceName $ convertLHsSigType utvm cid_poly_ty
   instanceClass <- termHead instanceHead
                      & maybe (convUnsupportedIn "strangely-formed instance heads"
                                                 "type class instance"
@@ -286,7 +287,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                   CoqAssertionDef        apf -> editFailure $ "cannot redefine an instance method definition into " ++ anAssertionVariety apf
 
           (Nothing, Just assoc, _) ->
-            CM_Defined CL_Type <$> local (envFor meth) (convertType assoc)
+            let convertedType = withCurrentDefinition meth $ convertType assoc in
+
+            CM_Defined CL_Type <$> local (envFor meth) convertedType
             -- TODO: Permit rewriting or renaming or similar here
 
           (Nothing, Nothing, Just term) ->

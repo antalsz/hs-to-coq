@@ -87,7 +87,7 @@ convertAssociatedType classArgs FamilyDecl{..} = do
   unless (null fdInjectivityAnn) $ badAssociation "injective associated type families" "associated type"
   
   name   <- var TypeNS $ unLoc fdLName
-  args   <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit fdTyVars
+  args   <- withCurrentDefinition name (convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit fdTyVars)
   -- Could losen this in future?
   unless (classArgs == foldMap (toListOf binderIdents) args) $
     badAssociation "associated type families with argument lists that differ from the class's" "associated type"
@@ -95,21 +95,23 @@ convertAssociatedType classArgs FamilyDecl{..} = do
   
   result <- case unLoc fdResultSig of
     NoSig                            -> pure $ Sort Type
-    KindSig   k                      -> convertLType k
+    KindSig   k                      -> withCurrentDefinition name $ convertLType k
     TyVarSig (L _ (UserTyVar _))     -> pure $ Sort Type -- Maybe not a thing inside type classes?
-    TyVarSig (L _ (KindedTyVar _ k)) -> convertLType k   -- Maybe not a thing inside type classes?
+    TyVarSig (L _ (KindedTyVar _ k)) -> withCurrentDefinition name $ convertLType k   -- Maybe not a thing inside type classes?
   
   pure (name, result)
 
 convertAssociatedTypeDefault :: ConversionMonad r m => [Qualid] -> TyFamDefltEqn GhcRn -> m (Qualid, Term)
 convertAssociatedTypeDefault classArgs FamEqn{..} = do
-  args <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats
+  n <- var TypeNS (unLoc feqn_tycon)
+  args <- withCurrentDefinition n (convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats)
   unless (classArgs == foldMap (toListOf binderIdents) args) $
     convUnsupportedIn_lname "associated type family defaults with argument lists that differ from the class's"
                             "associated type equation"
                             feqn_tycon
-  (,) <$> var TypeNS (unLoc feqn_tycon)
-      <*> convertLType feqn_rhs
+  ty <- withCurrentDefinition n $ convertLType feqn_rhs
+  pure (n, ty)
+
   -- Skipping feqn_fixity
     
 convertClassDecl :: ConversionMonad r m
@@ -128,12 +130,14 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   let convUnsupportedHere what = convUnsupportedIn what "type class" (showP name)
   unless (null fds) $ convUnsupportedHere "functional dependencies"
 
-  ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
+  let aux x = withCurrentDefinition name $ convertLType x
+  ctx  <- traverse (fmap (Generalized Coq.Implicit) . aux) hsCtx
+
   storeSuperclassCount name . sum <=< for ctx $ \case
     Generalized _ (termHead -> Just super) -> maybe 1 (+ 1) <$> lookupSuperclassCount super
     _                                      -> pure 1
 
-  args <- convertLHsTyVarBndrs Coq.Explicit ltvs
+  args <- withCurrentDefinition name $ convertLHsTyVarBndrs Coq.Explicit ltvs
   kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.classKinds.at name)
   let args' = zipWith go args kinds
        where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
@@ -164,7 +168,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs
-  
+
   type_defs  <- M.fromList <$> traverse (convertAssociatedTypeDefault argNames . unLoc) typeDefaults
   value_defs <- fmap M.fromList $ for (bagToList defaults) $
                 convertTypedModuleBinding Nothing . unLoc >=> \case

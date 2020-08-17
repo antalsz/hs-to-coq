@@ -1,0 +1,3 @@
+except in ExceptInDataDefinition.Test1 rename type ExceptInDataDefinition.Test1 = ExceptInDataDefinition.Test2
+except in ExceptInDataDefinition.Test1 rename value ExceptInDataDefinition.A = ExceptInDataDefinition.X
+except in ExceptInDataDefinition.Test1 rename value ExceptInDataDefinition.B = ExceptInDataDefinition.Y

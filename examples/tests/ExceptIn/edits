@@ -1,20 +1,16 @@
+skip module GHC.Err
+skip ExceptIn.Default__S
+skip ExceptIn.Default__I
+
 # This edit works.
 except in ExceptIn.bar, ExceptIn.baz rename value ExceptIn.A = ExceptIn.X
+except in ExceptIn.bar, ExceptIn.baz rename value ExceptIn.B = ExceptIn.Y
 
+except in ExceptIn.bar, ExceptIn.baz rename type ExceptIn.Test1 = ExceptIn.Test2
 
 # The following edit has a couple of issues; see below for more information.
-except in ExceptIn.Test1, ExceptIn.bar, ExceptIn.baz rename type ExceptIn.Test1 = ExceptIn.Test2
+# except in ExceptIn.Test1 rename type ExceptIn.Test1 = ExceptIn.Test2
 
-# 1.
-# In the type signature of ExceptIn.bar and ExceptIn.baz, Test1 is renamed to
-# Test2, even though we excluded ExceptIn.bar and ExceptIn.baz when we specified
-# the rename edit.
-
-# This is not an issue specific to "except in" edits, but rather with the fact that
-# local edits are not taken into account when translating signatures. This has been
-# documented; see issue #156 on github (https://github.com/antalsz/hs-to-coq/issues/156).
-
-# 2.
 # In the declaration of Test1 (Inductive Test1 : Type), "Test1" is renamed to
 # "Test2", even though we excluded ExceptIn.Test1 when we specified the rename
 # edit. Since there is already a data type called Test2, the new definition of

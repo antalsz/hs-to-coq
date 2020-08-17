@@ -119,7 +119,7 @@ Format:
   | **skip** **class** *qualified_class*
 
 Effect:
-  
+
   Omit the given type class and all its instances.
 
   These skipped classes are not stored in the generated metadata, so you need to
@@ -178,7 +178,7 @@ Effect:
   .. code-block:: shell
 
      skip equation ModuleName.redundant _ (Some b)
-  
+
   And the last case will be deleted on the Coq side:
 
   .. code-block:: coq
@@ -197,19 +197,19 @@ Effect:
   Why would you want this?  This edit is most useful in tandem with ``skip
   constructor`` (which see).  Suppose we have a function where the final catch-all
   case can only match skipped constructors, such as
-  
+
   .. code-block:: haskell
 
      data T = TranslateMe
             | SkipMe
-     
+
      function :: T -> Bool
      function TranslateMe = True
      function _           = False
 
   Then, on skipping ``SkipMe``, this function's ``_`` case will be redundant,
   and Coq would reject it.  We can fix this with
-  
+
    .. code-block:: shell
 
       skip equation ModuleName.function _
@@ -240,7 +240,7 @@ Effect:
   pattern itself.
 
   For example, consider the following (silly) function definition:
-  
+
   .. code-block:: haskell
 
      redundant :: Bool -> Bool
@@ -255,7 +255,7 @@ Effect:
   .. code-block:: shell
 
      in ModuleName.redundant skip case pattern _
-  
+
   And the last case will be deleted on the Coq side (reformatted):
 
   .. code-block:: coq
@@ -364,7 +364,7 @@ Effect:
   from the edits have been applied, ``axiomatize original module name`` checks
   the *original*, pre-``rename module``, form of the module name.  Most of the
   time, this would be confusing, and ``axiomatize module`` would be preferable.
-  
+
   However, if you have used ``rename module`` to merge two (or more) modules
   into one, but you only want one of them (or some other strict subset) to be
   axiomatized, then ``axiomatize original module name`` is the only way to get
@@ -502,10 +502,10 @@ Effect:
   Inject a ``Import`` statement into the Coq code, which makes the definitions
   from the given module available unqualified.
 
-  When used to import the hs-to-coq base library, this makes the output look 
-  more like standard Haskell.  
+  When used to import the hs-to-coq base library, this makes the output look
+  more like standard Haskell.
 
-  Note, however, that Coq's module system lacks the ``import ... hiding`` 
+  Note, however, that Coq's module system lacks the ``import ... hiding``
   construct so all definitions from the module must be made available.
 
 Examples:
@@ -662,13 +662,13 @@ Effect:
   If a converted definition is of the form
 
   .. code-block:: coq
-  
+
      Definition outer := let inner := definition in inner.
 
   then convert it to simply
 
   .. code-block:: coq
-  
+
      Definition outer := definition.
 
   Both ``outer`` and ``inner`` can have arguments; ``inner`` can have a type
@@ -756,49 +756,49 @@ Effect:
   An explanation: sometimes, poly-kinded Haskell data types have extra invisible
   type parameters.  For instance, in ``Data.Functor.Const``, we have the
   type
-  
+
   .. code-block:: haskell
-  
+
      newtype Const a b = Const { getConst :: a }
-  
+
   which is secretly
-  
+
   .. code-block:: haskell
-  
+
      newtype Const {k} (a :: Type) (b :: k) = Const { getConst :: a }
-  
+
   Often, such as here, this doesn't show up in the translated Coq code; we get
 
   .. code-block:: coq
-  
+
      Inductive Const a b : Type := Mk_Const (getConst : a) : Const a b.
 
   (And, as in Haskell 2010, ``b`` is inferred to have kind ``Type``.)  Sometimes
   it does, in which case we can fix it using ``data kinds``.  But either way, we
   still introduce spurious kind variables in the translation sometimes.  For
   example, the derived ``Eq`` instance for ``Const`` is translated to
-  
+
   .. code-block:: coq
-  
+
      Program Instance Eq___Const {a} {k} {b} `{GHC.Base.Eq_ a}
         : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
        fun _ k =>
          k {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
               GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
-  
+
   The implicit argument ``{k}`` isn't useful in the Coq code, and causes a
   type-checking failure when its type cannot be determined.  We can avoid this
   with
 
   .. code-block:: shell
-  
+
      delete unused type variables Data.Functor.Const.Eq___Const
 
   which will drop the ``{k}`` and leave the definition with just the ``{a}`` and
   ``{b}`` it needs:
 
   .. code-block:: coq
-  
+
      Program Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a}
         : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
        fun _ k =>
@@ -806,7 +806,7 @@ Effect:
               GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
 
 Examples:
-  
+
   .. code-block:: shell
 
      delete unused type variables Data.Functor.Const.Eq___Const
@@ -921,7 +921,7 @@ Effect:
 
   By default, ``hs-to-coq`` translates recursive definitions using Coq’s
   ``fix`` operator, which requires that the recursion is obviously structurally
-  recursive. This is not always the right choice, and a ``termination`` edit tells 
+  recursive. This is not always the right choice, and a ``termination`` edit tells
   ``hs-to-coq`` to construct the recursive definition differently, where *termination_argument* is one of the following:
 
   * .. index::
@@ -1067,7 +1067,7 @@ Effect:
 
      data Forest a = Empty
                    | WithTree (Tree a) (Forest a)
-     
+
      data Tree a = Branch Bool a (Forest a)
 
      isOK :: Tree a -> Bool
@@ -1082,11 +1082,11 @@ Effect:
        |  WithTree : Tree a -> Forest a -> Forest a
      with Tree a : Type
        := Branch : bool -> a -> Forest a -> Tree a.
-      
+
      Arguments Empty    {_}.
      Arguments WithTree {_} _ _.
      Arguments Branch   {_} _ _ _.
-     
+
      Definition isOK {a} : Tree a -> bool :=
        fun '(Branch ok _ _) => ok.
 
@@ -1151,7 +1151,7 @@ Effect:
        if isOK t
        then mapOKTree f t
        else t.
-      
+
      Definition mapOKTree {a} (f : a -> a) (t : Tree a) : Tree a :=
        match t with
        | Branch ok x ts => Branch ok (f x) (mapForest f ts)
@@ -1178,13 +1178,13 @@ Effect:
          | f, WithTree t ts => WithTree (mapTree f t) (mapForest f ts)
          end
        for mapForest.
-      
+
      Definition mapOKTree {a} : (a -> a) -> Tree a -> Tree a :=
        fun arg_0__ arg_1__ =>
          match arg_0__, arg_1__ with
          | f, Branch ok x ts => Branch ok (f x) (mapForest f ts)
          end.
-      
+
      Definition mapTree {a} : (a -> a) -> Tree a -> Tree a :=
        fix mapTree f t :=
          let mapOKTree arg_0__ arg_1__ :=
@@ -1240,15 +1240,16 @@ Format:
 
 Effect:
 
-  This is essentially the opposite of an ``in`` edit. The given edit is applied as normal,
-  except during the translation of the given definition(s). This is most useful to rename
-  or rewrite a definition everywhere except within one or more functions. In addition, it 
-  can be used when there is a local function with the same name in multiple definitions,
-  in order to give termination arguments to all occurrences of that local function except
-  those in the specified definitions.
+  This is essentially the opposite of an ``in`` edit. The given edit is applied
+  as normal, except during the translation of the given definition(s). This is
+  most useful to rename or rewrite a definition everywhere except within one or
+  more functions. In addition, it can be used when there is a local function
+  with the same name in multiple definitions, in order to give termination
+  arguments to all occurrences of that local function except those in the
+  specified definitions.
 
-  As with ``in`` edits, while all edits are allowed, for many edits it doesn't make sense to
-  apply ``except in``.
+  As with ``in`` edits, while all edits are allowed, for many edits it doesn't
+  make sense to apply ``except in``.
 
 
 Examples:
@@ -1261,6 +1262,9 @@ Examples:
      # Multiple qualified names are separated with commas
      except in ModuleName.def_1, ModuleName.def_2 rename type GHC.Types.[] = list
 
+Caveats:
+
+  This edit does not currently work with data type definitions.
 
 Deprecated edits
 ----------------

@@ -38,7 +38,6 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
-import qualified GHC (Name)
 import HsToCoq.Util.GHC.Module
 import Bag
 

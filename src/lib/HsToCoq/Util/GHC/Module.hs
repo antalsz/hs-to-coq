@@ -12,10 +12,15 @@ import qualified GHC
 
 import Control.Lens
 
+-- Note: the names in the list of module exports are from before any renaming
+-- has occurred.
 data ModuleData = ModuleData { _modName     :: ModuleName
                              , _modExports  :: [GHC.Name]
                              } deriving (Eq)
 makeLenses ''ModuleData
+
+instance Ord ModuleData where
+  (<=) d1 d2 = _modName d1 <= _modName d2
 
 
 instance Show ModuleName where

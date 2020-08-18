@@ -237,12 +237,12 @@ instance Monoid Convert_Module_Mode where
 
   
 
-convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn, [GHC.Name])] -> m [NonEmpty ConvertedModule]
+convertModules :: GlobalMonad r m => [(ModuleData, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
   -- Collect modules with the same post-`rename module` name
   mergedModulesNELs <-  traverse (foldrM buildGroups (emptyRnGroup, emptyRnGroup, mempty, mempty))
                     =<< M.fromListWith (<>)
-                    <$> traverse (((\(name,_,_) -> renameModule name) <&&&> pure . pure @NonEmpty)) sources
+                    <$> traverse (renameModule . _modName . fst <&&&> pure . pure @NonEmpty) sources
 
   cmods <- for (M.toList mergedModulesNELs) $ \(name, (axGrp, convGrp, mode, combinedExports)) -> 
             let modData = ModuleData {_modName = name, _modExports = combinedExports} in 
@@ -255,16 +255,16 @@ convertModules sources = do
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- cmods]
 
   where
-    buildGroups (oldName, modGrp, exports) (axGrp, convGrp, mode, combinedExports) =
-      view (edits.axiomatizedOriginalModuleNames.contains oldName) <&> \case
+    buildGroups (modData, modGrp) (axGrp, convGrp, mode, combinedExports) =
+      view (edits.axiomatizedOriginalModuleNames.contains (modData^.modName)) <&> \case
         True  -> ( modGrp{hs_tyclds = []}                     `appendGroups` axGrp
                  , emptyRnGroup{hs_tyclds = hs_tyclds modGrp} `appendGroups` convGrp
                  , Mode_Axiomatize <> mode
-                 , exports <> combinedExports )
+                 , (modData^.modExports) <> combinedExports )
         False -> ( axGrp
                  , modGrp `appendGroups` convGrp
                  , Mode_Convert <> mode
-                 , exports <> combinedExports )
+                 , (modData^.modExports) <> combinedExports )
 
     combineModules (ConvertedModule name  imports1 tyClDecls1 valDecls1 clsInstDecls1 addedTyCls1 addedDecls1, imps1)
                    (ConvertedModule _name imports2 tyClDecls2 valDecls2 clsInstDecls2 _addedTyCls2 _addedDecls2, imps2) =

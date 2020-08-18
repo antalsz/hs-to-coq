@@ -247,7 +247,7 @@ convUnsupportedIn' what category which =
 
 convUnsupportedIns :: ConversionMonad r m => String -> [(String, String)] -> m a
 convUnsupportedIns what locs = do
-  mod <- ("module",) . moduleNameString <$> view (currentModule.modName) -- can't use ^.
+  mod <- views (currentModule.modName) $ ("module",) . moduleNameString
   convUnsupportedIns' what $ locs ++ [mod]
 
 convUnsupportedIn :: ConversionMonad r m => String -> String -> String -> m a

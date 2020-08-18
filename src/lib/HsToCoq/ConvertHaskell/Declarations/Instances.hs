@@ -49,7 +49,7 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 convertInstanceName :: ConversionMonad r m => LHsType GhcRn -> m Qualid
 convertInstanceName n = do
     coqType <- withCurrentDefinition (Bare "") $ convertLType n -- revisit if needed
-    qual <- Qualified . moduleNameText <$> view currentModule
+    qual <- Qualified . moduleNameText <$> view (currentModule.modName)
     case skip coqType of
         Left err -> throwProgramError $ "Cannot derive instance name from `" ++ showP coqType ++ "': " ++ err
         Right name -> return $ qual name

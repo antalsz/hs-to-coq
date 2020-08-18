@@ -132,15 +132,28 @@ convertHsGroup HsGroup{..} = do
                       CoqAxiomDef            _   -> pure ()
                       CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
-        let promotedSentences = [ (name, sentences) | (Just name, sentences) <- defns, name `S.member` promotions ]
-        let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ] \\ promotedSentences
-
+        let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
         let defnsMap = M.fromList namedSentences
-        let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
+
+        -- defnsMap    :: Map Qualid [Sentence]
+        -- sentenceBVs :: Map Qualid (Set Qualid)
+        let sentenceBVs = (S.unions . (fmap (getFreeVars' . bvOf @Qualid))) <$> defnsMap
+
+        -- transitiveClosure :: Ord a => Reflexivity -> Map a (Set a) -> Map a (Set a)
+        let tc = transitiveClosure Reflexive sentenceBVs                -- :: Map Qualid (Set Qualid)
+        let depsList = map (\k -> M.lookup k tc) (S.toList promotions)  -- :: [Maybe (Set Qualid)]
+        let depsSet = S.unions $ map (fromMaybe S.empty) depsList       -- :: Set Qualid
+                
+        let promotedSentences = [ (name, sentences) | (Just name, sentences) <- defns, name `S.member` depsSet ]
+        let namedSentences'   = namedSentences \\ promotedSentences
+        -- let defnsMap' = M.fromList namedSentences'
+        -- let ordered = foldMap (foldMap (defnsMap' M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap'
         -- TODO: We use 'topoSortByVariablesBy' later in 'moduleDeclarations' --
         -- is this 'topoSortEnvironment' really necessary?
+        -- It seems this is not necessary, and it has been changed.
 
-        pure $ (unnamedSentences ++ ordered, concat [sents | (_, sents) <- promotedSentences])
+        pure $ (unnamedSentences ++ (concat $ snd <$> namedSentences'),
+                concat [sents | (_, sents) <- promotedSentences])
 
   convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
 

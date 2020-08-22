@@ -146,14 +146,18 @@ convertHsGroup HsGroup{..} = do
                 
         let promotedSentences = [ (name, sentences) | (Just name, sentences) <- defns, name `S.member` depsSet ]
         let namedSentences'   = namedSentences \\ promotedSentences
-        -- let defnsMap' = M.fromList namedSentences'
-        -- let ordered = foldMap (foldMap (defnsMap' M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap'
+
+        let promotedDefnsMap = M.fromList promotedSentences
+        let orderedPromoted = foldMap (foldMap (promotedDefnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> promotedDefnsMap
+
+        let defnsMap' = M.fromList namedSentences'
+        let ordered = foldMap (foldMap (defnsMap' M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap'
         -- TODO: We use 'topoSortByVariablesBy' later in 'moduleDeclarations' --
         -- is this 'topoSortEnvironment' really necessary?
-        -- It seems this is not necessary, and it has been changed.
+        -- It seems this is necessary, see https://github.com/antalsz/hs-to-coq/pull/163#issuecomment-678484285
+        -- for what can go wrong
 
-        pure $ (unnamedSentences ++ (concat $ snd <$> namedSentences'),
-                concat [sents | (_, sents) <- promotedSentences])
+        pure $ (unnamedSentences ++ ordered, orderedPromoted)
 
   convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
 

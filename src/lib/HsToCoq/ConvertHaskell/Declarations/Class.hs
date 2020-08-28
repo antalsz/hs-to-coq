@@ -1,4 +1,6 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, ViewPatterns, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables, MultiParamTypeClasses #-}
+{-# LANGUAGE CPP, RecordWildCards, LambdaCase, ViewPatterns, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables, MultiParamTypeClasses #-}
+
+#include "ghc-compat.h"
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences, directClassSentences, cpsClassSentences, convertAssociatedType, convertAssociatedTypeDefault) where
 
@@ -30,6 +32,9 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite
 import HsToCoq.Coq.Pretty
 import HsToCoq.Util.FVs
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 
 import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
@@ -70,7 +75,7 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
 getImplicits _ = []
 
 -- Module-local
-convUnsupportedIn_lname :: (ConversionMonad r m, Outputable nm) => String -> String -> GenLocated l nm -> m a
+convUnsupportedIn_lname :: (ConversionMonad r m, Outputable nm) => String -> String -> Located nm -> m a
 convUnsupportedIn_lname what whatFam lname = do
   name <- T.unpack <$> ghcPpr (unLoc lname)
   convUnsupportedIn what whatFam name
@@ -82,7 +87,7 @@ convertAssociatedType classArgs FamilyDecl{..} = do
   case fdInfo of
     OpenTypeFamily     -> pure ()
     DataFamily         -> badAssociation "associated data types"           "data family"
-    ClosedTypeFamily _ -> badAssociation "associated closed type families" "closed type family "
+    ClosedTypeFamily _ -> badAssociation "associated closed type families" "closed type family"
   -- Skipping 'fdFixity'
   unless (null fdInjectivityAnn) $ badAssociation "injective associated type families" "associated type"
   
@@ -92,28 +97,58 @@ convertAssociatedType classArgs FamilyDecl{..} = do
   unless (classArgs == foldMap (toListOf binderIdents) args) $
     badAssociation "associated type families with argument lists that differ from the class's" "associated type"
   storeExplicitMethodArguments name args
-  
+
   result <- case unLoc fdResultSig of
-    NoSig                            -> pure $ Sort Type
-    KindSig   k                      -> withCurrentDefinition name $ convertLType k
-    TyVarSig (L _ (UserTyVar _))     -> pure $ Sort Type -- Maybe not a thing inside type classes?
-    TyVarSig (L _ (KindedTyVar _ k)) -> withCurrentDefinition name $ convertLType k   -- Maybe not a thing inside type classes?
+    NoSig NOEXTP                     -> pure $ Sort Type
+    KindSig NOEXTP k                 -> withCurrentDefinition name $ convertLType k
+    TyVarSig NOEXTP (L _ (UserTyVar NOEXTP _))
+      -> pure $ Sort Type -- Maybe not a thing inside type classes?
+    TyVarSig NOEXTP (L _ (KindedTyVar NOEXTP _ k))
+      -> withCurrentDefinition name $ convertLType k   -- Maybe not a thing inside type classes?
+#if __GLASGOW_HASKELL__ >= 806
+    TyVarSig _ (L _ (XTyVarBndr v)) -> noExtCon v
+    XFamilyResultSig v -> noExtCon v
+#endif
   
   pure (name, result)
 
-convertAssociatedTypeDefault :: ConversionMonad r m => [Qualid] -> TyFamDefltEqn GhcRn -> m (Qualid, Term)
-convertAssociatedTypeDefault classArgs FamEqn{..} = do
+#if __GLASGOW_HASKELL__ >= 806
+convertAssociatedType _ (XFamilyDecl v) = noExtCon v
+#endif
+
+#if __GLASGOW_HASKELL__ < 810
+type TyFamDefltDecl pass = TyFamDefltEqn pass
+type LTyFamDefltDecl pass = LTyFamDefltEqn pass
+#endif
+
+convertAssociatedTypeDefault
+  :: ConversionMonad r m
+  => [Qualid]
+  -> TyFamDefltDecl GhcRn
+  -> m (Qualid, Term)
+convertAssociatedTypeDefault classArgs
+#if __GLASGOW_HASKELL__ >= 810
+    (TyFamInstDecl { tfid_eqn = HsIB { hsib_body = FamEqn{..} } })
+      | let params = fromMaybe [] feqn_bndrs = do
+#else
+    FamEqn{..} | let params = hsq_explicit feqn_pats = do
+#endif
   n <- var TypeNS (unLoc feqn_tycon)
-  args <- withCurrentDefinition n (convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats)
+  args <- withCurrentDefinition n (convertLHsTyVarBndrs Coq.Explicit params)
   unless (classArgs == foldMap (toListOf binderIdents) args) $
     convUnsupportedIn_lname "associated type family defaults with argument lists that differ from the class's"
                             "associated type equation"
                             feqn_tycon
   ty <- withCurrentDefinition n $ convertLType feqn_rhs
   pure (n, ty)
-
   -- Skipping feqn_fixity
-    
+
+#if __GLASGOW_HASKELL__ >= 810
+convertAssociatedTypeDefault _ (TyFamInstDecl (HsIB { hsib_body = XFamEqn v })) = noExtCon v
+#elif __GLASGOW_HASKELL__ >= 806
+convertAssociatedTypeDefault _ (XFamEqn v) = noExtCon v
+#endif
+
 convertClassDecl :: ConversionMonad r m
                  => LHsContext GhcRn                      -- ^@tcdCtxt@    Context
                  -> Located GHC.Name                      -- ^@tcdLName@   name of the class
@@ -122,7 +157,7 @@ convertClassDecl :: ConversionMonad r m
                  -> [LSig GhcRn]                          -- ^@tcdSigs@    method signatures
                  -> LHsBinds GhcRn                        -- ^@tcdMeths@   default methods
                  -> [LFamilyDecl GhcRn]                   -- ^@tcdATs@     associated types
-                 -> [LTyFamDefltEqn GhcRn]                -- ^@tcdATDefs@  associated types defaults
+                 -> [LTyFamDefltDecl GhcRn]               -- ^@tcdATDefs@  associated types defaults
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
   name <- var TypeNS hsName

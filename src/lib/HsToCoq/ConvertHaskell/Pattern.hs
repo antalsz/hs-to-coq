@@ -1,4 +1,6 @@
-{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts, ScopedTypeVariables #-}
+
+#include "ghc-compat.h"
 
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat, runPatternT,
@@ -32,6 +34,10 @@ import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsExpr
+import HsToCoq.Util.GHC.HsTypes (selectorFieldOcc_)
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 
@@ -47,35 +53,40 @@ convertPat :: (LocalConvMonad r m, MonadWriter [Term] m, MonadError Qualid m) =>
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
-convertPat (GHC.VarPat (L _ x)) =
+convertPat (GHC.VarPat NOEXTP (L _ x)) =
   QualidPat <$> var ExprNS x
 
-convertPat (LazyPat p) = do
+convertPat (LazyPat NOEXTP p) = do
   p' <- convertLPat p
   r <- refutability p'
   if isRefutable r then return p' -- convUnsupported "lazy refutable pattern"
                    else return p'
 
-convertPat (GHC.AsPat x p) =
+convertPat (GHC.AsPat NOEXTP x p) =
   Coq.AsPat <$> convertLPat p <*> var ExprNS (unLoc x)
 
-convertPat (ParPat p) =
+convertPat (ParPat NOEXTP p) =
   convertLPat p
 
-convertPat (BangPat p) =
+convertPat (BangPat NOEXTP p) =
   convertLPat p
 
-convertPat (ListPat pats PlaceHolder overloaded) =
-  if maybe True (isNoSyntaxExpr . snd) overloaded
+#if __GLASGOW_HASKELL__ >= 806
+convertPat (ListPat overloaded pats) =
+#else
+convertPat (ListPat pats PlaceHolder overloaded') | let overloaded = fmap snd overloaded' =
+#endif
+  if maybe True isNoSyntaxExpr overloaded
   then foldr (App2Pat (Bare "cons")) (Coq.VarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 
+#if __GLASGOW_HASKELL__ >= 806
+convertPat (TuplePat _ pats _boxity) =
+#else
 -- TODO: Mark converted unboxed tuples specially?
 convertPat (TuplePat pats _boxity _PlaceHolders) =
+#endif
   foldl1 (App2Pat (Bare "pair")) <$> traverse convertLPat pats
-
-convertPat (PArrPat _ _) =
-  convUnsupported "parallel array patterns"
 
 convertPat (ConPatIn (L _ hsCon) conVariety) = do
   con <- var ExprNS hsCon
@@ -96,8 +107,9 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
              let defaultPat field | isJust rec_dotdot = QualidPat field
                                   | otherwise         = UnderscorePat
 
-             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _ hsField)) hsPat pun)) -> do
-                           field <- var ExprNS hsField
+             patterns <- fmap M.fromList . for rec_flds $
+               \(L _ (HsRecField (L _ occ) hsPat pun)) -> do
+                           field <- var ExprNS (selectorFieldOcc_ occ)
                            pat   <- if pun
                                     then pure $ Coq.VarPat (qualidBase field)
                                     else convertLPat hsPat
@@ -123,10 +135,10 @@ convertPat (ConPatOut{}) =
 convertPat (ViewPat _ _ _) =
   convUnsupported "view patterns"
 
-convertPat (SplicePat _) =
+convertPat (SplicePat NOEXTP _) =
   convUnsupported "pattern splices"
 
-convertPat (LitPat lit) =
+convertPat (LitPat NOEXTP lit) =
   case lit of
     GHC.HsChar   _ c       -> pure $ InScopePat (StringPat $ T.singleton c) "char"
     HsCharPrim   _ _       -> convUnsupported "`Char#' literal patterns"
@@ -141,8 +153,14 @@ convertPat (LitPat lit) =
     HsRat        _ _ _     -> convUnsupported "`Rational' literal patterns"
     HsFloatPrim  _ _       -> convUnsupported "`Float#' literal patterns"
     HsDoublePrim _ _       -> convUnsupported "`Double#' literal patterns"
+#if __GLASGOW_HASKELL__ >= 806
+    XLit v -> noExtCon v
 
+convertPat (NPat _ (L _ (XOverLit v)) _negate _eq) = noExtCon v
+convertPat (NPat _ (L _ OverLit{..}) _negate _eq) = -- And strings
+#else
 convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
+#endif
   case ol_val of
     HsIntegral   intl     -> convertIntegerPat "integer literal patterns" (il_value intl)
     HsFractional _        -> convUnsupported "fractional literal patterns"
@@ -151,17 +169,27 @@ convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
 convertPat (NPlusKPat _ _ _ _ _ _) =
   convUnsupported "n+k-patterns"
 
+convertPat (CoPat NOEXTP _ _ _) =
+  convUnsupported "coercion patterns"
+
+convertPat SumPat{} =
+  convUnsupported "sum type patterns"
+
+#if __GLASGOW_HASKELL__ >= 806
+convertPat SigPat{} =
+  convUnsupported "`SigPat' constructor"
+convertPat XPat{} =
+  convUnsupported "`XPat' constructor"  -- Can't use noExtCon to dispatch this on GHC 8.8
+#else
+convertPat (PArrPat _ _) =
+  convUnsupported "parallel array patterns"
+
 convertPat (SigPatIn _ _) =
   convUnsupported "`SigPatIn' constructor"
 
 convertPat (SigPatOut _ _) =
   convUnsupported "`SigPatOut' constructor"
-
-convertPat (CoPat _ _ _) =
-  convUnsupported "coercion patterns"
-
-convertPat SumPat{} =
-  convUnsupported "sum type patterns"
+#endif
 
 --------------------------------------------------------------------------------
 

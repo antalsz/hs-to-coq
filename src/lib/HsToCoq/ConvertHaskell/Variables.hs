@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiWayIf, LambdaCase, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE CPP, MultiWayIf, LambdaCase, OverloadedStrings, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
@@ -26,6 +26,7 @@ import Outputable (OutputableBndr)
 import Name(occNameString, nameOccName, nameModule_maybe)
 -- import Name hiding (Name)
 
+import HsToCoq.Util.Monad (failIO)
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
 
@@ -94,7 +95,7 @@ rename :: ConversionMonad r m => HsNamespace -> Qualid -> m Qualid
 rename ns = go S.empty
   where
     go seen qid | qid `S.member` seen =
-        fail $ explainStrItems showP "no" "," "and" "Cyclic renaming" "Cyclic renamings" seen
+        failIO $ explainStrItems showP "no" "," "and" "Cyclic renaming" "Cyclic renamings" seen
     go seen qid = view (edits . renamed ns qid) >>= \case
         Nothing ->   return qid
             -- A self rename is also fine, it signals stopping.
@@ -116,7 +117,10 @@ var ns name = do
     renameModule qid1
 
 
-
 recordField :: (ConversionMonad r m) => AmbiguousFieldOcc GhcRn -> m Qualid
+#if __GLASGOW_HASKELL__ >= 806
+recordField (Unambiguous sel _) = var ExprNS sel
+#else
 recordField (Unambiguous _ sel) = var ExprNS sel
+#endif
 recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

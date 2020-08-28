@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedStrings,
@@ -26,7 +27,11 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import Bag
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 import HsToCoq.Util.GHC.Module
+import HsToCoq.Util.Monad (ErrorString)
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Subst
@@ -91,10 +96,10 @@ convertInstanceName n = do
         bitsToInt (False:xs) = 2*bitsToInt xs
 
     -- Breadth-first traversal listing all variables and type constructors
-    bfTerm :: Monad m => Term -> m [Qualid]
+    bfTerm :: Term -> Either ErrorString [Qualid]
     bfTerm = fmap concat . go
       where
-        go :: Monad m => Term -> m [[Qualid]]
+        go :: Term -> Either ErrorString [[Qualid]]
         go t = do
             (f, args) <- collectArgs t
             subtrees <- mapM go args
@@ -141,6 +146,9 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 
   pure InstanceInfo{..}
+#if __GLASGOW_HASKELL__ >= 806
+convertClsInstDeclInfo (XClsInstDecl v) = noExtCon v
+#endif
 
 --------------------------------------------------------------------------------
 
@@ -165,8 +173,8 @@ unlessSkippedClass InstanceInfo{..} act = do
   view (edits.skippedClasses.contains instanceClass) >>= \case
     True ->
       pure [CommentSentence . Comment $
-              "Skipping all instances of class `" <> textP instanceClass <> "', \
-              \including `" <> textP instanceName <> "'"]
+              "Skipping all instances of class `" <> textP instanceClass
+                <> "', including `" <> textP instanceName <> "'"]
     False ->
       act
 
@@ -350,6 +358,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           pure $ ProgramSentence (InstanceSentence instTerm) Nothing
 
       pure $ methodSentences ++ [instance_sentence]
+#if __GLASGOW_HASKELL__ >= 806
+convertClsInstDecl (XClsInstDecl v) = noExtCon v
+#endif
 
 --------------------------------------------------------------------------------
 

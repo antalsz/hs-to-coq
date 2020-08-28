@@ -59,7 +59,7 @@ rewrite1 (Rewrite patVars lhs rhs) term
 -- (Maybe we should drop InFix completely)
 norm :: Term -> Term
 norm (HsString s) = String s
-norm t | Just (f, args) <- collectArgs t = appList (Qualid f) (map PosArg args)
+norm t | Right (f, args) <- collectArgs t = appList (Qualid f) (map PosArg args)
 norm t = t
 
 match :: [Ident] -> Term -> Term -> Maybe (M.Map Qualid Term)

@@ -22,6 +22,10 @@ import HsToCoq.Coq.Gallina.Util hiding (Var)
 import HsToCoq.Coq.Pretty
 import HsToCoq.PrettyPrint
 
+#if __GLASGOW_HASKELL__ >= 806
+type PluginPass = CorePluginPass
+#endif
+
 -- | A more convenient Gallina application operator
 (<:) :: Term -> [Term] -> Term
 n <: xs = appList n (map PosArg xs)

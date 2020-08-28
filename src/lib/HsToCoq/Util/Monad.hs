@@ -12,11 +12,13 @@ module HsToCoq.Util.Monad (
   -- * Kleisli arrow combinators
   (<***>), (<&&&>), (<+++>), (<|||>),
   -- * Errors
-  exceptEither
+  failIO,
+  exceptEither, failEither, ErrorString
   ) where
 
 import Control.Arrow
 import Control.Monad.Except
+import Control.Monad.Fail (MonadFail)
 import Data.Bool
 
 andM :: Monad m => m Bool -> m Bool -> m Bool
@@ -67,3 +69,12 @@ infixr 2 <|||>
 
 exceptEither :: MonadError e m => Either e a -> m a
 exceptEither = either throwError pure
+
+type ErrorString = String
+
+failEither :: MonadFail m => Either ErrorString a -> m a
+failEither (Left e) = fail e
+failEither (Right a) = pure a
+
+failIO :: MonadIO m => ErrorString -> m a
+failIO = liftIO . fail

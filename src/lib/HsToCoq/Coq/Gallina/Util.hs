@@ -56,6 +56,7 @@ import qualified Data.Text as T
 
 import GHC.Stack
 
+import HsToCoq.Util.Monad (ErrorString)
 import HsToCoq.Coq.Gallina
 import HsToCoq.ConvertHaskell.InfixNames
 
@@ -243,7 +244,7 @@ binderArgs = map (PosArg . nameToTerm) . foldMap (toListOf binderNames)
 unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
 unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)
 
-collectArgs :: Monad m => Term -> m (Qualid, [Term])
+collectArgs :: Term -> Either ErrorString (Qualid, [Term])
 collectArgs (Qualid qid) = return (qid, [])
 collectArgs (App t args) = do
     (f, args1) <- collectArgs t
@@ -251,13 +252,13 @@ collectArgs (App t args) = do
     return $ (f, args1 ++ args2)
   where
     fromArg (PosArg t) = return t
-    fromArg _          = fail "non-positional argument"
+    fromArg _          = Left "non-positional argument"
 collectArgs (Arrow a1 a2) = return (arrow_qid, [a1, a2])
   where arrow_qid = Qualified "GHC.Prim" "arrow"
 collectArgs (Parens t)    = collectArgs t
 collectArgs (InScope t _) = collectArgs t
 collectArgs (HasType t _) = collectArgs t
-collectArgs t             = fail $ "collectArgs: " ++ show t
+collectArgs t             = Left $ "collectArgs: " ++ show t
 
 -- assuming that the term is in prenex normal form
 collectBinders :: Term -> [Binder]

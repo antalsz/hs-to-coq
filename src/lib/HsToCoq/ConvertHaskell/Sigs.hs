@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
+
+#include "ghc-compat.h"
 
 module HsToCoq.ConvertHaskell.Sigs (
   convertLSigs, convertSigs, lookupSig,
@@ -24,6 +27,9 @@ import GHC hiding (Name)
 import qualified GHC
 
 import HsToCoq.Util.GHC
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 import HsToCoq.Coq.Gallina
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -48,20 +54,24 @@ collectSigs sigs = do
 
   multimap :: M.Map GHC.Name ([LHsSigType GhcRn],[Fixity])
    <- fmap (M.fromListWith (<>)) . runListT $ list sigs >>= \case
-    (TypeSig lnames (HsWC wcs hsib))
+    TypeSig NOEXTP lnames (HsWC wcs hsib)
       | null wcs  -> asTypes lnames hsib
       | otherwise -> throwError "type wildcards found"
-    (ClassOpSig False lnames sigTy) -> asTypes lnames sigTy
-    (ClassOpSig True _ _) -> mempty -- Ignore default methods signatures
-    (FixSig _)            -> mempty
-    (InlineSig   _ _)     -> mempty
-    (SpecSig     _ _ _)   -> mempty
-    (SpecInstSig _ _)     -> mempty
-    (MinimalSig  _ _)     -> mempty
-    (SCCFunSig{})         -> mempty
-    (CompleteMatchSig{})  -> mempty
-    (PatSynSig  _ _)      -> throwError "pattern synonym signatures"
-    (IdSig      _)        -> throwError "generated-code signatures"
+#if __GLASGOW_HASKELL__ >= 806
+    TypeSig NOEXTP _ (XHsWildCardBndrs v) -> noExtCon v
+    XSig v -> noExtCon v
+#endif
+    ClassOpSig NOEXTP False lnames sigTy -> asTypes lnames sigTy
+    ClassOpSig NOEXTP True _ _ -> mempty -- Ignore default methods signatures
+    FixSig NOEXTP _            -> mempty
+    InlineSig NOEXTP _ _       -> mempty
+    SpecSig   NOEXTP _ _ _     -> mempty
+    SpecInstSig NOEXTP _ _     -> mempty
+    MinimalSig  NOEXTP _ _     -> mempty
+    SCCFunSig{}        -> mempty
+    CompleteMatchSig{} -> mempty
+    PatSynSig NOEXTP _ _ -> throwError "pattern synonym signatures"
+    IdSig     NOEXTP _   -> throwError "generated-code signatures"
 
   pure $ flip M.mapWithKey multimap $ \_key info@(_,_) -> case info of
          ([ty],  [fixity])  -> Right $ HsSignature ty (Just fixity)

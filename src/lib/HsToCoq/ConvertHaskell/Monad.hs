@@ -185,7 +185,7 @@ type LocalConvMonad r m =
         , HasCurrentDefinition r Qualid
         )
 
-runGlobalMonad :: (GhcMonad m, Monad m) =>
+runGlobalMonad :: GhcMonad m =>
     Edits ->
     Leniency ->
     TypeInfoConfig ->

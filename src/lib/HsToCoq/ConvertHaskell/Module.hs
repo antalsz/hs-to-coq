@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns, TupleSections, LambdaCase, RecordWildCards, TypeApplications, FlexibleContexts, DeriveDataTypeable, OverloadedLists, OverloadedStrings, ScopedTypeVariables, MultiWayIf, RankNTypes  #-}
+
+#include "ghc-compat.h"
 
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
@@ -38,10 +41,11 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 import HsToCoq.Util.GHC.Module
 import Bag
-
-import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -141,9 +145,15 @@ convertHsGroup HsGroup{..} = do
                          -- Ignore roles
   (convertedValDecls, promotedDecls)  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
+#if __GLASGOW_HASKELL__ >= 806
+      ValBinds{} ->
+        convUnsupported' "pre-renaming `ValBinds' construct post renaming"
+      XValBindsLR (NValBinds binds lsigs) -> do
+#else
       ValBindsIn{} ->
         convUnsupported' "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
+#endif
         sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
         let convertBinding' !b = (,) (convertedBindingName b) <$> convertBinding sigs b
         defns <- (convertTypedModuleBindings
@@ -180,7 +190,7 @@ convertHsGroup HsGroup{..} = do
 
         pure $ (unnamedSentences ++ ordered, orderedPromoted)
 
-  convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
+  convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD NOEXTP cid) <- group_instds grp]
 
   (convertedAddedTyCls,convertedAddedDecls) <- view (edits.additions.at mod.non ([],[]))
 
@@ -196,6 +206,10 @@ convertHsGroup HsGroup{..} = do
     axiomatizeBinding _ exn =
       pure (Nothing, [CommentSentence $ Comment $
         "While translating non-function binding: " <> T.pack (show exn)])
+
+#if __GLASGOW_HASKELL__ >= 806
+convertHsGroup (XHsGroup v) = noExtCon v
+#endif
 
 --------------------------------------------------------------------------------
 
@@ -388,8 +402,8 @@ usedAxioms decls = comment ++ ax_decls
       ]
 
     comment =
-      [ CommentSentence (Comment "The Haskell code containes partial or \
-         \untranslateable code, which needs the following")
+      [ CommentSentence (Comment
+          "The Haskell code containes partial or untranslateable code, which needs the following")
       | not (null ax_decls)
       ]
 

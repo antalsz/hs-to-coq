@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts, ScopedTypeVariables,
@@ -48,6 +49,9 @@ import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.Subst        
 import HsToCoq.Util.FVs
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 
 import Data.Generics hiding (Generic, Fixity(..))
 
@@ -131,6 +135,9 @@ convertTyClDecl decl = do
                              SynDecl{}   -> "a type synonym"
                              DataDecl{}  -> "a data type"
                              ClassDecl{} -> "a type class"
+#if __GLASGOW_HASKELL__ >= 806
+                             XTyClDecl v -> noExtCon v
+#endif
                     to   = case redef of
                              CoqDefinitionDef _   -> "a Definition"
                              CoqFixpointDef   _   -> "a Fixpoint"
@@ -146,6 +153,9 @@ convertTyClDecl decl = do
                                   SynDecl{}   -> ("type synonym",     "type synonyms")
                                   DataDecl{}  -> ("data type",        "data types")
                                   ClassDecl{} -> ("type class",       "type classes")
+#if __GLASGOW_HASKELL__ >= 806
+                                  XTyClDecl v -> noExtCon v
+#endif
             in convUnsupportedIn ("axiomatizing " ++ whats ++ " (without `redefine Axiom')") what (showP coqName)
           
           TranslateIt ->
@@ -163,6 +173,9 @@ convertTyClDecl decl = do
            SynDecl{..}   -> ConvSyn              <$> convertSynDecl           tcdLName (hsq_explicit tcdTyVars) tcdRhs
            DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl          tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
            ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+#if __GLASGOW_HASKELL__ >= 806
+           XTyClDecl v -> noExtCon v
+#endif
 
 --------------------------------------------------------------------------------
 

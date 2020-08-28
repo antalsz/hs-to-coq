@@ -1,6 +1,10 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TupleSections, RecordWildCards, LambdaCase,
              OverloadedStrings,
              FlexibleContexts #-}
+
+#include "ghc-compat.h"
 
 module HsToCoq.ConvertHaskell.Declarations.DataType (
   convertDataDecl,
@@ -15,6 +19,7 @@ import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import Data.Traversable
 import Data.Maybe
+import HsToCoq.Util.Monad (failEither)
 import HsToCoq.Util.Traversable
 
 import qualified Data.Set        as S
@@ -26,6 +31,11 @@ import Control.Monad.Trans.Maybe
 
 import GHC hiding (Name)
 import qualified GHC
+
+import HsToCoq.Util.GHC.HsTypes (selectorFieldOcc_)
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -64,21 +74,29 @@ conNameOrSkip name = do
 
 convertConDecl :: ConversionMonad r m
                => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
-convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = fmap fold . runMaybeT $ do
+#if __GLASGOW_HASKELL__ >= 806
+convertConDecl _ _ (XConDecl v) = noExtCon v
+convertConDecl curType extraArgs (ConDeclH98
+    { con_name = lname, con_ex_tvs = lqvs, con_mb_cxt = mlcxt, con_args = details }) =
+#else
+convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc)
+ | let lqvs = maybe [] hsq_explicit mlqvs =
+#endif
+ fmap fold . runMaybeT $ do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported' "constructor contexts"
 
   con <- conNameOrSkip $ unLoc lname
 
   -- Only the explicit tyvars are available before renaming, so they're all we
   -- need to consider
-  params <- withCurrentDefinition con $ maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
+  params <- withCurrentDefinition con $ convertLHsTyVarBndrs Coq.Implicit lqvs
   args   <- withCurrentDefinition con (traverse convertLType $ hsConDeclArgTys details)
 
   case details of
     RecCon (L _ fields) ->
       do
        let qualids =  traverse (var ExprNS) $
-                      map (selectorFieldOcc . unLoc) $
+                      map (selectorFieldOcc_ . unLoc) $
                       concatMap (cd_fld_names . unLoc) fields
        fieldInfo <- fmap RecordFields qualids
        storeConstructorFields con fieldInfo
@@ -91,14 +109,24 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = f
       storeConstructorFields con fieldInfo
       pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
+#if __GLASGOW_HASKELL__ >= 806
+convertConDecl curType extraArgs (ConDeclGADT
+    { con_names = lnames, con_qvars = qvars, con_mb_cxt = mcxt
+    , con_args = args, con_res_ty = res_ty }) = do
+#else
 convertConDecl curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
+#endif
   fmap catMaybes . for lnames $ \(L _ hsName) -> runMaybeT $ do
     conName         <- conNameOrSkip hsName
     utvm            <- unusedTyVarModeFor conName
-    (_, curTypArgs) <- collectArgs curType
-    conTy           <- withCurrentDefinition conName 
-                       (maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
-                         (mapMaybe termHead curTypArgs))
+    (_, curTypArgs) <- failEither (collectArgs curType)
+    conTy           <- withCurrentDefinition conName $
+#if __GLASGOW_HASKELL__ >= 806
+      let mktm = convertHsSigType_ utvm qvars mcxt args res_ty in
+#else
+      let mktm = convertLHsSigTypeWithExcls utvm sigTy in
+#endif
+      maybeForall extraArgs <$> mktm (mapMaybe termHead curTypArgs)
     storeConstructorFields conName $ NonRecordFields 0   -- This is a hack
     pure (conName, [], Just conTy)
 
@@ -150,11 +178,14 @@ rewriteDataTypeArguments dta bs = do
 convertDataDefn :: LocalConvMonad r m
                 => Term -> [Binder] -> HsDataDefn GhcRn
                 -> m (Term, [Constructor])
-convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
+convertDataDefn curType extraArgs (HsDataDefn NOEXTP _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported' "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (traverse addAdditionalConstructorScope =<<
            foldTraverse (convertConDecl curType extraArgs . unLoc) cons)
+#if __GLASGOW_HASKELL__ >= 806
+convertDataDefn _ _ (XHsDataDefn v) = noExtCon v
+#endif
 
 convertDataDecl :: ConversionMonad r m
                 => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> HsDataDefn GhcRn
@@ -165,10 +196,14 @@ convertDataDecl name tvs defn = do
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.dataKinds.at coqName)
   let cvtName tv = Ident <$> var TypeNS (unLoc tv)
   let  go :: ConversionMonad r m => LHsTyVarBndr GhcRn -> Maybe Term -> m Binder
-       go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
-       go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
-       go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
-       go (L _ (KindedTyVar name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen
+       go (L _ (UserTyVar NOEXTP name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+       go (L _ (UserTyVar NOEXTP name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
+       go (L _ (KindedTyVar NOEXTP name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+       go (L _ (KindedTyVar NOEXTP name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen
+#if __GLASGOW_HASKELL__ >= 806
+       go (L _ (XTyVarBndr v)) _ = noExtCon v
+#endif
+
   rawParams <- zipWithM go tvs kinds
 
   (params, indices) <-

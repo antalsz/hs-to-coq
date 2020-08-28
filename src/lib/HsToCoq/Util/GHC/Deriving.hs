@@ -1,4 +1,12 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
+
+#if __GLASGOW_HASKELL__ >= 806
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeApplications #-}
+#endif
+
+#include "ghc-compat.h"
 
 {-
 This seems to work. But it is a hack!
@@ -8,6 +16,11 @@ A 10-line patch extending the GHC-API would make that go away
 module HsToCoq.Util.GHC.Deriving (initForDeriving, addDerivedInstances) where
 
 import GHC
+#if __GLASGOW_HASKELL__ >= 808
+import GhcPlugins (SourceText(NoSourceText), PromotionFlag(NotPromoted))
+#else
+import GhcPlugins (SourceText(NoSourceText))
+#endif
 
 import Control.Monad
 
@@ -44,10 +57,25 @@ addDerivedInstances tcm = do
                 -- Set the module to make it look like we are in GHCi
                 -- so that GHC will allow us to re-typecheck existing instances
         setGblEnv tcg_env_hack $
+#if __GLASGOW_HASKELL__ >= 810
+            tcInstDeclsDeriv [] (hs_derivds hsgroup)
+#else
             tcInstDeclsDeriv [] (hs_tyclds hsgroup >>= group_tyclds) (hs_derivds hsgroup)
+#endif
 
     let inst_decls = map instInfoToDecl $ inst_infos
 
+#if __GLASGOW_HASKELL__ >= 806
+    let mkTyClGroup decls instds = TyClGroup
+          { group_ext = NOEXT
+          , group_tyclds = decls
+          , group_roles = []
+#if __GLASGOW_HASKELL__ >= 810
+          , group_kisigs = []
+#endif
+          , group_instds = instds
+          }
+#endif
     let hsgroup' = hsgroup { hs_tyclds = mkTyClGroup [] inst_decls : hs_tyclds hsgroup }
 
     return $ tcm { tm_renamed_source = Just (hsgroup', a, b, c) }
@@ -70,23 +98,32 @@ fakeDerivingMod = mkModule interactiveUnitId (mkModuleName "Deriving")
 
 
 instInfoToDecl :: InstInfo GhcRn -> LInstDecl GhcRn
-instInfoToDecl inst_info = noLoc $ ClsInstD (ClsInstDecl {..})
-   where
-    cid_poly_ty = HsIB tvars' (noLoc (HsQualTy (noLoc ctxt) inst_head)) True
-    cid_binds = ib_binds (iBinds inst_info)
-    cid_sigs = []
-    cid_tyfam_insts = []
-    cid_datafam_insts = []
-    cid_overlap_mode = Nothing
-
+instInfoToDecl inst_info = noLoc $ ClsInstD NOEXT (ClsInstDecl
+    { cid_binds = ib_binds (iBinds inst_info)
+    , cid_sigs = []
+    , cid_tyfam_insts = []
+    , cid_datafam_insts = []
+    , cid_overlap_mode = Nothing
+#if __GLASGOW_HASKELL__ >= 808
+    , cid_poly_ty = HsIB @GhcRn tvars_ (noLoc (HsQualTy NOEXT (noLoc ctxt) inst_head))
+#elif __GLASGOW_HASKELL__ == 806
+    , cid_poly_ty = HsIB @GhcRn (HsIBRn tvars_ True) (noLoc (HsQualTy NOEXT (noLoc ctxt) inst_head))
+#else
+    , cid_poly_ty = HsIB tvars_ (noLoc (HsQualTy (noLoc ctxt) inst_head)) True
+#endif
+#if __GLASGOW_HASKELL__ >= 806
+    , cid_ext = NOEXT
+#endif
+    })
+  where
     (tvars, theta, cls, args) = instanceSig (iSpec inst_info)
-    tvars' :: [Name]
-    tvars' = map tyVarName tvars
+    tvars_ :: [Name]
+    tvars_ = map tyVarName tvars
     ctxt = map typeToLHsType' theta
-    inst_head = foldl lHsAppTy (noLoc (HsTyVar NotPromoted (noLoc (getName cls)))) $
+    inst_head = foldl lHsAppTy (noLoc (HsTyVar NOEXT NotPromoted (noLoc (getName cls)))) $
         map typeToLHsType' args
 
-    lHsAppTy f x = noLoc (HsAppTy f x)
+    lHsAppTy f x = noLoc (HsAppTy NOEXT f x)
 
 -- Taken from HsUtils. We need it to produce a Name, not a RdrName
 typeToLHsType' :: Type -> LHsType GhcRn
@@ -94,25 +131,36 @@ typeToLHsType' ty
   = go ty
   where
     go :: Type -> LHsType GhcRn
-    go ty@(FunTy arg _)
-      | isPredTy arg
-      , (theta, tau) <- tcSplitPhiTy ty
-      = noLoc (HsQualTy { hst_ctxt = noLoc (map go theta)
-                        , hst_body = go tau })
-    go (FunTy arg res) = nlHsFunTy (go arg) (go res)
+    go ty@(FunTy {}) | (arg, res) <- splitFunTy ty =
+      if isPredTy arg then
+        let (theta, tau) = tcSplitPhiTy ty in
+        noLoc (HsQualTy { hst_ctxt = noLoc (map go theta)
+                        , hst_body = go tau
+#if __GLASGOW_HASKELL__ >= 806
+                        , hst_xqual = NOEXT
+#endif
+                        })
+      else nlHsFunTy (go arg) (go res)
     go ty@(ForAllTy {})
       | (tvs, tau) <- tcSplitForAllTys ty
       = noLoc (HsForAllTy { hst_bndrs = map go_tv tvs
-                          , hst_body = go tau })
+                          , hst_body = go tau
+#if __GLASGOW_HASKELL__ >= 806
+                          , hst_xforall = NOEXT
+#endif
+#if __GLASGOW_HASKELL__ >= 810
+                          , hst_fvf = ForallInvis
+#endif
+                          })
     go (TyVarTy tv)         = nlHsTyVar (getName tv)
     go (AppTy t1 t2)        = nlHsAppTy (go t1) (go t2)
-    go (LitTy (NumTyLit n)) = noLoc $ HsTyLit (HsNumTy noSourceText n)
-    go (LitTy (StrTyLit s)) = noLoc $ HsTyLit (HsStrTy noSourceText s)
+    go (LitTy (NumTyLit n)) = noLoc $ HsTyLit NOEXT (HsNumTy NoSourceText n)
+    go (LitTy (StrTyLit s)) = noLoc $ HsTyLit NOEXT (HsStrTy NoSourceText s)
     go ty@(TyConApp tc args)
       | any isInvisibleTyConBinder (tyConBinders tc)
         -- We must produce an explicit kind signature here to make certain
         -- programs kind-check. See Note [Kind signatures in typeToLHsType].
-      = noLoc $ HsKindSig lhs_ty (go (TcType.typeKind ty))
+      = noLoc $ HsKindSig NOEXT lhs_ty (go (Type.typeKind ty))
       | otherwise = lhs_ty
        where
         lhs_ty = nlHsTyConApp (getName tc) (map go args')
@@ -124,6 +172,6 @@ typeToLHsType' ty
          -- so we must remove them here (Trac #8563)
 
     go_tv :: TyVar -> LHsTyVarBndr GhcRn
-    go_tv tv = noLoc $ KindedTyVar (noLoc (getName tv))
-                                   (go (tyVarKind tv))
+    go_tv tv = noLoc $ KindedTyVar NOEXT
+        (noLoc (getName tv)) (go (tyVarKind tv))
 

@@ -266,7 +266,8 @@ subtractEdits edits1 edits2 =
   , _replacedTypes                  = edits1^.replacedTypes
   , _collapsedLets                  = edits1^.collapsedLets
   , _inEdits                        = edits1^.inEdits
-  , _exceptInEdits                  = edits1^.exceptInEdits 
+  , _exceptInEdits                  = edits1^.exceptInEdits
+  , _promotions                     = edits1^.promotions
   }
 
 -- Derived edits

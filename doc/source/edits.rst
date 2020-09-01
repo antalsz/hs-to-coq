@@ -860,9 +860,10 @@ Format:
   | **promote** *qualified_name* ...
 
 Effect:
-  ``hs-to-coq`` divides Haskell definitions into two kinds: type-level and term-level.
-  The ``promote`` edit "prmotes" a term-level definition to the type level.
-  It also recursively promotes the transitive closure of all definitions on which the
+  `hs-to-coq` divides Haskell definitions into two "levels": type-level and term-level.
+  Type-level definitions always appear above term-level definitions in the Coq output.
+  The ``promote`` edit moves a term-level definition to the type level.
+  It also recursively moves the transitive closure of all definitions on which the
   specified definition depends.
 
 Examples:

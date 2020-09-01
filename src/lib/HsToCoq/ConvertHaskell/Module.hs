@@ -38,6 +38,7 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
+import qualified GHC (Name)
 import HsToCoq.Util.GHC.Module
 import Bag
 
@@ -75,7 +76,7 @@ annotateFixpoint x _ = x
 
 convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup HsGroup{..} = do
-  mod                 <- view currentModule
+  mod                 <- view (currentModule . modName)
   isModuleAxiomatized <- view currentModuleAxiomatized
 
   let catchIfAxiomatizing | isModuleAxiomatized = const
@@ -193,9 +194,9 @@ renameModule :: GlobalMonad r m => ModuleName -> m ModuleName
 renameModule mod = view $ edits.renamedModules.at mod.non mod
 
 -- Assumes module renaming has been accomplished
-convertModule' :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
-convertModule' convModName group = do
-  withCurrentModule convModName $ do
+convertModule' :: GlobalMonad r m => ModuleData -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
+convertModule' convModData group = do
+  withCurrentModule convModData $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
                                 , convertedClsInstDecls = convModClsInstDecls
@@ -203,7 +204,7 @@ convertModule' convModName group = do
                                 , convertedAddedDecls   = convModAddedDecls
                                 }
       <- convertHsGroup group
-
+    let convModName = convModData ^. modName
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedTyCls ++ convModAddedDecls
     let freeVars = toList $ foldMap getFreeVars' allSentences
     let modules = filter (/= convModName)
@@ -235,10 +236,10 @@ convertModule' convModName group = do
     pure (ConvertedModule{..}, modules)
 
 -- Handles module renaming
-convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
-convertModule convModNameOrig group = do
-  convModName <- renameModule convModNameOrig
-  convertModule' convModName group
+convertModule :: GlobalMonad r m => ModuleData -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
+convertModule modData@(ModuleData { _modName = convModNameOrig }) group = do
+    convModName <- renameModule convModNameOrig
+    convertModule' modData{ _modName = convModName } group
 
 -- Module-local
 data Convert_Module_Mode = Mode_Initial
@@ -257,30 +258,36 @@ instance Semigroup Convert_Module_Mode where
 instance Monoid Convert_Module_Mode where
   mempty = Mode_Initial
 
-convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
+  
+
+convertModules :: GlobalMonad r m => [(ModuleData, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
   -- Collect modules with the same post-`rename module` name
-  mergedModulesNELs <-  traverse (foldrM buildGroups (emptyRnGroup, emptyRnGroup, mempty))
+  mergedModulesNELs <-  traverse (foldrM buildGroups (emptyRnGroup, emptyRnGroup, mempty, mempty))
                     =<< M.fromListWith (<>)
-                    <$> traverse (renameModule . fst <&&&> pure . pure @NonEmpty) sources
+                    <$> traverse (renameModule . _modName . fst <&&&> pure . pure @NonEmpty) sources
 
-  cmods <- for (M.toList mergedModulesNELs) $ \(name, (axGrp, convGrp, mode)) -> case mode of
-             Mode_Axiomatize -> axiomatizeModule' name (axGrp `appendGroups` convGrp)
-             Mode_Convert    -> convertModule' name convGrp
-             Mode_Both       -> combineModules <$> axiomatizeModule' name axGrp <*> convertModule' name convGrp
-             Mode_Initial    -> error "INTERNAL ERROR: impossible, `foldrM` over a `NonEmpty`"
+  cmods <- for (M.toList mergedModulesNELs) $ \(name, (axGrp, convGrp, mode, combinedExports)) -> 
+            let modData = ModuleData {_modName = name, _modExports = combinedExports} in 
+              case mode of
+                Mode_Axiomatize -> axiomatizeModule' modData (axGrp `appendGroups` convGrp)
+                Mode_Convert    -> convertModule' modData convGrp
+                Mode_Both       -> combineModules <$> axiomatizeModule' modData axGrp <*> convertModule' modData convGrp
+                Mode_Initial    -> error "INTERNAL ERROR: impossible, `foldrM` over a `NonEmpty`"
 
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- cmods]
 
   where
-    buildGroups (oldName, modGrp) (axGrp, convGrp, mode) =
-      view (edits.axiomatizedOriginalModuleNames.contains oldName) <&> \case
+    buildGroups (modData, modGrp) (axGrp, convGrp, mode, combinedExports) =
+      view (edits.axiomatizedOriginalModuleNames.contains (modData^.modName)) <&> \case
         True  -> ( modGrp{hs_tyclds = []}                     `appendGroups` axGrp
                  , emptyRnGroup{hs_tyclds = hs_tyclds modGrp} `appendGroups` convGrp
-                 , Mode_Axiomatize <> mode )
+                 , Mode_Axiomatize <> mode
+                 , (modData^.modExports) <> combinedExports )
         False -> ( axGrp
                  , modGrp `appendGroups` convGrp
-                 , Mode_Convert <> mode )
+                 , Mode_Convert <> mode
+                 , (modData^.modExports) <> combinedExports )
 
     combineModules (ConvertedModule name  imports1 tyClDecls1 valDecls1 clsInstDecls1 addedTyCls1 addedDecls1, imps1)
                    (ConvertedModule _name imports2 tyClDecls2 valDecls2 clsInstDecls2 _addedTyCls2 _addedDecls2, imps2) =
@@ -295,7 +302,7 @@ convertModules sources = do
       -- It's OK not to worry about ordering the declarations
       -- because we 'topoSortByVariablesBy' them in 'moduleDeclarations'.
 
-    axiomatizeModule' name = local (edits.axiomatizedModules %~ S.insert name) . convertModule' name
+    axiomatizeModule' modData = local (edits.axiomatizedModules %~ S.insert (modData ^. modName)) . convertModule' modData
 
 data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
                                              , moduleValueDeclarations :: ![Sentence] }

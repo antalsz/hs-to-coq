@@ -60,7 +60,7 @@ import Panic
 
 import HsToCoq.Coq.Gallina (Qualid, Qualid(..), Ident)
 import HsToCoq.Coq.Pretty
-import HsToCoq.Util.GHC.Module (moduleNameText)
+import HsToCoq.Util.GHC.Module (moduleNameText, ModuleData, modName)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -92,13 +92,13 @@ data GlobalEnv = GlobalEnv
 data ModuleEnv = ModuleEnv
     { _moduleEnvEdits         :: !Edits
     , _moduleEnvLeniency      :: !Leniency
-    , _moduleEnvCurrentModule :: !ModuleName
+    , _moduleEnvCurrentModule :: !ModuleData
     }
 
 data LocalEnv = LocalEnv
     { _localEnvEdits             :: !Edits
     , _localEnvLeniency          :: !Leniency
-    , _localEnvCurrentModule     :: !ModuleName
+    , _localEnvCurrentModule     :: !ModuleData
     , _localEnvCurrentDefinition :: !Qualid
     }
 
@@ -106,8 +106,8 @@ makeFields ''GlobalEnv
 makeFields ''ModuleEnv
 makeFields ''LocalEnv
 
-currentModuleAxiomatized :: (HasEdits s Edits, HasCurrentModule s ModuleName) => Getter  s Bool
-currentModuleAxiomatized = to $ \s -> s^.edits.axiomatizedModules.contains (s^.currentModule)
+currentModuleAxiomatized :: (HasEdits s Edits, HasCurrentModule s ModuleData) => Getter  s Bool
+currentModuleAxiomatized = to $ \s -> s^.edits.axiomatizedModules.contains (s^.currentModule.modName)
 
 data AxiomatizationMode = SpecificAxiomatize | GeneralAxiomatize
                         deriving (Eq, Ord, Enum, Bounded, Show, Read)
@@ -120,7 +120,7 @@ data TranslationTask = SkipIt
 
 -- |Should this definition be skipped, axiomatized, or translated?
 -- `HasEdits`, and `HasCurrentModule`, but that hardly seems necessary.
-definitionTask :: forall s m. (MonadReader s m, HasEdits s Edits, HasCurrentModule s ModuleName)
+definitionTask :: forall s m. (MonadReader s m, HasEdits s Edits, HasCurrentModule s ModuleData)
                => Qualid -> m TranslationTask
 definitionTask name =
   let isIn :: Lens' Edits (Set Qualid) -> m Bool
@@ -169,7 +169,7 @@ type GlobalMonad r m =
 --   Has edits, current module name, access to GHC etc.
 type ConversionMonad r m =
         ( GlobalMonad r m
-        , HasCurrentModule r ModuleName
+        , HasCurrentModule r ModuleData
         )
 -- | The local one monad, additional knows the current function name
 --   and a counter for fresh variables
@@ -191,13 +191,13 @@ runGlobalMonad initEdits leniency paths act =
     act
 
 withCurrentModule :: GlobalMonad r m =>
-    ModuleName ->
+    ModuleData ->
     (forall r m. ConversionMonad r m => m a) ->
     m a
 withCurrentModule newModule act = do
     _edits    <- view edits
     _leniency <- view leniency
-    isProcessedModule (moduleNameText newModule) -- Start collecting the interface
+    isProcessedModule (moduleNameText (newModule ^. modName)) -- Start collecting the interface
     runReaderT act $ ModuleEnv
         { _moduleEnvEdits         = _edits
         , _moduleEnvLeniency      = _leniency
@@ -213,10 +213,14 @@ withCurrentDefinition newDef act = do
     local_edits <- view (edits.inEdits.at newDef.non mempty)
     let edits_in_scope = local_edits <> global_edits
     
+    -- Subtract out the edits to be excluded for this definition.
+    excluded_edits <- view (edits.exceptInEdits.at newDef.non mempty)
+    let edits_final = subtractEdits edits_in_scope excluded_edits
+    
     _leniency      <- view leniency
     _currentModule <- view currentModule
     runCounterT . runReaderT act $ LocalEnv
-        { _localEnvEdits             = edits_in_scope
+        { _localEnvEdits             = edits_final
         , _localEnvLeniency          = _leniency
         , _localEnvCurrentModule     = _currentModule
         , _localEnvCurrentDefinition = newDef
@@ -247,7 +251,7 @@ convUnsupportedIn' what category which =
 
 convUnsupportedIns :: ConversionMonad r m => String -> [(String, String)] -> m a
 convUnsupportedIns what locs = do
-  mod <- ("module",) . moduleNameString <$> view currentModule
+  mod <- views (currentModule.modName) $ ("module",) . moduleNameString
   convUnsupportedIns' what $ locs ++ [mod]
 
 convUnsupportedIn :: ConversionMonad r m => String -> String -> String -> m a

@@ -359,7 +359,10 @@ convertAndPrintModules :: GlobalMonad r m => WithModulePrinter m -> [Typechecked
 convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamedHsGroup
   where
     toRenamedHsGroup tcm
-        | Just (hs_group, _, _, _) <- tm_renamed_source tcm = pure (mod, hs_group)
+        | Just (hs_group, _, _, _) <- tm_renamed_source tcm = 
+          let exports = modInfoExports (tm_checked_module_info tcm) 
+              modData = ModuleData {_modName = mod, _modExports = exports} in
+            pure (modData, hs_group)
         | otherwise = throwProgramError $  "Renamer failed for `" ++ moduleNameString mod ++ "'"
       where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm
 

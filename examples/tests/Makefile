@@ -37,7 +37,8 @@ PASS = \
   SkipConstructor \
   SkipMatches \
   Promote \
-  Promote2
+  Promote2 \
+  ExceptIn \
 
 # tests that *should* pass but currently fail
 TODO_PASS = \
@@ -45,7 +46,8 @@ TODO_PASS = \
   TypeAnnotations \
   StrictPair \
   MutrecInst \
-  TopBind
+  TopBind \
+  ExceptInDataDefinition \
 
 # tests that *should* pass but currently don't even translate
 TODO_TRANSLATE = \

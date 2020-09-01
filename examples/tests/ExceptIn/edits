@@ -1,0 +1,32 @@
+skip module GHC.Err
+skip ExceptIn.Default__S
+skip ExceptIn.Default__I
+
+# This edit works.
+except in ExceptIn.bar, ExceptIn.baz rename value ExceptIn.A = ExceptIn.X
+except in ExceptIn.bar, ExceptIn.baz rename value ExceptIn.B = ExceptIn.Y
+
+except in ExceptIn.bar, ExceptIn.baz rename type ExceptIn.Test1 = ExceptIn.Test2
+
+# The following edit has a couple of issues; see below for more information.
+# except in ExceptIn.Test1 rename type ExceptIn.Test1 = ExceptIn.Test2
+
+# In the declaration of Test1 (Inductive Test1 : Type), "Test1" is renamed to
+# "Test2", even though we excluded ExceptIn.Test1 when we specified the rename
+# edit. Since there is already a data type called Test2, the new definition of
+# Test2 (i.e. the definition of Test1 before the renaming) is removed by
+# hs-to-coq and does not appear at all in the resulting Coq code.
+
+# Why does the renaming happen, despite the fact that we excluded ExceptIn.Test1?
+# Note that when we specified ExceptIn.Test1 in the "except in" edit, we told
+# hs-to-coq not to rename Test1 to Test2 *inside* the definition of Test1, but
+# the declaration is not considered to be inside the definition.
+
+# Perhaps it would make sense to consider the declaration to be part of the
+# definition, so that we can prevent the name in the declaration from
+# being renamed.
+
+
+
+
+

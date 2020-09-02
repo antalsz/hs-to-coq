@@ -36,6 +36,8 @@ PASS = \
   Existential \
   SkipConstructor \
   SkipMatches \
+  Promote \
+  Promote2 \
   ExceptIn \
 
 # tests that *should* pass but currently fail

@@ -849,6 +849,29 @@ Examples:
 
     order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
 
+
+``promote`` -- promote a definition from the term level to the type level
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: promote, edit
+
+Format:
+  | **promote** *qualified_name* ...
+
+Effect:
+  `hs-to-coq` divides Haskell definitions into two "levels": type-level and term-level.
+  Type-level definitions always appear above term-level definitions in the Coq output.
+  The ``promote`` edit moves a term-level definition to the type level.
+  It also recursively moves the transitive closure of all definitions on which the
+  specified definition depends.
+
+Examples:
+  .. code-block:: shell
+
+    promote MyModule.foo
+
+
 ``manual notation`` -- Indicate presence of manual notation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

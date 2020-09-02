@@ -93,6 +93,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   pattern         { TokWord    "pattern"        }
   original        { TokWord    "original"       }
   name            { TokWord    "name"           }
+  promote         { TokWord    "promote"        }
   except          { TokWord    "except"         }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
@@ -317,6 +318,7 @@ Edit :: { Edit }
   | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                      $3 $4                                 }
   | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
   | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
+  | promote Qualid                                        { PromoteEdit                      $2                                    }
   | except 'in' SepBy1(Qualid, ',') Edit                  { ExceptInEdit                     $3 $4                                 }
 
 Edits :: { [Edit] }

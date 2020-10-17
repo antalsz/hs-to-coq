@@ -285,6 +285,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                   CoqInstanceDef         _   -> editFailure   "cannot redefine an instance method definition into an Instance"
                   CoqAxiomDef            _   -> pure ()
                   CoqAssertionDef        apf -> editFailure $ "cannot redefine an instance method definition into " ++ anAssertionVariety apf
+              SkippedBinding _ -> convUnsupportedHere "skipping binding in instance"
 
           (Nothing, Just assoc, _) ->
             let convertedType = withCurrentDefinition meth $ convertType assoc in

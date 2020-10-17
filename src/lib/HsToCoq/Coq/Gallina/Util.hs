@@ -36,7 +36,10 @@ module HsToCoq.Coq.Gallina.Util (
   nameToTerm, nameToPattern,
   binderArgs,
   consolidateTypedBinders,
-  stripBinderType
+  stripBinderType,
+
+  -- * Manipulating 'Sentence's
+  isComment
   ) where
 
 import Control.Lens
@@ -310,3 +313,7 @@ unconsOneBinderFromType (Forall bbs t) = Just $ second (maybeForall ?? t) (uncon
 unconsOneBinderFromType (t `Arrow` t') = Just (BinderInfo Ungeneralizable Explicit Nothing (Just t), t')
 unconsOneBinderFromType (Parens t)     = unconsOneBinderFromType t
 unconsOneBinderFromType _              = Nothing
+
+isComment :: Sentence -> Bool
+isComment CommentSentence{} = True
+isComment _ = False

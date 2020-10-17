@@ -862,7 +862,7 @@ convertTypedBinding convHsTy FunBind{..}   = do
     -- Skip it?  Axiomatize it?
     definitionTask name >>= \case
       SkipIt ->
-        pure Nothing
+        pure . Just $ SkippedBinding name
       
       RedefineIt def ->
         pure . Just $ RedefinedBinding name def
@@ -1204,8 +1204,9 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
       toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
       noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
       noLetRd _nm _sn _body = convUnsupported "redefining local bindings"
+      noSkp _nm _body = convUnsupported "skipping local binding"
       
-  (foldrM (withConvertedBinding toLet matchLet noLetAx noLetRd) ?? convDefs) =<< body
+  (foldrM (withConvertedBinding toLet matchLet noLetAx noLetRd noSkp) ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"

@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, TypeApplications, FlexibleContexts, DeriveDataTypeable, OverloadedLists, OverloadedStrings, ScopedTypeVariables, MultiWayIf, RankNTypes  #-}
+{-# LANGUAGE BangPatterns, TupleSections, LambdaCase, RecordWildCards, TypeApplications, FlexibleContexts, DeriveDataTypeable, OverloadedLists, OverloadedStrings, ScopedTypeVariables, MultiWayIf, RankNTypes  #-}
 
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
@@ -74,6 +74,56 @@ annotateFixpoint ((Inferred e n):tl) (Just (Arrow x y)) = (Typed Generalizable e
 annotateFixpoint (a:tl) (Just (Arrow _ y)) = a:(annotateFixpoint tl (Just y))
 annotateFixpoint x _ = x
 
+convertedBindingName :: ConvertedBinding -> Maybe Qualid
+convertedBindingName cb = case cb of
+  ConvertedDefinitionBinding cd -> Just (_convDefName cd)
+  ConvertedPatternBinding _ _ -> Nothing
+  ConvertedAxiomBinding name _ -> Just name
+  RedefinedBinding name _ -> Just name
+  SkippedBinding name -> Just name
+
+convertBinding
+  :: ConversionMonad r m
+  => M.Map Qualid Signature -> ConvertedBinding -> m [Sentence]
+convertBinding sigs (ConvertedDefinitionBinding cdef@ConvertedDefinition{_convDefName = name}) =
+  withCurrentDefinition name $ do
+    t  <- view (edits.termination.at name)
+    obl <- view (edits.obligations.at name)
+    useProgram <- useProgramHere
+    if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
+       ->  pure <$> toProgramFixpointSentence cdef order obl
+       | otherwise                   -- no edit
+       -> let def = DefinitionDef Global (cdef^.convDefName)
+                                         (cdef^.convDefArgs)
+                                         (cdef^.convDefType)
+                                         (cdef^.convDefBody) NotExistingClass
+          in pure $
+             [ case (cdef^.convDefBody) of
+                 Fix (FixOne (FixBody qual bind ord mterm term))
+                   -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ annotateFixpoint (toList (bind)) (cdef^.convDefType)) ord mterm term)] [])
+                 _ -> if useProgram
+                      then ProgramSentence (DefinitionSentence def) obl
+                      else DefinitionSentence def ] ++
+             [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
+
+convertBinding _ (ConvertedPatternBinding _ _) =
+  -- TODO add a warning that the top-level pattern was skipped
+  pure [] -- convUnsupported' "top-level pattern bindings"
+
+convertBinding _ (ConvertedAxiomBinding ax ty) = pure [typedAxiom ax ty]
+
+convertBinding _ (RedefinedBinding _ def) =
+  [definitionSentence def] <$ case def of
+    CoqInductiveDef _   -> editFailure   "cannot redefine a value definition into an Inductive"
+    CoqInstanceDef  _   -> editFailure   "cannot redefine a value definition into an Instance"
+    CoqAssertionDef apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf
+    CoqDefinitionDef _  -> pure ()
+    CoqFixpointDef   _  -> pure ()
+    CoqAxiomDef      _  -> pure ()
+
+convertBinding _ (SkippedBinding name) =
+  pure [CommentSentence . Comment $ "Skipping definition `" <> textP name <> "'"]
+
 convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup HsGroup{..} = do
   mod                 <- view (currentModule . modName)
@@ -95,45 +145,13 @@ convertHsGroup HsGroup{..} = do
         convUnsupported' "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
+        let convertBinding' !b = (,) (convertedBindingName b) <$> convertBinding sigs b
         defns <- (convertTypedModuleBindings
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??
                    handler)
-              $  withConvertedBinding
-                   (\cdef@ConvertedDefinition{_convDefName = name} -> ((Just name,) <$>) $ withCurrentDefinition name $ do
-                       t  <- view (edits.termination.at name)
-                       obl <- view (edits.obligations.at name)
-                       useProgram <- useProgramHere
-                       if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
-                          ->  pure <$> toProgramFixpointSentence cdef order obl
-                          | otherwise                   -- no edit
-                          -> let def = DefinitionDef Global (cdef^.convDefName)
-                                                            (cdef^.convDefArgs)
-                                                            (cdef^.convDefType)
-                                                            (cdef^.convDefBody) NotExistingClass
-                             in pure $
-                                [ case (cdef^.convDefBody) of
-                                    Fix (FixOne (FixBody qual bind ord mterm term))
-                                      -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ annotateFixpoint (toList (bind)) (cdef^.convDefType)) ord mterm term)] [])
-                                    _ -> if useProgram
-                                         then ProgramSentence (DefinitionSentence def) obl
-                                         else DefinitionSentence def ] ++
-                                [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
-                   )
-                   (\_ _ ->  -- TODO add a warning that the top-level pattern was skipped
-                      pure (Nothing,[]) --convUnsupported' "top-level pattern bindings"
-                           )
-                   (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))
-                   (\name def -> (Just name, [definitionSentence def]) <$ case def of
-                      CoqInductiveDef        _   -> editFailure   "cannot redefine a value definition into an Inductive"
-                      CoqDefinitionDef       _   -> pure ()
-                      CoqFixpointDef         _   -> pure ()
-                      CoqInstanceDef         _   -> editFailure   "cannot redefine a value definition into an Instance"
-                      CoqAxiomDef            _   -> pure ()
-                      CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
-                   (\name -> pure (Just name, [CommentSentence . Comment $
-                      "Skipping definition `" <> textP name <> "'"]))
+                 convertBinding'
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
         let defnsMap = M.fromList namedSentences

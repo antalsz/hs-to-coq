@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Definitions (
   ConvertedDefinition(..), convDefName, convDefArgs, convDefType, convDefBody,
-  ConvertedBinding(..), withConvertedBinding,
+  ConvertedBinding(..),
   toProgramFixpointSentence
   ) where
 
@@ -44,26 +44,13 @@ data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
                       | SkippedBinding             Qualid
                       deriving (Eq, Ord, Show, Read)
 
-withConvertedBinding :: (ConvertedDefinition -> a)
-                     -> (Pattern -> Term -> a)
-                     -> (Qualid -> Term -> a)
-                     -> (Qualid -> CoqDefinition -> a)
-                     -> (Qualid -> a)
-                     -> ConvertedBinding -> a
-withConvertedBinding withDef withPat withAxm withRdf withSkp cb = case cb of
-  ConvertedDefinitionBinding cdf     -> withDef cdf
-  ConvertedPatternBinding    pat def -> withPat pat def
-  ConvertedAxiomBinding      axm typ -> withAxm axm typ
-  RedefinedBinding           rnm def -> withRdf rnm def
-  SkippedBinding             nam     -> withSkp nam
-
 -- TODO: We /really/ need a better story for pattern bindings
 instance HasBV Qualid ConvertedBinding where
-  bvOf = withConvertedBinding bvOf
-                              (\pat def -> bvOf   pat `telescope` fvOf' def)
-                              (\axm typ -> binder axm `telescope` fvOf' typ)
-                              (\rnm def -> binder rnm `telescope` bvOf  def)
-                              (\nam     -> binder nam)
+  bvOf (ConvertedDefinitionBinding  cdf) = bvOf cdf
+  bvOf (ConvertedPatternBinding pat def) = bvOf   pat `telescope` fvOf' def
+  bvOf (ConvertedAxiomBinding   axm typ) = binder axm `telescope` fvOf' typ
+  bvOf (RedefinedBinding        rnm def) = binder rnm `telescope` bvOf  def
+  bvOf (SkippedBinding nam) = binder nam
 
 decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Maybe Term, Term)
 decomposeFixpoint (Fix (FixOne (FixBody name binders _ mty body)))

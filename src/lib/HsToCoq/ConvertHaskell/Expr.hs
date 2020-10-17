@@ -1195,18 +1195,20 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
     convertTypedBindings (map unLoc . bagToList $ mut_group) sigs pure Nothing
   let convDefs = concat convDefss
 
-  let matchLet pat term body = do
-        is_complete <- isCompleteMultiPattern [MultPattern [pat]]
-        pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing $
-            [ Equation [MultPattern [pat]] body] ++
-            [ Equation [MultPattern [UnderscorePat]] patternFailure | not is_complete ]
-
-      toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
-      noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
-      noLetRd _nm _sn _body = convUnsupported "redefining local bindings"
-      noSkp _nm _body = convUnsupported "skipping local binding"
+  let fromConvertedBinding cb body = case cb of
+        ConvertedDefinitionBinding (ConvertedDefinition{..}) ->
+          pure (Let _convDefName _convDefArgs _convDefType _convDefBody body)
+        ConvertedPatternBinding pat term -> do
+          is_complete <- isCompleteMultiPattern [MultPattern [pat]]
+          pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing $
+              [ Equation [MultPattern [pat]] body] ++
+              [ Equation [MultPattern [UnderscorePat]] patternFailure | not is_complete ]
+        ConvertedAxiomBinding ax _ty ->
+          convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
+        RedefinedBinding _nm _sn -> convUnsupported "redefining local bindings"
+        SkippedBinding _nm -> convUnsupported "skipping local binding"
       
-  (foldrM (withConvertedBinding toLet matchLet noLetAx noLetRd noSkp) ?? convDefs) =<< body
+  (foldrM fromConvertedBinding ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"

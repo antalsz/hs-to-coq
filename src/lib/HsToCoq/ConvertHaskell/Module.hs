@@ -55,6 +55,7 @@ import HsToCoq.ConvertHaskell.Declarations.Instances
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.Coq.Preamble
+import HsToCoq.Coq.Pretty (textP)
 
 --------------------------------------------------------------------------------
 
@@ -131,6 +132,8 @@ convertHsGroup HsGroup{..} = do
                       CoqInstanceDef         _   -> editFailure   "cannot redefine a value definition into an Instance"
                       CoqAxiomDef            _   -> pure ()
                       CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
+                   (\name -> pure (Just name, [CommentSentence . Comment $
+                      "Skipping definition `" <> textP name <> "'"]))
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
         let defnsMap = M.fromList namedSentences

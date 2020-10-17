@@ -41,17 +41,21 @@ data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
                       | ConvertedPatternBinding    Pattern Term
                       | ConvertedAxiomBinding      Qualid Term
                       | RedefinedBinding           Qualid CoqDefinition
+                      | SkippedBinding             Qualid
                       deriving (Eq, Ord, Show, Read)
 
 withConvertedBinding :: (ConvertedDefinition -> a)
                      -> (Pattern -> Term -> a)
                      -> (Qualid -> Term -> a)
                      -> (Qualid -> CoqDefinition -> a)
+                     -> (Qualid -> a)
                      -> ConvertedBinding -> a
-withConvertedBinding  withDef _withPat _withAxm _withRdf (ConvertedDefinitionBinding cdf)     = withDef cdf
-withConvertedBinding _withDef  withPat _withAxm _withRdf (ConvertedPatternBinding    pat def) = withPat pat def
-withConvertedBinding _withDef _withPat  withAxm _withRdf (ConvertedAxiomBinding      axm typ) = withAxm axm typ
-withConvertedBinding _withDef _withPat _withAxm  withRdf (RedefinedBinding           rnm def) = withRdf rnm def
+withConvertedBinding withDef withPat withAxm withRdf withSkp cb = case cb of
+  ConvertedDefinitionBinding cdf     -> withDef cdf
+  ConvertedPatternBinding    pat def -> withPat pat def
+  ConvertedAxiomBinding      axm typ -> withAxm axm typ
+  RedefinedBinding           rnm def -> withRdf rnm def
+  SkippedBinding             nam     -> withSkp nam
 
 -- TODO: We /really/ need a better story for pattern bindings
 instance HasBV Qualid ConvertedBinding where
@@ -59,6 +63,7 @@ instance HasBV Qualid ConvertedBinding where
                               (\pat def -> bvOf   pat `telescope` fvOf' def)
                               (\axm typ -> binder axm `telescope` fvOf' typ)
                               (\rnm def -> binder rnm `telescope` bvOf  def)
+                              (\nam     -> binder nam)
 
 decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Maybe Term, Term)
 decomposeFixpoint (Fix (FixOne (FixBody name binders _ mty body)))

@@ -342,11 +342,16 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
  where
   gap out = hPutStrLn out "" >> hFlush out
 
-  printThe out what _   [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-  printThe out what sep ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                                gap out
-                                traverse_ (hPrettyPrint out) . intersperse sep $
-                                  map ((<> line) . renderGallina) ds
+  printThe out what sep ds = do
+    printTheHeader out what ds
+    unless (null ds) $ do
+      gap out
+      traverse_ (hPrettyPrint out) . intersperse sep $
+        map ((<> line) . renderGallina) ds
+
+  printTheHeader out what ds
+    | all isComment ds = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+    | otherwise = hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
 
 printConvertedModules :: GlobalMonad r m
                       => WithModulePrinter m

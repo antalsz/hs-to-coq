@@ -16,8 +16,9 @@ import Outputable
 ghcPpr :: (GhcMonad m, Outputable a) => a -> m Text
 ghcPpr x = fmap T.pack $ showPpr <$> getSessionDynFlags <*> pure x
 
-defaultRunGhc :: Ghc a -> IO a
+defaultRunGhc :: Ghc () -> IO ()
 defaultRunGhc ghc = defaultErrorHandler defaultFatalMessager defaultFlushOut
-                  . runGhc (Just libdir) $ do
+                  . runGhc (Just libdir)
+                  . handleSourceError printException $ do
                       void $ setSessionDynFlags =<< getSessionDynFlags
                       ghc

@@ -67,9 +67,15 @@ Definition trimConArgs
     | Core.DataAlt dc, args => Util.dropList (Core.dataConUnivTyVars dc) args
     end.
 
+(* Skipping definition `CoreUtils.tickHNFArgs' *)
+
+(* Skipping definition `CoreUtils.stripTicksTopT' *)
+
 Definition stripTicksTopE {b}
    : (Core.Tickish Core.Id -> bool) -> Core.Expr b -> Core.Expr b :=
   fun p => let go := fun '(other) => other in go.
+
+(* Skipping definition `CoreUtils.stripTicksTop' *)
 
 Definition stripTicksT {b}
    : (Core.Tickish Core.Id -> bool) ->
@@ -174,10 +180,18 @@ Definition stripTicksE {b}
       fun '(pair (pair c bs) e) => pair (pair c bs) (go e) in
     go expr.
 
+(* Skipping definition `CoreUtils.rhsIsStatic' *)
+
 Axiom refineDefaultAlt : list Unique.Unique ->
                          Core.TyCon ->
                          list AxiomatizedTypes.Type_ ->
                          list Core.AltCon -> list Core.CoreAlt -> (bool * list Core.CoreAlt)%type.
+
+(* Skipping definition `CoreUtils.mkTicks' *)
+
+(* Skipping definition `CoreUtils.mkTickNoHNF' *)
+
+(* Skipping definition `CoreUtils.mkTick' *)
 
 Definition mkAltExpr
    : Core.AltCon ->

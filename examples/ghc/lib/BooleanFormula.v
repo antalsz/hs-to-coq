@@ -181,6 +181,14 @@ Local Definition BooleanFormula_foldr
 
 (* Converted value declarations: *)
 
+(* Skipping definition `BooleanFormula.pprBooleanFormulaNormal' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormulaNice' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormula'' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormula' *)
+
 Definition mkVar {a} : a -> BooleanFormula a :=
   Var.
 

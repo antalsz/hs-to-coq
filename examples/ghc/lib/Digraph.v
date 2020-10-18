@@ -55,9 +55,27 @@ Definition node_payload {key} {payload} (arg_0__ : Node key payload) :=
 
 Axiom verticesG : forall {node}, Graph node -> list node.
 
+(* Skipping definition `Digraph.vertexReady' *)
+
+(* Skipping definition `Digraph.vertexGroupsS' *)
+
+(* Skipping definition `Digraph.vertexGroupsG' *)
+
+(* Skipping definition `Digraph.vertexGroups' *)
+
 Axiom transposeG : forall {node}, Graph node -> Graph node.
 
 Axiom topologicalSortG : forall {node}, Graph node -> list node.
+
+(* Skipping definition `Digraph.stronglyConnCompG' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniqR' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniq' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrdR' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrd' *)
 
 Axiom reduceNodesIntoVerticesUniq : forall {key} {payload},
                                     forall `{Unique.Uniquable key}, ReduceFn key payload.
@@ -65,13 +83,25 @@ Axiom reduceNodesIntoVerticesUniq : forall {key} {payload},
 Axiom reduceNodesIntoVerticesOrd : forall {key} {payload},
                                    forall `{GHC.Base.Ord key}, ReduceFn key payload.
 
+(* Skipping definition `Digraph.reduceNodesIntoVertices' *)
+
 Axiom reachablesG : forall {node}, Graph node -> list node -> list node.
 
 Axiom reachableG : forall {node}, Graph node -> node -> list node.
 
+(* Skipping definition `Digraph.reachable' *)
+
+(* Skipping definition `Digraph.preorderF' *)
+
 Axiom outdegreeG : forall {node}, Graph node -> node -> option nat.
 
+(* Skipping definition `Digraph.noOutEdges' *)
+
+(* Skipping definition `Digraph.mkEmpty' *)
+
 Axiom indegreeG : forall {node}, Graph node -> node -> option nat.
+
+(* Skipping definition `Digraph.include' *)
 
 Axiom hasVertexG : forall {node}, Graph node -> node -> bool.
 
@@ -85,6 +115,8 @@ Axiom graphFromEdgedVerticesOrd : forall {key} {payload},
 Axiom graphFromEdgedVertices : forall {key} {payload},
                                ReduceFn key payload -> list (Node key payload) -> Graph (Node key payload).
 
+(* Skipping definition `Digraph.graphEmpty' *)
+
 Axiom findCycle : forall {payload} {key},
                   forall `{GHC.Base.Ord key}, list (Node key payload) -> option (list payload).
 
@@ -95,6 +127,12 @@ Axiom emptyG : forall {node}, Graph node -> bool.
 Axiom edgesG : forall {node}, Graph node -> list (Edge node).
 
 Axiom dfsTopSortG : forall {node}, Graph node -> list (list node).
+
+(* Skipping definition `Digraph.degreeG' *)
+
+(* Skipping definition `Digraph.decodeSccs' *)
+
+(* Skipping definition `Digraph.contains' *)
 
 Axiom componentsG : forall {node}, Graph node -> list (list node).
 

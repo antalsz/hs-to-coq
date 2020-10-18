@@ -32,6 +32,12 @@ Inductive GhcException : Type
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Panic.withSignalHandlers' *)
+
+(* Skipping definition `Panic.tryMost' *)
+
+(* Skipping definition `Panic.throwGhcExceptionIO' *)
+
 Axiom throwGhcException : forall {a} `{GHC.Err.Default a}, GhcException -> a.
 
 Axiom sorryDoc : forall {a} `{GHC.Err.Default a},
@@ -39,7 +45,15 @@ Axiom sorryDoc : forall {a} `{GHC.Err.Default a},
 
 Axiom sorry : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
 
+(* Skipping definition `Panic.signalHandlersRefCount' *)
+
+(* Skipping definition `Panic.showGhcException' *)
+
+(* Skipping definition `Panic.showException' *)
+
 Axiom short_usage : GHC.Base.String.
+
+(* Skipping definition `Panic.safeShowException' *)
 
 Axiom progName : GHC.Base.String.
 
@@ -52,6 +66,8 @@ Axiom panicDoc : forall {a} `{GHC.Err.Default a},
                  GHC.Base.String -> GHC.Base.String -> a.
 
 Axiom panic : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
+
+(* Skipping definition `Panic.handleGhcException' *)
 
 Axiom assertPanic : forall {a} `{GHC.Err.Default a},
                     GHC.Base.String -> GHC.Num.Int -> a.

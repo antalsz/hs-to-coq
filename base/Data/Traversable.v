@@ -81,6 +81,8 @@ Definition forM {t} {m} {a} {b} `{Traversable t} `{GHC.Base.Monad m}
    : t a -> (a -> m b) -> m (t b) :=
   GHC.Base.flip mapM.
 
+(* Skipping definition `Data.Traversable.foldMapDefault' *)
+
 Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
   GHC.Prim.coerce (traverse : (a -> Data.Functor.Identity.Identity b) ->
                    t a -> Data.Functor.Identity.Identity (t b)).

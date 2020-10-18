@@ -300,6 +300,10 @@ Definition zip4 {a} {b} {c} {d}
    : list a -> list b -> list c -> list d -> list (a * b * c * d)%type :=
   zipWith4 GHC.Tuple.pair4.
 
+(* Skipping definition `Data.OldList.wordsFB' *)
+
+(* Skipping definition `Data.OldList.words' *)
+
 Definition unzip7 {a} {b} {c} {d} {e} {f} {g}
    : list (a * b * c * d * e * f * g)%type ->
      (list a * list b * list c * list d * list e * list f * list g)%type :=
@@ -359,6 +363,10 @@ Definition unwords : list String -> String :=
 
 Axiom unlines : list String -> String.
 
+(* Skipping definition `Data.OldList.unfoldr' *)
+
+(* Skipping definition `Data.OldList.transpose' *)
+
 Definition toListSB {a} : SnocBuilder a -> list a :=
   fun '(Mk_SnocBuilder _ f r) => Coq.Init.Datatypes.app f (GHC.List.reverse r).
 
@@ -372,6 +380,8 @@ Definition tails {a} : list a -> list (list a) :=
 
 Definition tailUnwords : String -> String :=
   fun arg_0__ => match arg_0__ with | nil => nil | cons _ xs => xs end.
+
+(* Skipping definition `Data.OldList.subsequences' *)
 
 Fixpoint stripPrefix {a} `{Eq_ a} (arg_0__ arg_1__ : list a) : option (list a)
            := match arg_0__, arg_1__ with
@@ -389,6 +399,8 @@ Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
                  end in
     gl l #0.
 
+(* Skipping definition `Data.OldList.sortBy' *)
+
 Definition sortOn {b} {a} `{Ord b} : (a -> b) -> list a -> list a :=
   fun f =>
     map Data.Tuple.snd ∘
@@ -397,6 +409,8 @@ Definition sortOn {b} {a} `{Ord b} : (a -> b) -> list a -> list a :=
 
 Definition sort {a} `{(Ord a)} : list a -> list a :=
   sortBy compare.
+
+(* Skipping definition `Data.OldList.snocSB' *)
 
 Definition select {a}
    : (a -> bool) -> a -> (list a * list a)%type -> (list a * list a)%type :=
@@ -407,11 +421,15 @@ Definition select {a}
         pair ts (cons x fs)
     end.
 
+(* Skipping definition `Data.OldList.sb' *)
+
 Fixpoint prependToAll {a} (arg_0__ : a) (arg_1__ : list a) : list a
            := match arg_0__, arg_1__ with
               | _, nil => nil
               | sep, cons x xs => cons sep (cons x (prependToAll sep xs))
               end.
+
+(* Skipping definition `Data.OldList.permutations' *)
 
 Definition partition {a} : (a -> bool) -> list a -> (list a * list a)%type :=
   fun p xs => foldr (select p) (pair nil nil) xs.
@@ -481,12 +499,18 @@ Fixpoint mapAccumL {acc} {x} {y} (arg_0__ : (acc -> x -> (acc * y)%type))
                   pair s'' (cons y ys)
               end.
 
+(* Skipping definition `Data.OldList.lines' *)
+
 Fixpoint isPrefixOf {a} `{(Eq_ a)} (arg_0__ arg_1__ : list a) : bool
            := match arg_0__, arg_1__ with
               | nil, _ => true
               | _, nil => false
               | cons x xs, cons y ys => andb (x == y) (isPrefixOf xs ys)
               end.
+
+(* Skipping definition `Data.OldList.isInfixOf' *)
+
+(* Skipping definition `Data.OldList.intersperse' *)
 
 Definition intersectBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -502,6 +526,8 @@ Definition intersectBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
 Definition intersect {a} `{(Eq_ a)} : list a -> list a -> list a :=
   intersectBy _==_.
 
+(* Skipping definition `Data.OldList.intercalate' *)
+
 Fixpoint insertBy {a} (arg_0__ : (a -> a -> comparison)) (arg_1__ : a) (arg_2__
                     : list a) : list a
            := match arg_0__, arg_1__, arg_2__ with
@@ -515,6 +541,12 @@ Fixpoint insertBy {a} (arg_0__ : (a -> a -> comparison)) (arg_1__ : a) (arg_2__
 
 Definition insert {a} `{Ord a} : a -> list a -> list a :=
   fun e ls => insertBy (compare) e ls.
+
+(* Skipping definition `Data.OldList.inits' *)
+
+(* Skipping definition `Data.OldList.groupBy' *)
+
+(* Skipping definition `Data.OldList.group' *)
 
 Fixpoint genericTake {i} {a} `{(GHC.Real.Integral i)} (arg_0__ : i) (arg_1__
                        : list a) : list a
@@ -540,11 +572,15 @@ Fixpoint genericSplitAt {i} {a} `{(GHC.Real.Integral i)} (arg_0__ : i) (arg_1__
                   end
               end.
 
+(* Skipping definition `Data.OldList.genericReplicate' *)
+
 Fixpoint genericLength {i} {a} `{(GHC.Num.Num i)} (arg_0__ : list a) : i
            := match arg_0__ with
               | nil => #0
               | cons _ l => #1 GHC.Num.+ genericLength l
               end.
+
+(* Skipping definition `Data.OldList.genericIndex' *)
 
 Fixpoint genericDrop {i} {a} `{(GHC.Real.Integral i)} (arg_0__ : i) (arg_1__
                        : list a) : list a
@@ -556,6 +592,10 @@ Fixpoint genericDrop {i} {a} `{(GHC.Real.Integral i)} (arg_0__ : i) (arg_1__
                   | n, cons _ xs => genericDrop (n GHC.Num.- #1) xs
                   end
               end.
+
+(* Skipping definition `Data.OldList.findIndices' *)
+
+(* Skipping definition `Data.OldList.findIndex' *)
 
 Definition find {a} : (a -> bool) -> list a -> option a :=
   fun p => Data.Maybe.listToMaybe ∘ GHC.List.filter p.
@@ -583,6 +623,10 @@ Definition nubBy {a} : (a -> a -> bool) -> list a -> list a :=
 
 Definition nub {a} `{(Eq_ a)} : list a -> list a :=
   nubBy _==_.
+
+(* Skipping definition `Data.OldList.elemIndices' *)
+
+(* Skipping definition `Data.OldList.elemIndex' *)
 
 Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
   fun p =>

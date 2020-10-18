@@ -52,6 +52,10 @@ Definition ufmToIntMap {elt} : UniqFM elt -> IntMap.IntMap elt :=
 Definition sizeUFM {elt} : UniqFM elt -> nat :=
   fun '(UFM m) => IntMap.size m.
 
+(* Skipping definition `UniqFM.pprUniqFM' *)
+
+(* Skipping definition `UniqFM.pprUFM' *)
+
 Axiom plusUFM_CD : forall {elt},
                    (elt -> elt -> elt) -> UniqFM elt -> elt -> UniqFM elt -> elt -> UniqFM elt.
 
@@ -70,6 +74,8 @@ Definition plusUFM {elt} : UniqFM elt -> UniqFM elt -> UniqFM elt :=
 
 Axiom plusMaybeUFM_C : forall {elt},
                        (elt -> elt -> option elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt.
+
+(* Skipping definition `UniqFM.pluralUFM' *)
 
 Definition partitionUFM {elt}
    : (elt -> bool) -> UniqFM elt -> (UniqFM elt * UniqFM elt)%type :=
@@ -196,6 +202,8 @@ Definition filterUFM {elt} : (elt -> bool) -> UniqFM elt -> UniqFM elt :=
     match arg_0__, arg_1__ with
     | p, UFM m => UFM (IntMap.filter p m)
     end.
+
+(* Skipping definition `UniqFM.equalKeysUFM' *)
 
 Definition emptyUFM {elt} : UniqFM elt :=
   UFM IntMap.empty.

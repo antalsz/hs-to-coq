@@ -43,6 +43,8 @@ Definition mapIdentityT {m} {a} {n} {b}
    : (m a -> n b) -> IdentityT m a -> IdentityT n b :=
   fun f => Mk_IdentityT GHC.Base.∘ (f GHC.Base.∘ runIdentityT).
 
+(* Skipping definition `Control.Monad.Trans.Identity.liftCatch' *)
+
 Definition liftCallCC {m} {a} {b}
    : Control.Monad.Signatures.CallCC m a b ->
      Control.Monad.Signatures.CallCC (IdentityT m) a b :=

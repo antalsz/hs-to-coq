@@ -85,6 +85,8 @@ Definition liftListen {m} {w} {a} {s} `{(GHC.Base.Monad m)}
                    GHC.Base.return_ (pair (pair a w) s') in
                  listen (runStateT m s) GHC.Base.>>= cont_0__).
 
+(* Skipping definition `Control.Monad.Trans.State.Lazy.liftCatch' *)
+
 Definition liftCallCC' {m} {a} {s} {b}
    : Control.Monad.Signatures.CallCC m (a * s)%type (b * s)%type ->
      Control.Monad.Signatures.CallCC (StateT s m) a b :=

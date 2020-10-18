@@ -136,6 +136,12 @@ Definition srcLocFile : RealSrcLoc -> FastString.FastString :=
 Definition srcLocCol : RealSrcLoc -> GHC.Num.Int :=
   fun '(ASrcLoc _ _ c) => c.
 
+(* Skipping definition `SrcLoc.spans' *)
+
+(* Skipping definition `SrcLoc.sortLocated' *)
+
+(* Skipping definition `SrcLoc.rightmost' *)
+
 Definition realSrcLocSpan : RealSrcLoc -> RealSrcSpan :=
   fun '(ASrcLoc file line col) => RealSrcSpan' file line col line col.
 
@@ -145,6 +151,10 @@ Definition srcLocSpan : SrcLoc -> SrcSpan :=
     | UnhelpfulLoc str => UnhelpfulSpan str
     | ARealSrcLoc l => ARealSrcSpan (realSrcLocSpan l)
     end.
+
+(* Skipping definition `SrcLoc.pprUserSpan' *)
+
+(* Skipping definition `SrcLoc.pprUserRealSpan' *)
 
 Definition noSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<no location info>")).
@@ -218,6 +228,12 @@ Definition mkGeneralSrcLoc : FastString.FastString -> SrcLoc :=
 Definition mkGeneralLocated {e} : GHC.Base.String -> e -> Located e :=
   fun s e => L (mkGeneralSrcSpan (FastString.fsLit s)) e.
 
+(* Skipping definition `SrcLoc.leftmost_smallest' *)
+
+(* Skipping definition `SrcLoc.leftmost_largest' *)
+
+(* Skipping definition `SrcLoc.isSubspanOf' *)
+
 Definition isPointRealSpan : RealSrcSpan -> bool :=
   fun '(RealSrcSpan' _ line1 col1 line2 col2) =>
     andb (line1 GHC.Base.== line2) (col1 GHC.Base.== col2).
@@ -255,9 +271,21 @@ Definition generatedSrcLoc : SrcLoc :=
 Definition eqLocated {a} `{GHC.Base.Eq_ a} : Located a -> Located a -> bool :=
   fun a b => unLoc a GHC.Base.== unLoc b.
 
+(* Skipping definition `SrcLoc.containsSpan' *)
+
+(* Skipping definition `SrcLoc.combineSrcSpans' *)
+
+(* Skipping definition `SrcLoc.combineRealSrcSpans' *)
+
+(* Skipping definition `SrcLoc.combineLocs' *)
+
 Definition cmpLocated {a} `{GHC.Base.Ord a}
    : Located a -> Located a -> comparison :=
   fun a b => GHC.Base.compare (unLoc a) (unLoc b).
+
+(* Skipping definition `SrcLoc.advanceSrcLoc' *)
+
+(* Skipping definition `SrcLoc.addCLoc' *)
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun arg_0__ arg_1__ =>

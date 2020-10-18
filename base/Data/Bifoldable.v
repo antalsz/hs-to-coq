@@ -88,6 +88,16 @@ Definition bior {t} `{Bifoldable t} : t bool bool -> bool :=
 Definition binull {t} {a} {b} `{Bifoldable t} : t a b -> bool :=
   bifoldr (fun arg_0__ arg_1__ => false) (fun arg_2__ arg_3__ => false) true.
 
+(* Skipping definition `Data.Bifoldable.bimsum' *)
+
+(* Skipping definition `Data.Bifoldable.biminimumBy' *)
+
+(* Skipping definition `Data.Bifoldable.biminimum' *)
+
+(* Skipping definition `Data.Bifoldable.bimaximumBy' *)
+
+(* Skipping definition `Data.Bifoldable.bimaximum' *)
+
 Definition bimapM_ {t} {f} {a} {c} {b} {d} `{Bifoldable t}
   `{GHC.Base.Applicative f}
    : (a -> f c) -> (b -> f d) -> t a b -> f unit :=
@@ -110,6 +120,8 @@ Definition bifoldrM {t} {m} {a} {c} {b} `{Bifoldable t} `{GHC.Base.Monad m}
     let f' := fun k x z => f x z GHC.Base.>>= k in
     bifoldl f' g' GHC.Base.return_ xs z0.
 
+(* Skipping definition `Data.Bifoldable.bifoldr1' *)
+
 Definition bifoldr' {t} {a} {c} {b} `{Bifoldable t}
    : (a -> c -> c) -> (b -> c -> c) -> c -> t a b -> c :=
   fun f g z0 xs =>
@@ -122,6 +134,8 @@ Definition bifoldlM {t} {m} {a} {b} {c} `{Bifoldable t} `{GHC.Base.Monad m}
     let g' := fun x k z => g z x GHC.Base.>>= k in
     let f' := fun x k z => f z x GHC.Base.>>= k in
     bifoldr f' g' GHC.Base.return_ xs z0.
+
+(* Skipping definition `Data.Bifoldable.bifoldl1' *)
 
 Definition bifoldl' {t} {a} {b} {c} `{Bifoldable t}
    : (a -> b -> a) -> (a -> c -> a) -> a -> t b c -> a :=
@@ -150,6 +164,8 @@ Definition biconcatMap {t} {a} {c} {b} `{Bifoldable t}
 
 Definition biconcat {t} {a} `{Bifoldable t} : t (list a) (list a) -> list a :=
   bifold.
+
+(* Skipping definition `Data.Bifoldable.biasum' *)
 
 Definition biany {t} {a} {b} `{Bifoldable t}
    : (a -> bool) -> (b -> bool) -> t a b -> bool :=

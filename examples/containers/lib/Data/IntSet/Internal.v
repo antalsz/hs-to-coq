@@ -87,8 +87,14 @@ Require Import Coq.NArith.NArith.
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Utils.Containers.Internal.BitUtil.lowestBitMask' *)
+
 Definition zero : Coq.Numbers.BinNums.N -> Mask -> bool :=
   fun i m => ((i) Data.Bits..&.(**) (m)) GHC.Base.== #0.
+
+(* Skipping definition `Data.IntSet.Internal.withEmpty' *)
+
+(* Skipping definition `Data.IntSet.Internal.withBar' *)
 
 Definition tip : Prefix -> BitMap -> IntSet :=
   fun arg_0__ arg_1__ =>
@@ -126,6 +132,24 @@ Definition size : IntSet -> Coq.Numbers.BinNums.N :=
                end in
   go #0.
 
+(* Skipping definition `Data.IntSet.Internal.showsTreeHang' *)
+
+(* Skipping definition `Data.IntSet.Internal.showsTree' *)
+
+(* Skipping definition `Data.IntSet.Internal.showsBitMap' *)
+
+(* Skipping definition `Data.IntSet.Internal.showsBars' *)
+
+(* Skipping definition `Data.IntSet.Internal.showWide' *)
+
+(* Skipping definition `Data.IntSet.Internal.showTreeWith' *)
+
+(* Skipping definition `Data.IntSet.Internal.showTree' *)
+
+(* Skipping definition `Data.IntSet.Internal.showBitMap' *)
+
+(* Skipping definition `Data.IntSet.Internal.showBin' *)
+
 Definition shorter : Mask -> Mask -> bool :=
   fun m1 m2 => (m1) GHC.Base.> (m2).
 
@@ -157,8 +181,12 @@ Definition revNat : Nat -> Nat :=
 Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
   fun x => Coq.NArith.BinNat.N.ldiff x suffixBitMask.
 
+(* Skipping definition `Data.IntSet.Internal.prefixBitMask' *)
+
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
+
+(* Skipping definition `Data.IntSet.Internal.node' *)
 
 Fixpoint nequal (arg_0__ arg_1__ : IntSet) : bool
            := match arg_0__, arg_1__ with
@@ -169,6 +197,8 @@ Fixpoint nequal (arg_0__ arg_1__ : IntSet) : bool
               | Nil, Nil => false
               | _, _ => true
               end.
+
+(* Skipping definition `Data.IntSet.Internal.natFromInt' *)
 
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m => Coq.NArith.BinNat.N.ldiff i (2 * m - 1 % N).
@@ -254,6 +284,10 @@ Fixpoint isSubsetOf (arg_0__ arg_1__ : IntSet) : bool
 Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
   fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
 
+(* Skipping definition `Data.IntSet.Internal.intSetDataType' *)
+
+(* Skipping definition `Data.IntSet.Internal.intFromNat' *)
+
 Definition indexOfTheOnlyBit :=
   fun x => Coq.NArith.BinNat.N.log2 x.
 
@@ -276,6 +310,12 @@ Fixpoint unsafeFindMax (arg_0__ : IntSet) : option Key
               | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
               | Bin _ _ _ r => unsafeFindMax r
               end.
+
+(* Skipping definition `Data.IntSet.Internal.fromListConstr' *)
+
+(* Skipping definition `Data.IntSet.Internal.fromDistinctAscList' *)
+
+(* Skipping definition `Data.IntSet.Internal.fromAscList' *)
 
 Definition revNatSafe n :=
   Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
@@ -438,6 +478,10 @@ Definition toDescList : IntSet -> list Key :=
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
+(* Skipping definition `Data.IntSet.Internal.findMin' *)
+
+(* Skipping definition `Data.IntSet.Internal.findMax' *)
+
 Fixpoint equal (arg_0__ arg_1__ : IntSet) : bool
            := match arg_0__, arg_1__ with
               | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
@@ -504,6 +548,10 @@ Program Fixpoint disjoint (arg_0__ arg_1__ : IntSet) {measure (size_nat arg_0__
                       | Nil, _ => true
                       end.
 Solve Obligations with (termination_by_omega).
+
+(* Skipping definition `Data.IntSet.Internal.deleteFindMin' *)
+
+(* Skipping definition `Data.IntSet.Internal.deleteFindMax' *)
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>

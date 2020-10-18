@@ -131,6 +131,8 @@ Definition unzip {a} {b} : list (a * b)%type -> (list a * list b)%type :=
            | pair a b, pair as_ bs => pair (cons a as_) (cons b bs)
            end) (pair nil nil).
 
+(* Skipping definition `GHC.List.unsafeTake' *)
+
 Definition uncons {a} : list a -> option (a * list a)%type :=
   fun arg_0__ =>
     match arg_0__ with
@@ -156,12 +158,13 @@ Definition takeFB {a} {b}
       if num_0__ == #1 : bool then c x n else
       c x (xs (m GHC.Num.- #1)).
 
-Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl _GHC.Num.+_ #0.
+(* Skipping definition `GHC.List.take' *)
 
 Definition strictUncurryScanr {a} {b} {c}
    : (a -> b -> c) -> (a * b)%type -> c :=
   fun f pair_ => let 'pair x y := pair_ in f x y.
+
+(* Skipping definition `GHC.List.splitAt' *)
 
 Fixpoint span {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a *
                                                                 list a)%type
@@ -191,6 +194,8 @@ Fixpoint scanr1 {a} `{_ : GHC.Err.Default a} (arg_0__ : a -> a -> a) (arg_1__
                   | _ => GHC.Err.patternFailure
                   end
               end.
+
+(* Skipping definition `GHC.List.scanr' *)
 
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
@@ -234,8 +239,11 @@ Definition reverse {a} : list a -> list a :=
                  end in
     rev l nil.
 
-Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl _GHC.Num.*_ #1.
+(* Skipping definition `GHC.List.replicate' *)
+
+(* Skipping definition `GHC.List.repeatFB' *)
+
+(* Skipping definition `GHC.List.repeat' *)
 
 Definition prel_list_str : String :=
   GHC.Base.hs_string__ "Prelude.".
@@ -300,6 +308,14 @@ Fixpoint lenAcc {a} (arg_0__ : list a) (arg_1__ : GHC.Num.Int) : GHC.Num.Int
 Definition length {a} : list a -> GHC.Num.Int :=
   fun xs => lenAcc xs #0.
 
+(* Skipping definition `GHC.List.iterateFB' *)
+
+(* Skipping definition `GHC.List.iterate'FB' *)
+
+(* Skipping definition `GHC.List.iterate'' *)
+
+(* Skipping definition `GHC.List.iterate' *)
+
 Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   id.
 
@@ -345,21 +361,6 @@ Definition errorEmptyList {a} `{_ : GHC.Err.Default a} : String -> a :=
                                                            (Coq.Init.Datatypes.app fun_ (GHC.Base.hs_string__
                                                                                     ": empty list"))).
 
-Definition foldl1 {a} `{_ : GHC.Err.Default a} : (a -> a -> a) -> list a -> a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, cons x xs => foldl f x xs
-    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1")
-    end.
-
-Definition foldl1' {a} `{_ : GHC.Err.Default a}
-   : (a -> a -> a) -> list a -> a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, cons x xs => foldl' f x xs
-    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1'")
-    end.
-
 Definition foldr1 {a} `{_ : GHC.Err.Default a} : (a -> a -> a) -> list a -> a :=
   fun f =>
     let fix go arg_0__
@@ -386,27 +387,6 @@ Definition init {a} `{_ : GHC.Err.Default a} : list a -> list a :=
 Definition lastError {a} `{_ : GHC.Err.Default a} : a :=
   errorEmptyList (GHC.Base.hs_string__ "last").
 
-Definition last {a} `{_ : GHC.Err.Default a} : list a -> a :=
-  fun xs =>
-    foldl (fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, x => x end)
-    lastError xs.
-
-Definition maximum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
-   : list a -> a :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | nil => errorEmptyList (GHC.Base.hs_string__ "maximum")
-    | xs => foldl1 max xs
-    end.
-
-Definition minimum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
-   : list a -> a :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | nil => errorEmptyList (GHC.Base.hs_string__ "minimum")
-    | xs => foldl1 min xs
-    end.
-
 Definition tail {a} `{_ : GHC.Err.Default a} : list a -> list a :=
   fun arg_0__ =>
     match arg_0__ with
@@ -425,6 +405,10 @@ Fixpoint dropWhile {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
               | _, nil => nil
               | p, (cons x xs' as xs) => if p x : bool then dropWhile p xs' else xs
               end.
+
+(* Skipping definition `GHC.List.drop' *)
+
+(* Skipping definition `GHC.List.cycle' *)
 
 Definition constScanl {a} {b} : a -> b -> a :=
   const.
@@ -465,6 +449,54 @@ Fixpoint all {a} (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
               | _, nil => true
               | p, cons x xs => andb (p x) (all p xs)
               end.
+
+(* Skipping definition `GHC.Base.foldl'' *)
+
+Definition foldl1' {a} `{_ : GHC.Err.Default a}
+   : (a -> a -> a) -> list a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, cons x xs => foldl' f x xs
+    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1'")
+    end.
+
+(* Skipping definition `GHC.Base.foldl' *)
+
+Definition foldl1 {a} `{_ : GHC.Err.Default a} : (a -> a -> a) -> list a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, cons x xs => foldl f x xs
+    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1")
+    end.
+
+Definition maximum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
+   : list a -> a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => errorEmptyList (GHC.Base.hs_string__ "maximum")
+    | xs => foldl1 max xs
+    end.
+
+Definition minimum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
+   : list a -> a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => errorEmptyList (GHC.Base.hs_string__ "minimum")
+    | xs => foldl1 min xs
+    end.
+
+Definition last {a} `{_ : GHC.Err.Default a} : list a -> a :=
+  fun xs =>
+    foldl (fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, x => x end)
+    lastError xs.
+
+Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
+  foldl _GHC.Num.*_ #1.
+
+Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
+  foldl _GHC.Num.+_ #0.
+
+(* Skipping definition `Coq.Lists.List.flat_map' *)
 
 Module Notations.
 Notation "'_GHC.List.!!_'" := (op_znzn__).

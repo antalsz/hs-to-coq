@@ -41,6 +41,10 @@ Definition zipWithM {m} {a} {b} {c} `{_ : GHC.Base.Applicative m}
 Definition unless {f} `{(GHC.Base.Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then GHC.Base.pure tt else s.
 
+(* Skipping definition `Control.Monad.replicateM_' *)
+
+(* Skipping definition `Control.Monad.replicateM' *)
+
 Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> b) -> m a -> m b :=
   fun f m =>
@@ -66,9 +70,15 @@ Notation "'_<=<_'" := (op_zlzezl__).
 
 Infix "<=<" := (_<=<_) (at level 99).
 
+(* Skipping definition `Control.Monad.mfilter' *)
+
 Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)}
    : (a -> m (b * c)%type) -> list a -> m (list b * list c)%type :=
   fun f xs => GHC.List.unzip Data.Functor.<$> Data.Traversable.traverse f xs.
+
+(* Skipping definition `Control.Monad.guard' *)
+
+(* Skipping definition `Control.Monad.forever' *)
 
 Definition foldM_ {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad
   m}

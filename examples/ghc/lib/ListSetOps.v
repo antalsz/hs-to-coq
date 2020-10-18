@@ -73,6 +73,10 @@ Definition hasNoDups {a} `{(GHC.Base.Eq_ a)} : list a -> bool :=
                  end in
     f nil xs.
 
+(* Skipping definition `ListSetOps.getNth' *)
+
+(* Skipping definition `ListSetOps.findDupsEq' *)
+
 Axiom equivClasses : forall {a},
                      (a -> a -> comparison) -> list a -> list (GHC.Base.NonEmpty a).
 

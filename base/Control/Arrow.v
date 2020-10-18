@@ -221,6 +221,8 @@ Notation "'_^>>_'" := (op_zczgzg__).
 
 Infix "^>>" := (_^>>_) (at level 99).
 
+(* Skipping definition `Control.Arrow.leftApp' *)
+
 Local Definition Arrow__arrow_arr
    : forall {b} {c}, (b -> c) -> GHC.Prim.arrow b c :=
   fun {b} {c} => fun f => f.

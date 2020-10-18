@@ -102,6 +102,8 @@ Definition splitUniqSupply4
 Definition returnUs {a} : a -> UniqSM a :=
   fun result => USM (fun us => pair result us).
 
+(* Skipping definition `UniqSupply.mkSplitUniqSupply' *)
+
 Fixpoint listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
            := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
               cons s1 (listSplitUniqSupply s2).

@@ -556,8 +556,26 @@ End ManualNotations.
 Definition when {f} `{(Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then s else pure tt.
 
+(* Skipping definition `GHC.Base.until' *)
+
+(* Skipping definition `GHC.Base.unsafeChr' *)
+
+(* Skipping definition `GHC.Base.unIO' *)
+
+(* Skipping definition `GHC.Base.thenIO' *)
+
+(* Skipping definition `GHC.Base.returnIO' *)
+
+(* Skipping definition `GHC.Base.remInt' *)
+
+(* Skipping definition `GHC.Base.quotRemInt' *)
+
+(* Skipping definition `GHC.Base.quotInt' *)
+
 Definition otherwise : bool :=
   true.
+
+(* Skipping definition `GHC.Base.ord' *)
 
 Definition op_zlztztzg__ {f} {a} {b} `{Applicative f}
    : f a -> f (a -> b) -> f b :=
@@ -594,6 +612,24 @@ Definition op_z2218U__ {b} {c} {a} : (b -> c) -> (a -> b) -> a -> c :=
 Notation "'_∘_'" := (op_z2218U__).
 
 Infix "∘" := (_∘_) (left associativity, at level 40).
+
+(* Skipping definition `GHC.Base.op_shiftRLzh__' *)
+
+(* Skipping definition `GHC.Base.op_shiftLzh__' *)
+
+(* Skipping definition `GHC.Base.op_iShiftRLzh__' *)
+
+(* Skipping definition `GHC.Base.op_iShiftRAzh__' *)
+
+(* Skipping definition `GHC.Base.op_iShiftLzh__' *)
+
+(* Skipping definition `GHC.Base.op_divModIntzh__' *)
+
+(* Skipping definition `GHC.Base.modInt' *)
+
+(* Skipping definition `GHC.Base.minInt' *)
+
+(* Skipping definition `GHC.Base.maxInt' *)
 
 Definition mapFB {elt} {lst} {a}
    : (elt -> lst -> lst) -> (a -> elt) -> a -> lst -> lst :=
@@ -646,6 +682,8 @@ Definition id {a} : a -> a :=
 Definition join {m} {a} `{(Monad m)} : m (m a) -> m a :=
   fun x => x >>= id.
 
+(* Skipping definition `GHC.Base.getTag' *)
+
 Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
   fun k z =>
     let fix go arg_0__
@@ -673,14 +711,24 @@ Fixpoint eqString (arg_0__ arg_1__ : String) : bool
               | _, _ => false
               end.
 
+(* Skipping definition `GHC.Base.divModInt' *)
+
+(* Skipping definition `GHC.Base.divInt' *)
+
 Definition const {a} {b} : a -> b -> a :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | x, _ => x end.
+
+(* Skipping definition `GHC.Base.build' *)
 
 Definition breakpointCond {a} : bool -> a -> a :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, r => r end.
 
 Definition breakpoint {a} : a -> a :=
   fun r => r.
+
+(* Skipping definition `GHC.Base.bindIO' *)
+
+(* Skipping definition `GHC.Base.augment' *)
 
 Definition assert {a} : bool -> a -> a :=
   fun _pred r => r.
@@ -690,6 +738,8 @@ Definition asTypeOf {a} : a -> a -> a :=
 
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
+
+(* Skipping definition `Coq.Init.Datatypes.app' *)
 
 Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a}
    : option inst_a -> option inst_a -> bool :=

@@ -265,6 +265,8 @@ Axiom occAnalRecBind : OccEnv ->
                        list (Core.Var * Core.CoreExpr)%type ->
                        UsageDetails -> (UsageDetails * list Core.CoreBind)%type.
 
+(* Skipping definition `OccurAnal.occAnalRec' *)
+
 Axiom occAnalLamOrRhs : OccEnv ->
                         list Core.CoreBndr ->
                         Core.CoreExpr -> (UsageDetails * list Core.CoreBndr * Core.CoreExpr)%type.

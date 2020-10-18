@@ -218,6 +218,8 @@ Definition runWhenMatched {f} {k} {x} {y} {z}
    : WhenMatched f k x y z -> k -> x -> y -> f (option z) :=
   matchedKey.
 
+(* Skipping definition `Data.Map.Internal.replaceAlong' *)
+
 Definition ratio : GHC.Num.Int :=
   #2.
 
@@ -227,6 +229,8 @@ Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f}
                     match arg_0__, arg_1__ with
                     | _, v => GHC.Base.pure (Some v)
                     end).
+
+(* Skipping definition `Data.Map.Internal.op_zn__' *)
 
 Definition null {k} {a} : Map k a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
@@ -318,6 +322,8 @@ Definition mapGentlyWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
     zipWithMaybeAMatched (fun k x y =>
                             GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
 
+(* Skipping definition `Data.Map.Internal.mapDataType' *)
+
 Fixpoint mapAccumRWithKey {a} {k} {b} {c} (arg_0__
                             : (a -> k -> b -> (a * c)%type)) (arg_1__ : a) (arg_2__ : Map k b) : (a *
                                                                                                   Map k c)%type
@@ -352,6 +358,8 @@ Definition mapAccum {a} {b} {c} {k}
                        match arg_0__, arg_1__, arg_2__ with
                        | a', _, x' => f a' x'
                        end) a m.
+
+(* Skipping definition `Data.Map.Internal.lookupTrace' *)
 
 Fixpoint lookupMinSure {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
            : (k * a)%type
@@ -514,6 +522,8 @@ Fixpoint keysSet {k} {a} (arg_0__ : Map k a) : Data.Set.Internal.Set_ k
               | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
               end.
 
+(* Skipping definition `Data.Map.Internal.insertAlong' *)
+
 Fixpoint fromSet {k} {a} (arg_0__ : (k -> a)) (arg_1__
                    : Data.Set.Internal.Set_ k) : Map k a
            := match arg_0__, arg_1__ with
@@ -521,6 +531,8 @@ Fixpoint fromSet {k} {a} (arg_0__ : (k -> a)) (arg_1__
               | f, Data.Set.Internal.Bin sz x l r =>
                   Bin sz x (f x) (fromSet f l) (fromSet f r)
               end.
+
+(* Skipping definition `Data.Map.Internal.fromListConstr' *)
 
 Definition foldrWithKey' {k} {a} {b}
    : (k -> a -> b -> b) -> b -> Map k a -> b :=
@@ -645,6 +657,10 @@ Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
                end in
   go.
 
+(* Skipping definition `Data.Map.Internal.findMin' *)
+
+(* Skipping definition `Data.Map.Internal.findMax' *)
+
 Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k} : GHC.Num.Int -> k -> Map k a -> GHC.Num.Int :=
     fix go (arg_0__ : GHC.Num.Int) (arg_1__ : k) (arg_2__ : Map k a) : GHC.Num.Int
@@ -660,19 +676,33 @@ Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
              end in
   go #0.
 
+(* Skipping definition `Data.Map.Internal.find' *)
+
 Definition empty {k} {a} : Map k a :=
   Tip.
 
 Definition elems {k} {a} : Map k a -> list a :=
   foldr cons nil.
 
+(* Skipping definition `Data.Map.Internal.elemAt' *)
+
 Definition dropMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f k x y :=
   Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Tip)) (fun arg_0__ arg_1__ =>
                     GHC.Base.pure None).
 
+(* Skipping definition `Data.Map.Internal.differenceWithKey' *)
+
+(* Skipping definition `Data.Map.Internal.differenceWith' *)
+
 Definition delta : GHC.Num.Int :=
   #3.
+
+(* Skipping definition `Data.Map.Internal.deleteFindMin' *)
+
+(* Skipping definition `Data.Map.Internal.deleteFindMax' *)
+
+(* Skipping definition `Data.Map.Internal.deleteAlong' *)
 
 Definition contramapSecondWhenMatched {b} {a} {f} {k} {x} {z}
    : (b -> a) -> WhenMatched f k x a z -> WhenMatched f k x b z :=
@@ -688,6 +718,8 @@ Definition boolITE {a} : a -> a -> bool -> a :=
     | f, _, false => f
     | _, t, true => t
     end.
+
+(* Skipping definition `Data.Map.Internal.bogus' *)
 
 Definition bin {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
   fun k x l r => Bin ((size l GHC.Num.+ size r) GHC.Num.+ #1) k x l r.
@@ -2101,6 +2133,8 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
     | AltSame => t
     end.
 
+(* Skipping definition `Data.Map.Internal.atKeyImpl' *)
+
 Definition atKeyIdentity {k} {a} `{GHC.Base.Ord k}
    : k ->
      (option a -> Data.Functor.Identity.Identity (option a)) ->
@@ -2110,6 +2144,8 @@ Definition atKeyIdentity {k} {a} `{GHC.Base.Ord k}
 
 Definition assocs {k} {a} : Map k a -> list (k * a)%type :=
   fun m => toAscList m.
+
+(* Skipping definition `Data.Map.Internal.alterF' *)
 
 Definition alter {k} {a} `{GHC.Base.Ord k}
    : (option a -> option a) -> k -> Map k a -> Map k a :=

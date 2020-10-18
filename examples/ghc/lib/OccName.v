@@ -126,6 +126,16 @@ Definition setOccNameSpace : NameSpace -> OccName -> OccName :=
     | sp, Mk_OccName _ occ => Mk_OccName sp occ
     end.
 
+(* Skipping definition `OccName.pprOccName' *)
+
+(* Skipping definition `OccName.pprOccEnv' *)
+
+(* Skipping definition `OccName.pprNonVarNameSpace' *)
+
+(* Skipping definition `OccName.pprNameSpaceBrief' *)
+
+(* Skipping definition `OccName.pprNameSpace' *)
+
 Definition plusOccEnv_C {a}
    : (a -> a -> a) -> OccEnv a -> OccEnv a -> OccEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -138,6 +148,8 @@ Definition plusOccEnv {a} : OccEnv a -> OccEnv a -> OccEnv a :=
     match arg_0__, arg_1__ with
     | A x, A y => A (UniqFM.plusUFM x y)
     end.
+
+(* Skipping definition `OccName.parenSymOcc' *)
 
 Definition otherNameSpace : NameSpace -> NameSpace :=
   fun arg_0__ =>

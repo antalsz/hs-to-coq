@@ -590,15 +590,45 @@ Admitted.
 
 (* Converted value declarations: *)
 
+(* Skipping definition `DynFlags.xopt_unset' *)
+
+(* Skipping definition `DynFlags.xopt_set' *)
+
+(* Skipping definition `DynFlags.xopt' *)
+
+(* Skipping definition `DynFlags.xFlagsDeps' *)
+
+(* Skipping definition `DynFlags.xFlags' *)
+
 Axiom wopt_unset_fatal : DynFlags -> WarningFlag -> DynFlags.
+
+(* Skipping definition `DynFlags.wopt_unset' *)
 
 Axiom wopt_set_fatal : DynFlags -> WarningFlag -> DynFlags.
 
+(* Skipping definition `DynFlags.wopt_set' *)
+
 Axiom wopt_fatal : WarningFlag -> DynFlags -> bool.
+
+(* Skipping definition `DynFlags.wopt' *)
+
+(* Skipping definition `DynFlags.whenGeneratingDynamicToo' *)
+
+(* Skipping definition `DynFlags.whenCannotGenerateDynamicToo' *)
+
+(* Skipping definition `DynFlags.wayUnsetGeneralFlags' *)
 
 Axiom wayTag : Way -> GHC.Base.String.
 
 Axiom wayRTSOnly : Way -> bool.
+
+(* Skipping definition `DynFlags.wayOptl' *)
+
+(* Skipping definition `DynFlags.wayOptc' *)
+
+(* Skipping definition `DynFlags.wayOptP' *)
+
+(* Skipping definition `DynFlags.wayGeneralFlags' *)
 
 Axiom wayDesc : Way -> GHC.Base.String.
 
@@ -618,9 +648,23 @@ Axiom wORDS_BIGENDIAN : DynFlags -> bool.
 
 Axiom versionedFilePath : DynFlags -> GHC.Base.String.
 
+(* Skipping definition `DynFlags.versionedAppDir' *)
+
+(* Skipping definition `DynFlags.v_unsafeGlobalDynFlags' *)
+
 Axiom useUnicodeSyntax : DynFlags -> bool.
 
+(* Skipping definition `DynFlags.useInstead' *)
+
 Axiom updateWays : DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.updOptLevel' *)
+
+(* Skipping definition `DynFlags.updM' *)
+
+(* Skipping definition `DynFlags.upd' *)
+
+(* Skipping definition `DynFlags.unusedBindsFlags' *)
 
 Axiom unsafeGlobalDynFlags : DynFlags.
 
@@ -633,9 +677,25 @@ Axiom unsafeFlags : list (GHC.Base.String * (DynFlags -> SrcLoc.SrcSpan) *
                           (DynFlags -> bool) *
                           (DynFlags -> DynFlags))%type.
 
+(* Skipping definition `DynFlags.unrecognisedWarning' *)
+
+(* Skipping definition `DynFlags.unSetWarningFlag' *)
+
+(* Skipping definition `DynFlags.unSetGeneralFlag'' *)
+
+(* Skipping definition `DynFlags.unSetGeneralFlag' *)
+
+(* Skipping definition `DynFlags.unSetFatalWarningFlag' *)
+
+(* Skipping definition `DynFlags.unSetExtensionFlag'' *)
+
+(* Skipping definition `DynFlags.unSetExtensionFlag' *)
+
 Axiom turnOn : TurnOnFlag.
 
 Axiom turnOff : TurnOnFlag.
+
+(* Skipping definition `DynFlags.trustPackage' *)
 
 Axiom topDir : DynFlags -> GHC.Base.String.
 
@@ -649,6 +709,8 @@ Axiom thisPackage : DynFlags -> Module.UnitId.
 Axiom thisComponentId : DynFlags -> Module.ComponentId.
 
 Axiom targetRetainsAllBindings : HscTarget -> bool.
+
+(* Skipping definition `DynFlags.targetPlatform' *)
 
 Axiom tablesNextToCode : DynFlags -> bool.
 
@@ -670,6 +732,10 @@ Axiom supportedLanguagesAndExtensions : list GHC.Base.String.
 
 Axiom supportedLanguages : list GHC.Base.String.
 
+(* Skipping definition `DynFlags.supportedLanguageOverlays' *)
+
+(* Skipping definition `DynFlags.supportedExtensions' *)
+
 Axiom standardWarnings : list WarningFlag.
 
 Axiom split_marker : GHC.Char.Char.
@@ -682,11 +748,41 @@ Axiom showOpt : Option -> GHC.Base.String.
 
 Axiom shouldUseColor : DynFlags -> bool.
 
+(* Skipping definition `DynFlags.setWarningFlag' *)
+
+(* Skipping definition `DynFlags.setWarnUnsafe' *)
+
+(* Skipping definition `DynFlags.setWarnSafe' *)
+
+(* Skipping definition `DynFlags.setVerbosity' *)
+
+(* Skipping definition `DynFlags.setVerboseCore2Core' *)
+
+(* Skipping definition `DynFlags.setUnsafeGlobalDynFlags' *)
+
 Axiom setUnitIdInsts : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.setUnitId' *)
+
+(* Skipping definition `DynFlags.setTmpDir' *)
+
+(* Skipping definition `DynFlags.setTargetWithPlatform' *)
+
+(* Skipping definition `DynFlags.setTarget' *)
 
 Axiom setStubDir : GHC.Base.String -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.setSafeHaskell' *)
+
+(* Skipping definition `DynFlags.setRtsOptsEnabled' *)
+
+(* Skipping definition `DynFlags.setRtsOpts' *)
+
 Axiom setPgmP : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.setPackageTrust' *)
+
+(* Skipping definition `DynFlags.setOverlappingInsts' *)
 
 Axiom setOutputHi : option GHC.Base.String -> DynFlags -> DynFlags.
 
@@ -694,19 +790,45 @@ Axiom setOutputFile : option GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setOutputDir : GHC.Base.String -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.setOptLevel' *)
+
+(* Skipping definition `DynFlags.setOptHpcDir' *)
+
 Axiom setObjectSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setObjectDir : GHC.Base.String -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.setObjTarget' *)
+
+(* Skipping definition `DynFlags.setMainIs' *)
+
+(* Skipping definition `DynFlags.setLogAction' *)
+
+(* Skipping definition `DynFlags.setLanguage' *)
+
 Axiom setJsonLogAction : DynFlags -> DynFlags.
 
 Axiom setInteractivePrint : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.setIncoherentInsts' *)
 
 Axiom setHiSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setHiDir : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setHcSuf : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.setGeneralFlag'' *)
+
+(* Skipping definition `DynFlags.setGeneralFlag' *)
+
+(* Skipping definition `DynFlags.setGenDeriving' *)
+
+(* Skipping definition `DynFlags.setFatalWarningFlag' *)
+
+(* Skipping definition `DynFlags.setExtensionFlag'' *)
+
+(* Skipping definition `DynFlags.setExtensionFlag' *)
 
 Axiom setDynOutputFile : option GHC.Base.String -> DynFlags -> DynFlags.
 
@@ -718,17 +840,29 @@ Axiom setDylibInstallName : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setDumpPrefixForce : option GHC.Base.String -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.setDumpFlag'' *)
+
+(* Skipping definition `DynFlags.setDumpFlag' *)
+
 Axiom setDumpDir : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setDepMakefile : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setDepIncludePkgDeps : bool -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.setDebugLevel' *)
+
+(* Skipping definition `DynFlags.setDPHOpt' *)
+
 Axiom setComponentId : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.sepArg' *)
 
 Axiom safeLanguageOn : DynFlags -> bool.
 
 Axiom safeInferOn : DynFlags -> bool.
+
+(* Skipping definition `DynFlags.safeImportsOn' *)
 
 Axiom safeImplicitImpsReq : DynFlags -> bool.
 
@@ -757,11 +891,21 @@ Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> BinNums.N.
 
 Axiom sIZEOF_CostCentreStack : DynFlags -> BinNums.N.
 
+(* Skipping definition `DynFlags.rtsIsProfiled' *)
+
+(* Skipping definition `DynFlags.removeWayDyn' *)
+
+(* Skipping definition `DynFlags.removeUserPkgConf' *)
+
+(* Skipping definition `DynFlags.removeGlobalPkgConf' *)
+
 Axiom rawSettings : DynFlags -> list (GHC.Base.String * GHC.Base.String)%type.
 
 Axiom rESERVED_STACK_WORDS : DynFlags -> BinNums.N.
 
 Axiom rESERVED_C_STACK_BYTES : DynFlags -> BinNums.N.
+
+(* Skipping definition `DynFlags.putLogMsg' *)
 
 Axiom projectVersion : DynFlags -> GHC.Base.String.
 
@@ -810,7 +954,21 @@ Axiom pgm_F : DynFlags -> GHC.Base.String.
 Axiom parseUnitIdInsts : GHC.Base.String ->
                          list (Module.ModuleName * Module.Module)%type.
 
+(* Skipping definition `DynFlags.parseUnitIdArg' *)
+
+(* Skipping definition `DynFlags.parsePackageFlag' *)
+
+(* Skipping definition `DynFlags.parsePackageArg' *)
+
+(* Skipping definition `DynFlags.parseDynamicFlagsFull' *)
+
+(* Skipping definition `DynFlags.parseDynamicFlagsCmdLine' *)
+
+(* Skipping definition `DynFlags.parseDynamicFilePragma' *)
+
 Axiom parseDynLibLoaderMode : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.package_flags_deps' *)
 
 Axiom packageTrustOn : DynFlags -> bool.
 
@@ -843,6 +1001,8 @@ Axiom opt_L : DynFlags -> list GHC.Base.String.
 Axiom opt_F : DynFlags -> list GHC.Base.String.
 
 Axiom optLevelFlags : list (list BinNums.N * GeneralFlag)%type.
+
+(* Skipping definition `DynFlags.optIntSuffixM' *)
 
 Axiom oFFSET_stgGCFun : DynFlags -> BinNums.N.
 
@@ -1000,9 +1160,17 @@ Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> BinNums.N.
 
 Axiom oFFSET_Capability_r : DynFlags -> BinNums.N.
 
+(* Skipping definition `DynFlags.nop' *)
+
+(* Skipping definition `DynFlags.noArgM' *)
+
+(* Skipping definition `DynFlags.noArg' *)
+
 Axiom negatableFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
 Axiom mkTablesNextToCode : bool -> bool.
+
+(* Skipping definition `DynFlags.mkFlag' *)
 
 Axiom mkBuildTag : list Way -> GHC.Base.String.
 
@@ -1013,6 +1181,10 @@ Axiom minusWcompatOpts : list WarningFlag.
 Axiom minusWallOpts : list WarningFlag.
 
 Axiom minusWOpts : list WarningFlag.
+
+(* Skipping definition `DynFlags.make_ord_flag' *)
+
+(* Skipping definition `DynFlags.make_dep_flag' *)
 
 Axiom makeDynFlagsConsistent : DynFlags ->
                                (DynFlags * list (SrcLoc.Located GHC.Base.String))%type.
@@ -1057,7 +1229,17 @@ Axiom mAX_CHARLIKE : DynFlags -> BinNums.N.
 
 Axiom languageFlagsDeps : list (Deprecation * FlagSpec Language)%type.
 
+(* Skipping definition `DynFlags.languageExtensions' *)
+
+(* Skipping definition `DynFlags.lang_set' *)
+
 Axiom lDV_SHIFT : DynFlags -> BinNums.N.
+
+(* Skipping definition `DynFlags.jsonLogOutput' *)
+
+(* Skipping definition `DynFlags.jsonLogFinaliser' *)
+
+(* Skipping definition `DynFlags.jsonLogAction' *)
 
 Axiom isSseEnabled : DynFlags -> bool.
 
@@ -1089,15 +1271,37 @@ Axiom isAvx2Enabled : DynFlags -> bool.
 
 Axiom interpreterProfiled : DynFlags -> bool.
 
+(* Skipping definition `DynFlags.interpreterDynamic' *)
+
+(* Skipping definition `DynFlags.interpretPackageEnv' *)
+
 Axiom interpWays : list Way.
 
+(* Skipping definition `DynFlags.intSuffixM' *)
+
+(* Skipping definition `DynFlags.intSuffix' *)
+
+(* Skipping definition `DynFlags.initDynFlags' *)
+
+(* Skipping definition `DynFlags.impliedXFlags' *)
+
 Axiom impliedOffGFlags : list (GeneralFlag * TurnOnFlag * GeneralFlag)%type.
+
+(* Skipping definition `DynFlags.impliedGFlags' *)
+
+(* Skipping definition `DynFlags.ignorePackage' *)
+
+(* Skipping definition `DynFlags.ifGeneratingDynamicToo' *)
+
+(* Skipping definition `DynFlags.ifCannotGenerateDynamicToo' *)
 
 Axiom iLDV_STATE_USE : DynFlags -> GHC.Num.Integer.
 
 Axiom iLDV_STATE_CREATE : DynFlags -> GHC.Num.Integer.
 
 Axiom iLDV_CREATE_MASK : DynFlags -> GHC.Num.Integer.
+
+(* Skipping definition `DynFlags.hidePackage' *)
 
 Axiom hideFlag : forall {a},
                  (Deprecation * FlagSpec a)%type -> (Deprecation * FlagSpec a)%type.
@@ -1110,9 +1314,15 @@ Axiom hasNoOptCoercion : DynFlags -> bool.
 
 Axiom hasNoDebugOutput : DynFlags -> bool.
 
+(* Skipping definition `DynFlags.hasArg' *)
+
+(* Skipping definition `DynFlags.gopt_unset' *)
+
 Axiom gopt_set : DynFlags -> GeneralFlag -> DynFlags.
 
 Axiom gopt : GeneralFlag -> DynFlags -> bool.
+
+(* Skipping definition `DynFlags.glasgowExtsFlags' *)
 
 Axiom ghciUsagePath : DynFlags -> GHC.Base.String.
 
@@ -1122,18 +1332,44 @@ Axiom getVerbFlags : DynFlags -> list GHC.Base.String.
 
 Axiom getOpts : forall {a}, DynFlags -> (DynFlags -> list a) -> list a.
 
+(* Skipping definition `DynFlags.generateDynamicTooConditional' *)
+
+(* Skipping definition `DynFlags.forceRecompile' *)
+
+(* Skipping definition `DynFlags.floatSuffix' *)
+
+(* Skipping definition `DynFlags.flattenExtensionFlags' *)
+
+(* Skipping definition `DynFlags.flagsPackage' *)
+
 Axiom flagsForCompletion : bool -> list GHC.Base.String.
 
+(* Skipping definition `DynFlags.flagsDynamic' *)
+
+(* Skipping definition `DynFlags.flagsAllDeps' *)
+
+(* Skipping definition `DynFlags.flagsAll' *)
+
 Axiom flagSpecOf : WarningFlag -> option (FlagSpec WarningFlag).
+
+(* Skipping definition `DynFlags.flagSpec'' *)
 
 Axiom flagSpec : forall {flag},
                  GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
 
+(* Skipping definition `DynFlags.flagHiddenSpec'' *)
+
 Axiom flagHiddenSpec : forall {flag},
                        GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
 
+(* Skipping definition `DynFlags.flagGhciSpec'' *)
+
 Axiom flagGhciSpec : forall {flag},
                      GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
+
+(* Skipping definition `DynFlags.fLangFlagsDeps' *)
+
+(* Skipping definition `DynFlags.fLangFlags' *)
 
 Axiom fFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
@@ -1141,34 +1377,84 @@ Axiom fFlags : list (FlagSpec GeneralFlag).
 
 Axiom extraGccViaCFlags : DynFlags -> list GHC.Base.String.
 
+(* Skipping definition `DynFlags.exposePluginPackageId' *)
+
+(* Skipping definition `DynFlags.exposePluginPackage' *)
+
+(* Skipping definition `DynFlags.exposePackageId' *)
+
 Axiom exposePackage' : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.exposePackage' *)
+
+(* Skipping definition `DynFlags.enableUnusedBinds' *)
+
+(* Skipping definition `DynFlags.enableGlasgowExts' *)
 
 Axiom emptyFilesToClean : FilesToClean.
 
+(* Skipping definition `DynFlags.dynamic_flags_deps' *)
+
 Axiom dynamicTooMkDynamicDynFlags : DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.dynamicGhc' *)
+
+(* Skipping definition `DynFlags.dynFlagDependencies' *)
 
 Axiom dopt_unset : DynFlags -> DumpFlag -> DynFlags.
 
 Axiom dopt_set : DynFlags -> DumpFlag -> DynFlags.
 
+(* Skipping definition `DynFlags.dopt' *)
+
+(* Skipping definition `DynFlags.distrustPackage' *)
+
+(* Skipping definition `DynFlags.disableUnusedBinds' *)
+
+(* Skipping definition `DynFlags.disableGlasgowExts' *)
+
 Axiom deprecatedForExtension : GHC.Base.String -> TurnOnFlag -> GHC.Base.String.
+
+(* Skipping definition `DynFlags.depFlagSpecOp'' *)
+
+(* Skipping definition `DynFlags.depFlagSpecOp' *)
 
 Axiom depFlagSpecCond : forall {flag},
                         GHC.Base.String ->
                         flag ->
                         (TurnOnFlag -> bool) -> GHC.Base.String -> (Deprecation * FlagSpec flag)%type.
 
+(* Skipping definition `DynFlags.depFlagSpec'' *)
+
 Axiom depFlagSpec : forall {flag},
                     GHC.Base.String ->
                     flag -> GHC.Base.String -> (Deprecation * FlagSpec flag)%type.
 
+(* Skipping definition `DynFlags.default_PIC' *)
+
 Axiom defaultWays : Settings -> list Way.
+
+(* Skipping definition `DynFlags.defaultObjectTarget' *)
+
+(* Skipping definition `DynFlags.defaultLogOutput' *)
+
+(* Skipping definition `DynFlags.defaultLogActionHPutStrDoc' *)
+
+(* Skipping definition `DynFlags.defaultLogActionHPrintDoc' *)
+
+(* Skipping definition `DynFlags.defaultLogAction' *)
+
+(* Skipping definition `DynFlags.defaultHscTarget' *)
 
 Axiom defaultGlobalDynFlags : DynFlags.
 
 Axiom defaultFlushOut : FlushOut.
 
+(* Skipping definition `DynFlags.defaultFlushErr' *)
+
 Axiom defaultFlags : Settings -> list GeneralFlag.
+
+(* Skipping definition `DynFlags.defaultFatalMessager' *)
 
 Axiom defaultDynFlags : Settings -> LlvmTargets -> DynFlags.
 
@@ -1181,6 +1467,12 @@ Axiom dOUBLE_SIZE : DynFlags -> BinNums.N.
 Axiom dFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
 Axiom compilerInfo : DynFlags -> list (GHC.Base.String * GHC.Base.String)%type.
+
+(* Skipping definition `DynFlags.combineSafeFlags' *)
+
+(* Skipping definition `DynFlags.clearPkgConf' *)
+
+(* Skipping definition `DynFlags.checkTemplateHaskellOk' *)
 
 Axiom checkOptLevel : BinNums.N ->
                       DynFlags -> Data.Either.Either GHC.Base.String DynFlags.
@@ -1211,11 +1503,19 @@ Axiom allowed_combination : list Way -> bool.
 
 Axiom allNonDeprecatedFlags : list GHC.Base.String.
 
+(* Skipping definition `DynFlags.allFlagsDeps' *)
+
+(* Skipping definition `DynFlags.add_dep_message' *)
+
 Axiom addWay' : Way -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.addWay' *)
 
 Axiom addPluginModuleNameOption : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addPluginModuleName : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.addPkgConfRef' *)
 
 Axiom addOptl : GHC.Base.String -> DynFlags -> DynFlags.
 
@@ -1223,7 +1523,13 @@ Axiom addOptc : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addOptP : GHC.Base.String -> DynFlags -> DynFlags.
 
+(* Skipping definition `DynFlags.addLibraryPath' *)
+
 Axiom addLdInputs : Option -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.addIncludePath' *)
+
+(* Skipping definition `DynFlags.addImportPath' *)
 
 Axiom addHaddockOpts : GHC.Base.String -> DynFlags -> DynFlags.
 
@@ -1232,6 +1538,8 @@ Axiom addGhciScript : GHC.Base.String -> DynFlags -> DynFlags.
 Axiom addGhcVersionFile : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addFrontendPluginOption : GHC.Base.String -> DynFlags -> DynFlags.
+
+(* Skipping definition `DynFlags.addFrameworkPath' *)
 
 Axiom addDepSuffix : GHC.Base.String -> DynFlags -> DynFlags.
 

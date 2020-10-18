@@ -2696,7 +2696,23 @@ Axiom tyCoVarsOfCoDSet : Coercion -> DTyCoVarSet.
 
 Axiom tyCoVarsOfCo : Coercion -> TyCoVarSet.
 
+(* Skipping definition `Core.tyCoFVsOfTypes' *)
+
+(* Skipping definition `Core.tyCoFVsOfType' *)
+
+(* Skipping definition `Core.tyCoFVsOfProv' *)
+
+(* Skipping definition `Core.tyCoFVsOfCos' *)
+
+(* Skipping definition `Core.tyCoFVsOfCoVar' *)
+
+(* Skipping definition `Core.tyCoFVsOfCo' *)
+
+(* Skipping definition `Core.tyCoFVsBndr' *)
+
 Axiom tyBinderType : TyBinder -> Type_.
+
+(* Skipping definition `Core.trimToType' *)
 
 Axiom trimCPRInfo : bool -> bool -> DmdResult -> DmdResult.
 
@@ -2714,6 +2730,8 @@ Axiom topNormaliseNewType_maybe : Type_ -> option (Coercion * Type_)%type.
 Axiom topDmd : Demand.
 
 Axiom toPhantomCo : Coercion -> Coercion.
+
+(* Skipping definition `Core.toCleanDmd' *)
 
 Axiom toBothDmdArg : DmdType -> BothDmdArg.
 
@@ -2736,6 +2754,14 @@ Axiom tidyTyCoVarBndrs : TidyEnv ->
 Axiom tidyTyCoVarBndr : TidyEnv -> TyCoVar -> (TidyEnv * TyCoVar)%type.
 
 Axiom tidyTopType : Type_ -> Type_.
+
+(* Skipping definition `Core.tidyToIfaceTypeSty' *)
+
+(* Skipping definition `Core.tidyToIfaceType' *)
+
+(* Skipping definition `Core.tidyToIfaceCoSty' *)
+
+(* Skipping definition `Core.tidyToIfaceCo' *)
 
 Axiom tidyPatSynIds : (Id -> Id) -> PatSyn -> PatSyn.
 
@@ -2867,6 +2893,8 @@ Axiom substCo : forall `{Util.HasDebugCallStack},
                 TCvSubst -> Coercion -> Coercion.
 
 Axiom stripCoercionTy : Type_ -> Coercion.
+
+(* Skipping definition `Core.strictifyDictDmd' *)
 
 Axiom strictenDmd : Demand -> CleanDemand.
 
@@ -3043,6 +3071,8 @@ Axiom promoteDataCon : DataCon -> TyCon.
 
 Axiom promoteCoercion : Coercion -> Coercion.
 
+(* Skipping definition `Core.primRepSizeB' *)
+
 Axiom primRepIsFloat : PrimRep -> option bool.
 
 Axiom primElemRepSizeB : PrimElemRep -> nat.
@@ -3087,6 +3117,8 @@ Axiom pprPromotionQuote : TyCon -> GHC.Base.String.
 
 Axiom pprPrecType : BasicTypes.TyPrec -> Type_ -> GHC.Base.String.
 
+(* Skipping definition `Core.pprPatSynType' *)
+
 Axiom pprParendType : Type_ -> GHC.Base.String.
 
 Axiom pprParendTheta : ThetaType -> GHC.Base.String.
@@ -3097,7 +3129,15 @@ Axiom pprParendCo : Coercion -> GHC.Base.String.
 
 Axiom pprKind : Kind -> GHC.Base.String.
 
+(* Skipping definition `Core.pprIfaceStrictSig' *)
+
+(* Skipping definition `Core.pprFundeps' *)
+
+(* Skipping definition `Core.pprFunDep' *)
+
 Axiom pprForAll : list TyVarBinder -> GHC.Base.String.
+
+(* Skipping definition `Core.pprDefMethInfo' *)
 
 Axiom pprDataCons : TyCon -> GHC.Base.String.
 
@@ -3293,6 +3333,10 @@ Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
 Axiom mkUProd : list ArgUse -> UseDmd.
 
 Axiom mkUCall : Count -> UseDmd -> UseDmd.
+
+(* Skipping definition `Core.mkTyVarTys' *)
+
+(* Skipping definition `Core.mkTyVarTy' *)
 
 Axiom mkTyConTy : TyCon -> Type_.
 
@@ -3512,9 +3556,15 @@ Axiom mkCoercionType : Role -> Type_ -> Type_ -> Type_.
 
 Axiom mkCoercionTy : Coercion -> Type_.
 
+(* Skipping definition `Core.mkCoVarCos' *)
+
+(* Skipping definition `Core.mkCoVarCo' *)
+
 Axiom mkCoCast : Coercion -> Coercion -> Coercion.
 
 Axiom mkClosedStrictSig : list Demand -> DmdResult -> StrictSig.
+
+(* Skipping definition `Core.mkCleanAnonTyConBinders' *)
 
 Axiom mkClassTyCon : Name.Name ->
                      list TyConBinder -> list Role -> AlgTyConRhs -> Class -> Name.Name -> TyCon.
@@ -3572,6 +3622,8 @@ Axiom mkAbstractClass : Name.Name ->
                         list TyVar -> list (FunDep TyVar) -> TyCon -> Class.
 
 Axiom mightBeUnsaturatedTyCon : TyCon -> bool.
+
+(* Skipping definition `Core.maybeSubCo' *)
 
 Axiom markReusedDmd : ArgUse -> ArgUse.
 
@@ -3937,6 +3989,10 @@ Axiom instCoercions : Coercion -> list Coercion -> option Coercion.
 
 Axiom instCoercion : Pair.Pair Type_ -> Coercion -> Coercion -> option Coercion.
 
+(* Skipping definition `Core.injectiveVarsOfType' *)
+
+(* Skipping definition `Core.injectiveVarsOfBinder' *)
+
 Axiom initRecTc : RecTcChecker.
 
 Axiom increaseStrictSigArity : nat -> StrictSig -> StrictSig.
@@ -3988,6 +4044,8 @@ Axiom getCastedTyVar_maybe : Type_ -> option (TyVar * CoercionN)%type.
 Axiom funResultTy : Type_ -> Type_.
 
 Axiom funArgTy : Type_ -> Type_.
+
+(* Skipping definition `Core.freshNames' *)
 
 Axiom findIdDemand : DmdType -> Var -> Demand.
 
@@ -4185,6 +4243,8 @@ Axiom dataConImplicitTyThings : DataCon -> list TyThing.
 
 Axiom dataConImplBangs : DataCon -> list HsImplBang.
 
+(* Skipping definition `Core.dataConIdentity' *)
+
 Axiom dataConFullSig : DataCon ->
                        (list TyVar * list TyVar * list EqSpec * ThetaType * list Type_ * Type_)%type.
 
@@ -4264,6 +4324,8 @@ Axiom coAxNthLHS : forall {br}, CoAxiom br -> nat -> Type_.
 
 Axiom closeOverKindsList : list TyVar -> list TyVar.
 
+(* Skipping definition `Core.closeOverKindsFV' *)
+
 Axiom closeOverKindsDSet : DTyVarSet -> DTyVarSet.
 
 Axiom closeOverKinds : TyVarSet -> TyVarSet.
@@ -4285,6 +4347,8 @@ Axiom classifyPredType : PredType -> PredTree.
 Axiom classTvsFds : Class -> (list TyVar * list (FunDep TyVar))%type.
 
 Axiom classSCTheta : Class -> list PredType.
+
+(* Skipping definition `Core.classSCSelId' *)
 
 Axiom classOpItems : Class -> list ClassOpItem.
 
@@ -4374,6 +4438,8 @@ Axiom appIsBottom : StrictSig -> nat -> bool.
 Axiom algTyConRhs : TyCon -> AlgTyConRhs.
 
 Axiom addDemand : Demand -> DmdType -> DmdType.
+
+(* Skipping definition `Core.addCaseBndrDmd' *)
 
 Axiom absDmd : Demand.
 
@@ -4608,6 +4674,12 @@ Axiom tickishCounts : forall {id}, Tickish id -> bool.
 Definition tickishFloatable {id} : Tickish id -> bool :=
   fun t => andb (tickishScopesLike t SoftScope) (negb (tickishCounts t)).
 
+(* Skipping definition `Core.tickishContains' *)
+
+(* Skipping definition `Core.tickishCanSplit' *)
+
+(* Skipping definition `Core.tcTyVarDetails' *)
+
 Definition sizeVarSet : VarSet -> nat :=
   UniqSet.sizeUniqSet.
 
@@ -4654,6 +4726,8 @@ Definition setTyVarKind : TyVar -> Kind -> TyVar :=
     let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
        id_info_5__ := tv in
     Mk_Id varName_0__ realUnique_1__ k idScope_3__ id_details_4__ id_info_5__.
+
+(* Skipping definition `Core.setTcTyVarDetails' *)
 
 Definition setStrictnessInfo : IdInfo -> StrictSig -> IdInfo :=
   fun info dd =>
@@ -4737,6 +4811,8 @@ Definition setNeverLevPoly `{Util.HasDebugCallStack}
                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
                    callArityInfo_9__ NeverLevityPolymorphic.
 
+(* Skipping definition `Core.setLevityInfoWithType' *)
+
 Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
   fun info pr =>
     GHC.Prim.seq pr (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
@@ -4745,6 +4821,10 @@ Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
                   Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
                             oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
+
+(* Skipping definition `Core.setIdNotExported' *)
+
+(* Skipping definition `Core.setIdExported' *)
 
 Definition setIdDetails : Id -> IdDetails -> Id :=
   fun id details =>
@@ -4862,6 +4942,20 @@ Definition rhssOfAlts {b} : list (Alt b) -> list (Expr b) :=
     let cont_0__ arg_1__ := let 'pair (pair _ _) e := arg_1__ in cons e nil in
     Coq.Lists.List.flat_map cont_0__ alts.
 
+(* Skipping definition `Core.ppr_id_scope' *)
+
+(* Skipping definition `Core.ppr_debug' *)
+
+(* Skipping definition `Core.pprVarSet' *)
+
+(* Skipping definition `Core.pprStrictness' *)
+
+(* Skipping definition `Core.pprIdDetails' *)
+
+(* Skipping definition `Core.ppCafInfo' *)
+
+(* Skipping definition `Core.ppArityInfo' *)
+
 Definition plusVarEnv_CD {a}
    : (a -> a -> a) -> VarEnv a -> a -> VarEnv a -> a -> VarEnv a :=
   UniqFM.plusUFM_CD.
@@ -4886,6 +4980,10 @@ Definition plusDVarEnv_C {a}
 
 Definition plusDVarEnv {a} : DVarEnv a -> DVarEnv a -> DVarEnv a :=
   UniqFM.plusUFM.
+
+(* Skipping definition `Core.pluralVarSet' *)
+
+(* Skipping definition `Core.partitionVarSet' *)
 
 Definition partitionVarEnv {a}
    : (a -> bool) -> VarEnv a -> (VarEnv a * VarEnv a)%type :=
@@ -4929,6 +5027,12 @@ Definition mk_id : Name.Name -> Type_ -> IdScope -> IdDetails -> IdInfo -> Id :=
   fun name ty scope details info =>
     Mk_Id name (Unique.getKey (Name.nameUnique name)) ty scope details info.
 
+(* Skipping definition `Core.mkWordLitWord' *)
+
+(* Skipping definition `Core.mkWordLit' *)
+
+(* Skipping definition `Core.mkWord64LitWord64' *)
+
 Definition mkDVarEnv {a} : list (Var * a)%type -> DVarEnv a :=
   UniqFM.listToUFM.
 
@@ -4957,6 +5061,8 @@ Definition mkTyVarBinder : ArgFlag -> Var -> TyVarBinder :=
 Definition mkTyVarBinders : ArgFlag -> list TyVar -> list TyVarBinder :=
   fun vis => GHC.Base.map (mkTyVarBinder vis).
 
+(* Skipping definition `Core.mkTyVar' *)
+
 Definition mkTyBind : TyVar -> Type_ -> CoreBind :=
   fun tv ty => NonRec tv (Mk_Type ty).
 
@@ -4970,11 +5076,19 @@ Definition mkTyArg {b} : Type_ -> Expr b :=
 Definition mkTyApps {b} : Expr b -> list Type_ -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
 
+(* Skipping definition `Core.mkTcTyVar' *)
+
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
   fun s => Lit (mkMachString s).
 
 Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
   fun rules vis_orphs => Mk_RuleEnv rules (Module.mkModuleSet vis_orphs).
+
+(* Skipping definition `Core.mkOtherCon' *)
+
+(* Skipping definition `Core.mkNoScope' *)
+
+(* Skipping definition `Core.mkNoCount' *)
 
 Definition mkLocalVar : IdDetails -> Name.Name -> Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId NotExported) details info.
@@ -5002,11 +5116,19 @@ Definition mkLets {b} : list (Bind b) -> Expr b -> Expr b :=
 Definition mkLams {b} : list b -> Expr b -> Expr b :=
   fun binders body => Data.Foldable.foldr Lam body binders.
 
+(* Skipping definition `Core.mkIntLitInt' *)
+
+(* Skipping definition `Core.mkIntLit' *)
+
+(* Skipping definition `Core.mkInt64LitInt64' *)
+
 Definition mkInScopeSet : VarSet -> InScopeSet :=
   fun in_scope => InScope in_scope #1.
 
 Definition mkGlobalVar : IdDetails -> Name.Name -> Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty GlobalId details info.
+
+(* Skipping definition `Core.mkFloatLitFloat' *)
 
 Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
   fun f => Lit (mkMachFloat f).
@@ -5015,8 +5137,12 @@ Definition mkExportedLocalVar
    : IdDetails -> Name.Name -> Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId Exported) details info.
 
+(* Skipping definition `Core.mkDoubleLitDouble' *)
+
 Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
   fun d => Lit (mkMachDouble d).
+
+(* Skipping definition `Core.mkCoVar' *)
 
 Definition mkCoBind : CoVar -> Coercion -> CoreBind :=
   fun cv co => NonRec cv (Mk_Coercion co).
@@ -5055,6 +5181,8 @@ Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
 
 Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
+
+(* Skipping definition `Core.mapVarSet' *)
 
 Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
   UniqFM.mapUFM.
@@ -5337,6 +5465,8 @@ Definition idDetails : Id -> IdDetails :=
 Definition hasSomeUnfolding : Unfolding -> bool :=
   fun '(NoUnfolding) => false.
 
+(* Skipping definition `Core.globaliseId' *)
+
 Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
 
@@ -5490,11 +5620,15 @@ Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
     | Some xx => extendDVarEnv env key (mangle_fn xx)
     end.
 
+(* Skipping definition `Core.exprToType' *)
+
 Definition exprToCoercion_maybe : CoreExpr -> option Coercion :=
   fun arg_0__ => match arg_0__ with | Mk_Coercion co => Some co | _ => None end.
 
 Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
   fun arg_0__ => None.
+
+(* Skipping definition `Core.evaldUnfolding' *)
 
 Definition emptyVarSet : VarSet :=
   UniqSet.emptyUniqSet.
@@ -5912,6 +6046,8 @@ Definition collectNBinders {b} : nat -> Expr b -> (list b * Expr b)%type :=
                  end in
     go orig_n nil orig_expr.
 
+(* Skipping definition `Core.collectNAnnBndrs' *)
+
 Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
   fun expr =>
     let fix go arg_0__ arg_1__
@@ -5980,6 +6116,8 @@ Program Definition collectAnnArgs {b} {a}
             go expr nil.
 Solve Obligations with (solve_collectAnnArgsTicks).
 
+(* Skipping definition `Core.coVarDetails' *)
+
 Definition cmpAltCon : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -6025,6 +6163,8 @@ Definition boringCxtOk : bool :=
 Definition boringCxtNotOk : bool :=
   false.
 
+(* Skipping definition `Core.bootUnfolding' *)
+
 Definition bindersOf {b} : Bind b -> list b :=
   fun arg_0__ =>
     match arg_0__ with
@@ -6049,6 +6189,8 @@ Definition binderKind {argf} : TyVarBndr TyVar argf -> Kind :=
 
 Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
   fun '(TvBndr _ argf) => argf.
+
+(* Skipping definition `Core.applyTypeToArg' *)
 
 Definition anyVarSet : (Var -> bool) -> VarSet -> bool :=
   UniqSet.uniqSetAny.

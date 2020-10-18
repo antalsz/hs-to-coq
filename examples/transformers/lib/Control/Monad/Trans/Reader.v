@@ -65,6 +65,8 @@ Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
 Definition liftReaderT {m} {a} {r} : m a -> ReaderT r m a :=
   fun m => Mk_ReaderT (GHC.Base.const m).
 
+(* Skipping definition `Control.Monad.Trans.Reader.liftCatch' *)
+
 Definition liftCallCC {m} {a} {b} {r}
    : Control.Monad.Signatures.CallCC m a b ->
      Control.Monad.Signatures.CallCC (ReaderT r m) a b :=

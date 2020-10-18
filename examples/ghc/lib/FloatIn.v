@@ -159,6 +159,8 @@ Definition sepBindsByDropPoint
     else go floaters (GHC.Base.map (fun fvs => pair fvs nil) (cons Core.emptyDVarSet
                                                                    drop_pts)).
 
+(* Skipping definition `FloatIn.floatInwards' *)
+
 Axiom fiExpr : DynFlags.DynFlags ->
                FloatInBinds -> CoreFVs.CoreExprWithFVs -> Core.CoreExpr.
 

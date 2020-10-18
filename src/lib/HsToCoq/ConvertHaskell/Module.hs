@@ -107,7 +107,7 @@ convertBinding sigs (ConvertedDefinitionBinding cdef@ConvertedDefinition{_convDe
              [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
 
 convertBinding _ (ConvertedPatternBinding _ _) =
-  -- TODO add a warning that the top-level pattern was skipped
+  -- Already skipped with a warning in 'HsToCoq.ConvertnHaskell.Expr.withHsBindName'
   pure [] -- convUnsupported' "top-level pattern bindings"
 
 convertBinding _ (ConvertedAxiomBinding ax ty) = pure [typedAxiom ax ty]

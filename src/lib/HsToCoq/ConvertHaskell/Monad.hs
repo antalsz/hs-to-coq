@@ -25,11 +25,12 @@ module HsToCoq.ConvertHaskell.Monad (
   -- * Operations
   fresh, gensym, genqid,
   useProgramHere, renamed,
-  -- * Errors
+  -- * Errors and warnings
   -- ** Within a definition
   convUnsupported,
   -- ** Within a module
   convUnsupported', convUnsupportedIn, convUnsupportedIns,
+  warnConvUnsupported',
   -- ** Anywhere
   convUnsupportedIn', convUnsupportedIns',
   -- ** Edits
@@ -53,8 +54,13 @@ import Control.Monad.Reader
 
 import Data.Set (Set)
 
+import Bag (unitBag)
 import GHC
+import DynFlags (getDynFlags)
+import ErrUtils (mkPlainWarnMsg)
 import Exception
+import GhcMonad (logWarnings)
+import Outputable (text)
 
 import Panic
 
@@ -265,6 +271,12 @@ convUnsupported' what =
 convUnsupported :: LocalConvMonad r m => String -> m a
 convUnsupported what =
   convUnsupportedIn what "definition" . showP =<< view currentDefinition
+
+warnConvUnsupported' :: ConversionMonad r m => SrcSpan -> String -> m ()
+warnConvUnsupported' loc what = do
+  dflags <- getDynFlags
+  let msg = mkPlainWarnMsg dflags loc (text (what ++ " unsupported, skipping translation"))
+  logWarnings (unitBag msg)
 
 editFailure :: MonadIO m => String -> m a
 editFailure what = throwProgramError $ "Could not apply edit: " ++ what

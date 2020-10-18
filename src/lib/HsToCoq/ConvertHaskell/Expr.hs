@@ -18,6 +18,7 @@ import Control.Arrow ((&&&))
 import Data.Bifunctor
 import Data.Foldable
 import HsToCoq.Util.Foldable
+import Data.Functor (($>))
 import Data.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Function
@@ -963,11 +964,22 @@ hsBindName defn = case defn of
 
     _ -> convUnsupported' ( "non-function top level bindings: " ++ GHC.showSDocUnsafe (GHC.ppr defn))
 
+-- | Warn and immediately return 'Nothing' for unsupported top-level bindings.
+withHsBindName
+  :: ConversionMonad r m => HsBind GhcRn -> (Qualid -> m (Maybe a)) -> m (Maybe a)
+withHsBindName b continue = case b of
+    FunBind{fun_id = L _ hsName} -> var ExprNS hsName >>= continue
+    PatBind{pat_lhs = p} ->
+      warnConvUnsupported' (getLoc p) "top-level pattern binding" $> Nothing
+    PatSynBind PSB{psb_id = i} ->
+      warnConvUnsupported' (getLoc i) "pattern synonym" $> Nothing
+    VarBind{} -> convUnsupported' "[internal] `VarBind' can't be a top-level binding"
+    AbsBinds{} -> convUnsupported' "[internal] `AbsBinds' can't be a top-level binding"
 
 -- This is where we switch from the global monad to the local monad
 convertTypedModuleBinding :: ConversionMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
-convertTypedModuleBinding ty defn = do
-    name <- hsBindName defn
+convertTypedModuleBinding ty defn =
+  withHsBindName defn $ \name ->
     withCurrentDefinition name $ convertTypedBinding ty defn
 
 convertTypedModuleBindings :: ConversionMonad r m

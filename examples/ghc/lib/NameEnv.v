@@ -50,6 +50,8 @@ Definition mapNameEnv {elt1} {elt2}
 Definition mapDNameEnv {a} {b} : (a -> b) -> DNameEnv a -> DNameEnv b :=
   UniqFM.mapUFM.
 
+(* Skipping definition `NameEnv.lookupNameEnv_NF' *)
+
 Definition lookupNameEnv {a} : NameEnv a -> Name.Name -> option a :=
   fun x y => UniqFM.lookupUFM x y.
 
@@ -92,6 +94,8 @@ Definition elemNameEnv {a} : Name.Name -> NameEnv a -> bool :=
 
 Definition disjointNameEnv {a} : NameEnv a -> NameEnv a -> bool :=
   fun x y => UniqFM.isNullUFM (UniqFM.intersectUFM x y).
+
+(* Skipping definition `NameEnv.depAnal' *)
 
 Definition delListFromNameEnv {a} : NameEnv a -> list Name.Name -> NameEnv a :=
   fun x y => UniqFM.delListFromUFM x y.

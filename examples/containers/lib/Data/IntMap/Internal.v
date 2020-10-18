@@ -150,6 +150,10 @@ Require Import Coq.Numbers.BinNums.
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.IntSet.Internal.zero' *)
+
+(* Skipping definition `Data.IntSet.Internal.mask' *)
+
 Definition zipWithMaybeMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> option z) -> WhenMatched f x y z :=
   fun f => Mk_WhenMatched (fun k x y => GHC.Base.pure (f k x y)).
@@ -167,6 +171,18 @@ Definition zipWithMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
 Definition zipWithAMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> f z) -> WhenMatched f x y z :=
   fun f => Mk_WhenMatched (fun k x y => Some Data.Functor.<$> f k x y).
+
+(* Skipping definition `Data.IntMap.Internal.withEmpty' *)
+
+(* Skipping definition `Data.IntMap.Internal.withBar' *)
+
+(* Skipping definition `Data.IntMap.Internal.updateMinWithKey' *)
+
+(* Skipping definition `Data.IntMap.Internal.updateMin' *)
+
+(* Skipping definition `Data.IntMap.Internal.updateMaxWithKey' *)
+
+(* Skipping definition `Data.IntMap.Internal.updateMax' *)
 
 Fixpoint unsafeFindMin {a} (arg_0__ : IntMap a) : option
                                                   (Data.IntSet.Internal.Key * a)%type
@@ -222,6 +238,20 @@ Definition size {a} : IntMap a -> Coq.Numbers.BinNums.N :=
 Definition singleton {a} : Data.IntSet.Internal.Key -> a -> IntMap a :=
   fun k x => Tip k x.
 
+(* Skipping definition `Data.IntMap.Internal.showsTreeHang' *)
+
+(* Skipping definition `Data.IntMap.Internal.showsTree' *)
+
+(* Skipping definition `Data.IntMap.Internal.showsBars' *)
+
+(* Skipping definition `Data.IntMap.Internal.showWide' *)
+
+(* Skipping definition `Data.IntMap.Internal.showTreeWith' *)
+
+(* Skipping definition `Data.IntMap.Internal.showTree' *)
+
+(* Skipping definition `Data.IntMap.Internal.showBin' *)
+
 Definition shorter : Mask -> Mask -> bool :=
   fun m1 m2 => (m1) GHC.Base.> (m2).
 
@@ -239,6 +269,8 @@ Definition preserveMissing {f} {x} `{GHC.Base.Applicative f}
                     match arg_0__, arg_1__ with
                     | _, v => GHC.Base.pure (Some v)
                     end).
+
+(* Skipping definition `Data.IntMap.Internal.op_zn__' *)
 
 Definition null {a} : IntMap a -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
@@ -259,6 +291,18 @@ Fixpoint nequal {a} `{GHC.Base.Eq_ a} (arg_0__ arg_1__ : IntMap a) : bool
               | _, _ => true
               end.
 
+(* Skipping definition `Data.IntMap.Internal.natFromInt' *)
+
+(* Skipping definition `Data.IntMap.Internal.minViewWithKeySure' *)
+
+(* Skipping definition `Data.IntMap.Internal.minViewWithKey' *)
+
+(* Skipping definition `Data.IntMap.Internal.minView' *)
+
+(* Skipping definition `Data.IntMap.Internal.mergeA' *)
+
+(* Skipping definition `Data.IntMap.Internal.merge' *)
+
 Definition member {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
   fun k =>
     let fix go arg_0__
@@ -274,6 +318,12 @@ Definition member {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
 
 Definition notMember {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
   fun k m => negb (member k m).
+
+(* Skipping definition `Data.IntMap.Internal.maxViewWithKeySure' *)
+
+(* Skipping definition `Data.IntMap.Internal.maxViewWithKey' *)
+
+(* Skipping definition `Data.IntMap.Internal.maxView' *)
 
 Definition match_ : Data.IntSet.Internal.Key -> Prefix -> Mask -> bool :=
   fun i p m => (Data.IntSet.Internal.mask i m) GHC.Base.== p.
@@ -340,6 +390,8 @@ Definition mapLT {a}
     match arg_0__, arg_1__ with
     | f, Mk_SplitLookup lt fnd gt => Mk_SplitLookup (f lt) fnd gt
     end.
+
+(* Skipping definition `Data.IntMap.Internal.mapKeysMonotonic' *)
 
 Definition mapGentlyWhenMissing {f} {a} {b} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f x a -> WhenMissing f x b :=
@@ -692,6 +744,10 @@ Definition isProperSubmapOf {a} `{GHC.Base.Eq_ a}
    : IntMap a -> IntMap a -> bool :=
   fun m1 m2 => isProperSubmapOfBy _GHC.Base.==_ m1 m2.
 
+(* Skipping definition `Data.IntMap.Internal.intMapDataType' *)
+
+(* Skipping definition `Data.IntMap.Internal.intFromNat' *)
+
 Fixpoint fromSet {a} (arg_0__ : (Data.IntSet.Internal.Key -> a)) (arg_1__
                    : Data.IntSet.Internal.IntSet) : IntMap a
            := match arg_0__, arg_1__ with
@@ -724,6 +780,16 @@ Fixpoint fromSet {a} (arg_0__ : (Data.IntSet.Internal.Key -> a)) (arg_1__
                                                                                                        bits2)) in
                   buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+ #1)
               end.
+
+(* Skipping definition `Data.IntMap.Internal.fromListConstr' *)
+
+(* Skipping definition `Data.IntMap.Internal.fromDistinctAscList' *)
+
+(* Skipping definition `Data.IntMap.Internal.fromAscListWithKey' *)
+
+(* Skipping definition `Data.IntMap.Internal.fromAscListWith' *)
+
+(* Skipping definition `Data.IntMap.Internal.fromAscList' *)
 
 Definition foldrWithKey' {a} {b}
    : (Data.IntSet.Internal.Key -> a -> b -> b) -> b -> IntMap a -> b :=
@@ -891,6 +957,12 @@ Definition findWithDefault {a}
                  end in
     go.
 
+(* Skipping definition `Data.IntMap.Internal.findMin' *)
+
+(* Skipping definition `Data.IntMap.Internal.findMax' *)
+
+(* Skipping definition `Data.IntMap.Internal.find' *)
+
 Fixpoint equal {a} `{GHC.Base.Eq_ a} (arg_0__ arg_1__ : IntMap a) : bool
            := match arg_0__, arg_1__ with
               | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
@@ -911,6 +983,14 @@ Definition dropMissing {f} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f x y :=
   Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Nil)) (fun arg_0__ arg_1__ =>
                     GHC.Base.pure None).
+
+(* Skipping definition `Data.IntMap.Internal.deleteMin' *)
+
+(* Skipping definition `Data.IntMap.Internal.deleteMax' *)
+
+(* Skipping definition `Data.IntMap.Internal.deleteFindMin' *)
+
+(* Skipping definition `Data.IntMap.Internal.deleteFindMax' *)
 
 Definition contramapSecondWhenMatched {b} {a} {f} {x} {z}
    : (b -> a) -> WhenMatched f x a z -> WhenMatched f x b z :=

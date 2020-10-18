@@ -44,6 +44,8 @@ Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_0__
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Control.Applicative.optional' *)
+
 (* Skipping all instances of class `GHC.Generics.Generic', including
    `Control.Applicative.Generic__WrappedMonad' *)
 

@@ -46,8 +46,14 @@ Definition setIdUnique : Core.Id -> Unique.Unique -> Core.Id :=
 Definition setIdType : Core.Id -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun id ty => Core.setVarType id ty.
 
+(* Skipping definition `Id.setIdNotExported' *)
+
 Definition setIdName : Core.Id -> Name.Name -> Core.Id :=
   Core.setVarName.
+
+(* Skipping definition `Id.setIdExported' *)
+
+(* Skipping definition `Id.setCaseBndrEvald' *)
 
 Definition recordSelectorTyCon : Core.Id -> Core.RecSelParent :=
   fun id =>
@@ -125,6 +131,8 @@ Definition mkUserLocal
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
           #330)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
+
+(* Skipping definition `Id.mkLocalCoVar' *)
 
 Definition mkGlobalId
    : Core.IdDetails ->
@@ -528,6 +536,8 @@ Definition idInlineActivation : Core.Id -> BasicTypes.Activation :=
 
 Definition idHasRules : Core.Id -> bool :=
   fun id => negb (Core.isEmptyRuleInfo (idSpecialisation id)).
+
+(* Skipping definition `Id.idFunRepArity' *)
 
 Definition idDemandInfo : Core.Id -> Core.Demand :=
   fun id => Core.demandInfo (Core.idInfo id).

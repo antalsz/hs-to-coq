@@ -80,6 +80,10 @@ Ltac termination_by_omega :=
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.IntSet.InternalWord.withEmpty' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.withBar' *)
+
 Definition tip : Prefix -> BitMap -> IntSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -115,6 +119,24 @@ Definition size : IntSet -> IntWord.Int :=
                end in
   go #0.
 
+(* Skipping definition `Data.IntSet.InternalWord.showsTreeHang' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showsTree' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showsBitMap' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showsBars' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showWide' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showTreeWith' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showTree' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showBitMap' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.showBin' *)
+
 Definition revNat : Nat -> Nat :=
   fun x1 =>
     let 'x2 := ((IntWord.shiftRWord x1 #1) Data.Bits..&.(**) #6148914691236517205)
@@ -143,6 +165,8 @@ Definition prefixOf : IntWord.Int -> Prefix :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
+(* Skipping definition `Data.IntSet.InternalWord.node' *)
+
 Fixpoint nequal (arg_0__ arg_1__ : IntSet) : bool
            := match arg_0__, arg_1__ with
               | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
@@ -164,6 +188,8 @@ Definition zero : IntWord.Int -> Mask -> bool :=
 
 Definition lowestBitMask : Nat -> Nat :=
   fun x => x Data.Bits..&.(**) GHC.Num.negate x.
+
+(* Skipping definition `Data.IntSet.InternalWord.intSetDataType' *)
 
 Definition intFromNat :=
   IntWord.intFromWord.
@@ -276,6 +302,12 @@ Fixpoint unsafeFindMax (arg_0__ : IntSet) : option Key
               | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
               | Bin _ _ _ r => unsafeFindMax r
               end.
+
+(* Skipping definition `Data.IntSet.InternalWord.fromListConstr' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.fromDistinctAscList' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.fromAscList' *)
 
 Program Definition foldrBits {a}
            : IntWord.Int -> (IntWord.Int -> a -> a) -> a -> Nat -> a :=
@@ -431,6 +463,10 @@ Definition toDescList : IntSet -> list Key :=
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
+(* Skipping definition `Data.IntSet.InternalWord.findMin' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.findMax' *)
+
 Fixpoint equal (arg_0__ arg_1__ : IntSet) : bool
            := match arg_0__, arg_1__ with
               | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
@@ -497,6 +533,10 @@ Program Fixpoint disjoint (arg_0__ arg_1__ : IntSet) {measure (size_nat arg_0__
                       | Nil, _ => true
                       end.
 Solve Obligations with (termination_by_omega).
+
+(* Skipping definition `Data.IntSet.InternalWord.deleteFindMin' *)
+
+(* Skipping definition `Data.IntSet.InternalWord.deleteFindMax' *)
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>

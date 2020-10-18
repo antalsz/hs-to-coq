@@ -151,6 +151,8 @@ Definition listen {m} {r} {w} {s} {a} `{(GHC.Base.Monad m)}
                  GHC.Base.return_ (pair (pair (pair a w) s') w) in
                runRWST m r s GHC.Base.>>= cont_0__).
 
+(* Skipping definition `Control.Monad.Trans.RWS.Lazy.liftCatch' *)
+
 Definition liftCallCC' {w} {m} {a} {s} {b} {r} `{(GHC.Base.Monoid w)}
    : Control.Monad.Signatures.CallCC m (a * s * w)%type (b * s * w)%type ->
      Control.Monad.Signatures.CallCC (RWST r w s m) a b :=

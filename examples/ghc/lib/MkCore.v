@@ -105,6 +105,10 @@ Definition mkWildCase
   fun scrut scrut_ty res_ty alts =>
     Core.Case scrut (mkWildValBinder scrut_ty) res_ty alts.
 
+(* Skipping definition `MkCore.mkStringExprFS' *)
+
+(* Skipping definition `MkCore.mkStringExpr' *)
+
 Definition mkSmallTupleSelector1
    : list Core.Id -> Core.Id -> Core.Id -> Core.CoreExpr -> Core.CoreExpr :=
   fun vars the_var scrut_var scrut =>
@@ -226,10 +230,14 @@ Definition mkRuntimeErrorApp
 Definition mkNothingExpr : AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun ty => Core.mkConApp TysWiredIn.nothingDataCon (cons (Core.Mk_Type ty) nil).
 
+(* Skipping definition `MkCore.mkNaturalExpr' *)
+
 Definition mkJustExpr
    : AxiomatizedTypes.Type_ -> Core.CoreExpr -> Core.CoreExpr :=
   fun ty val =>
     Core.mkConApp TysWiredIn.justDataCon (cons (Core.Mk_Type ty) (cons val nil)).
+
+(* Skipping definition `MkCore.mkIntegerExpr' *)
 
 Axiom mkIntExprInt : DynFlags.DynFlags -> nat -> Core.CoreExpr.
 
@@ -250,6 +258,12 @@ Definition mkIfThenElse
                                                                                                            TysWiredIn.trueDataCon)
                                                                                                           nil)
                                                                                                     then_expr) nil)).
+
+(* Skipping definition `MkCore.mkFoldrExpr' *)
+
+(* Skipping definition `MkCore.mkFloatExpr' *)
+
+(* Skipping definition `MkCore.mkDoubleExpr' *)
 
 Definition mkCoreVarTupTy : list Core.Id -> AxiomatizedTypes.Type_ :=
   fun ids => TysWiredIn.mkBoxedTupleTy (GHC.Base.map Id.idType ids).
@@ -381,6 +395,8 @@ Definition mkListExpr
 
 Definition mkCharExpr : GHC.Char.Char -> Core.CoreExpr :=
   fun c => mkCoreConApps TysWiredIn.charDataCon (cons (Core.mkCharLit c) nil).
+
+(* Skipping definition `MkCore.mkBuildExpr' *)
 
 Axiom mkBigCoreTupTy : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 

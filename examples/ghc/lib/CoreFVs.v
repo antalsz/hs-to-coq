@@ -70,13 +70,37 @@ Definition tickish_fvs : Core.Tickish Core.Id -> FV.FV :=
     | _ => FV.emptyFV
     end.
 
+(* Skipping definition `CoreFVs.stableUnfoldingVars' *)
+
 Definition stableUnfoldingFVs : Core.Unfolding -> option FV.FV :=
   fun '(_other) => None.
+
+(* Skipping definition `CoreFVs.orphNamesOfTypes' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfType' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfTyCon' *)
 
 Definition orphNamesOfThings {a}
    : (a -> NameSet.NameSet) -> list a -> NameSet.NameSet :=
   fun f =>
     Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ f) NameSet.emptyNameSet.
+
+(* Skipping definition `CoreFVs.orphNamesOfProv' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfFamInst' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfCos' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfCoCon' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfCoAxBranches' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfCoAxBranch' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfCo' *)
+
+(* Skipping definition `CoreFVs.orphNamesOfAxiom' *)
 
 Definition noFVs : Core.VarSet :=
   Core.emptyVarSet.
@@ -98,6 +122,10 @@ Definition freeVarsOfAnn : FVAnn -> Core.DIdSet :=
 
 Definition freeVarsOf : CoreExprWithFVs -> Core.DIdSet :=
   fun '(pair fvs _) => fvs.
+
+(* Skipping definition `CoreFVs.exprsOrphNames' *)
+
+(* Skipping definition `CoreFVs.exprOrphNames' *)
 
 Definition dVarTypeTyCoVars : Core.Var -> Core.DTyCoVarSet :=
   fun var => FV.fvDVarSet (varTypeTyCoFVs var).

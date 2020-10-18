@@ -61,6 +61,8 @@ Definition isJust {a} : option a -> bool :=
 Definition fromMaybe {a} : a -> option a -> a :=
   fun d x => match x with | None => d | Some v => v end.
 
+(* Skipping definition `Data.Maybe.fromJust' *)
+
 Definition catMaybes {a} : list (option a) -> list a :=
   fun ls =>
     let cont_0__ arg_1__ :=

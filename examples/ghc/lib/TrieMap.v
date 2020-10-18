@@ -187,6 +187,8 @@ Admitted.
 
 (* Converted value declarations: *)
 
+(* Skipping definition `TrieMap.xtTyLit' *)
+
 Local Definition TrieMap__Map_Key {k} `{GHC.Base.Ord k} : Type :=
   k.
 
@@ -647,6 +649,8 @@ Definition xtVar {a} : CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a :=
         let 'VM vm_bvar_4__ vm_fvar_5__ := m in
         VM vm_bvar_4__ (vm_fvar m |> xtDFreeVar v f)
     end.
+
+(* Skipping definition `TrieMap.lkTyLit' *)
 
 Definition lkTickish {a} : Core.Tickish Core.Id -> TickishMap a -> option a :=
   lookupTM (m := TickishMap).

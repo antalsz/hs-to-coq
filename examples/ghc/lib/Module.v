@@ -201,6 +201,8 @@ Instance Unpeel_NDModule : Prim.Unpeel NDModule Module :=
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Module.wiredInUnitIds' *)
+
 Definition unitModuleSet : Module -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.singleton.
 
@@ -340,12 +342,26 @@ Definition unionModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
 Definition stableUnitIdCmp : UnitId -> UnitId -> comparison :=
   fun p1 p2 => GHC.Base.compare (unitIdFS p1) (unitIdFS p2).
 
+(* Skipping definition `Module.renameHoleUnitId'' *)
+
+(* Skipping definition `Module.renameHoleUnitId' *)
+
+(* Skipping definition `Module.renameHoleModule'' *)
+
+(* Skipping definition `Module.renameHoleModule' *)
+
+(* Skipping definition `Module.rawHashUnitId' *)
+
 Definition pprUnitId : UnitId -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | DefiniteUnitId uid => Panic.someSDoc
     | IndefiniteUnitId uid => Panic.someSDoc
     end.
+
+(* Skipping definition `Module.pprModuleName' *)
+
+(* Skipping definition `Module.pprModule' *)
 
 Definition plusModuleEnv_C {a}
    : (a -> a -> a) -> ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
@@ -361,6 +377,20 @@ Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
     | Mk_ModuleEnv e1, Mk_ModuleEnv e2 =>
         Mk_ModuleEnv (Data.Map.Internal.union e1 e2)
     end.
+
+(* Skipping definition `Module.parseUnitId' *)
+
+(* Skipping definition `Module.parseModuleName' *)
+
+(* Skipping definition `Module.parseModuleId' *)
+
+(* Skipping definition `Module.parseModSubst' *)
+
+(* Skipping definition `Module.parseComponentId' *)
+
+(* Skipping definition `Module.newUnitId' *)
+
+(* Skipping definition `Module.newIndefUnitId' *)
 
 Local Definition Ord__ModuleName_compare
    : ModuleName -> ModuleName -> comparison :=
@@ -483,6 +513,8 @@ Definition moduleStableString : Module -> GHC.Base.String :=
                             (unitIdString moduleUnitId) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$")
                                                                                 (moduleNameString moduleName))).
 
+(* Skipping definition `Module.moduleNameSlashes' *)
+
 Definition moduleNameFS : ModuleName -> FastString.FastString :=
   fun '(Mk_ModuleName mod_) => mod_.
 
@@ -524,6 +556,8 @@ Definition mkModuleSet : list Module -> ModuleSet :=
 
 Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
   fun s => Mk_ModuleName s.
+
+(* Skipping definition `Module.mkModuleName' *)
 
 Definition mkModuleEnv {a} : list (Module * a)%type -> ModuleEnv a :=
   fun xs =>
@@ -693,8 +727,20 @@ Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
 Definition intersectModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.intersection.
 
+(* Skipping definition `Module.integerUnitId' *)
+
 Definition installedUnitIdString : InstalledUnitId -> GHC.Base.String :=
   FastString.unpackFS GHC.Base.∘ installedUnitIdFS.
+
+(* Skipping definition `Module.indefUnitIdToUnitId' *)
+
+(* Skipping definition `Module.indefModuleToModule' *)
+
+(* Skipping definition `Module.hashUnitId' *)
+
+(* Skipping definition `Module.generalizeIndefUnitId' *)
+
+(* Skipping definition `Module.generalizeIndefModule' *)
 
 Definition fsToUnitId : FastString.FastString -> UnitId :=
   DefiniteUnitId GHC.Base.∘ (Mk_DefUnitId GHC.Base.∘ Mk_InstalledUnitId).
@@ -748,6 +794,10 @@ Definition fsToInstalledUnitId : FastString.FastString -> InstalledUnitId :=
 
 Definition stringToInstalledUnitId : GHC.Base.String -> InstalledUnitId :=
   fsToInstalledUnitId GHC.Base.∘ FastString.mkFastString.
+
+(* Skipping definition `Module.fingerprintUnitId' *)
+
+(* Skipping definition `Module.fingerprintByteString' *)
 
 Definition filterModuleEnv {a}
    : (Module -> a -> bool) -> ModuleEnv a -> ModuleEnv a :=
@@ -902,6 +952,12 @@ Definition toInstalledUnitId : UnitId -> InstalledUnitId :=
 
 Definition baseUnitId : UnitId :=
   fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "base")).
+
+(* Skipping definition `Module.addBootSuffix_maybe' *)
+
+(* Skipping definition `Module.addBootSuffixLocn' *)
+
+(* Skipping definition `Module.addBootSuffix' *)
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Module.Show__ModLocation' *)

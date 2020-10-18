@@ -246,11 +246,15 @@ Axiom tickToTag : Tick -> nat.
 
 Axiom tickString : Tick -> GHC.Base.String.
 
+(* Skipping definition `CoreMonad.thNameToGhcName' *)
+
 Axiom simplCountN : SimplCount -> nat.
 
 Axiom runWhen : bool -> CoreToDo -> CoreToDo.
 
 Axiom runMaybe : forall {a}, option a -> (a -> CoreToDo) -> CoreToDo.
+
+(* Skipping definition `CoreMonad.runCoreM' *)
 
 Axiom reinitializeGlobals : CoreM unit.
 
@@ -279,7 +283,11 @@ Axiom plusSimplCount : SimplCount -> SimplCount -> SimplCount.
 Axiom nop : forall {a},
             CoreState -> a -> CoreIOEnv (a * CoreState * CoreWriter)%type.
 
+(* Skipping definition `CoreMonad.msg' *)
+
 Axiom modifyS : (CoreState -> CoreState) -> CoreM unit.
+
+(* Skipping definition `CoreMonad.liftIOWithCount' *)
 
 Axiom liftIOEnv : forall {a}, CoreIOEnv a -> CoreM a.
 
@@ -296,6 +304,18 @@ Axiom getSrcSpanM : CoreM SrcLoc.SrcSpan.
 Axiom getS : forall {a}, (CoreState -> a) -> CoreM a.
 
 Axiom getRuleBase : CoreM Core.RuleBase.
+
+(* Skipping definition `CoreMonad.getPrintUnqualified' *)
+
+(* Skipping definition `CoreMonad.getPackageFamInstEnv' *)
+
+(* Skipping definition `CoreMonad.getOrigNameCache' *)
+
+(* Skipping definition `CoreMonad.getHscEnv' *)
+
+(* Skipping definition `CoreMonad.getFirstAnnotations' *)
+
+(* Skipping definition `CoreMonad.getAnnotations' *)
 
 Axiom fatalErrorMsgS : GHC.Base.String -> CoreM unit.
 
@@ -321,6 +341,8 @@ Axiom debugTraceMsg : GHC.Base.String -> CoreM unit.
 Axiom cmpTick : Tick -> Tick -> comparison.
 
 Axiom cmpEqTick : Tick -> Tick -> comparison.
+
+(* Skipping definition `CoreMonad.bindsOnlyPass' *)
 
 Axiom addTick : TickCounts -> Tick -> TickCounts.
 

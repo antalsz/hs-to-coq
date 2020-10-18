@@ -73,6 +73,8 @@ Definition restrictUniqSetToUFM {a} {b}
     | Mk_UniqSet s, m => Mk_UniqSet (UniqFM.intersectUFM s m)
     end.
 
+(* Skipping definition `UniqSet.pprUniqSet' *)
+
 Instance Unpeel_UniqSet ele
    : GHC.Prim.Unpeel (UniqSet ele) (UniqFM.UniqFM ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun '(Mk_UniqSet y) => y) Mk_UniqSet.

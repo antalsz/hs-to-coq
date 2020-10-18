@@ -66,6 +66,8 @@ Instance Unpeel_Max {a} : Prim.Unpeel (Max a) (option a)
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.Functor.Utils.hash_compose' *)
+
 Local Definition Semigroup__Max_op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Max inst_a) -> (Max inst_a) -> (Max inst_a) :=
   fun arg_0__ arg_1__ =>

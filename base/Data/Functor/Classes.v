@@ -75,6 +75,54 @@ Definition liftCompare `{g__0__ : Ord1 f}
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.Functor.Classes.showsUnaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.showsUnary1' *)
+
+(* Skipping definition `Data.Functor.Classes.showsUnary' *)
+
+(* Skipping definition `Data.Functor.Classes.showsPrec2' *)
+
+(* Skipping definition `Data.Functor.Classes.showsPrec1' *)
+
+(* Skipping definition `Data.Functor.Classes.showsBinaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.showsBinary1' *)
+
+(* Skipping definition `Data.Functor.Classes.readsUnaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.readsUnary1' *)
+
+(* Skipping definition `Data.Functor.Classes.readsUnary' *)
+
+(* Skipping definition `Data.Functor.Classes.readsPrec2' *)
+
+(* Skipping definition `Data.Functor.Classes.readsPrec1' *)
+
+(* Skipping definition `Data.Functor.Classes.readsData' *)
+
+(* Skipping definition `Data.Functor.Classes.readsBinaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.readsBinary1' *)
+
+(* Skipping definition `Data.Functor.Classes.readUnaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.readPrec2' *)
+
+(* Skipping definition `Data.Functor.Classes.readPrec1' *)
+
+(* Skipping definition `Data.Functor.Classes.readData' *)
+
+(* Skipping definition `Data.Functor.Classes.readBinaryWith' *)
+
+(* Skipping definition `Data.Functor.Classes.liftReadListPrecDefault' *)
+
+(* Skipping definition `Data.Functor.Classes.liftReadListPrec2Default' *)
+
+(* Skipping definition `Data.Functor.Classes.liftReadListDefault' *)
+
+(* Skipping definition `Data.Functor.Classes.liftReadList2Default' *)
+
 Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b}
    : f a b -> f a b -> bool :=
   liftEq2 _GHC.Base.==_ _GHC.Base.==_.

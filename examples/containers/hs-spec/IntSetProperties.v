@@ -61,6 +61,18 @@ Definition toSet
      Data.Set.Internal.Set_ Coq.Numbers.BinNums.N :=
   Data.Set.Internal.fromList GHC.Base.∘ Data.IntSet.Internal.toList.
 
+(* Skipping definition `IntSetProperties.test_split' *)
+
+(* Skipping definition `IntSetProperties.test_lookupLT' *)
+
+(* Skipping definition `IntSetProperties.test_lookupLE' *)
+
+(* Skipping definition `IntSetProperties.test_lookupGT' *)
+
+(* Skipping definition `IntSetProperties.test_lookupGE' *)
+
+(* Skipping definition `IntSetProperties.test_LookupSomething' *)
+
 Definition prop_splitRoot : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
     let loop :=
@@ -119,6 +131,8 @@ Definition prop_size : Data.IntSet.Internal.IntSet -> Prop :=
      Coq.NArith.BinNat.N.of_nat (Coq.Init.Datatypes.length
                                  (Data.IntSet.Internal.toList s))).
 
+(* Skipping definition `IntSetProperties.prop_readShow' *)
+
 Definition prop_partition
    : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
@@ -137,6 +151,10 @@ Definition prop_ord
     GHC.Base.compare s1 s2 GHC.Base.==
     GHC.Base.compare (Data.IntSet.Internal.toList s1) (Data.IntSet.Internal.toList
                       s2).
+
+(* Skipping definition `IntSetProperties.prop_minView' *)
+
+(* Skipping definition `IntSetProperties.prop_maxView' *)
 
 Definition prop_map : Data.IntSet.Internal.IntSet -> bool :=
   fun s => Data.IntSet.Internal.map GHC.Base.id s GHC.Base.== s.
@@ -163,6 +181,8 @@ Definition prop_isProperSubsetOf
     Data.IntSet.Internal.isProperSubsetOf a b GHC.Base.==
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
 
+(* Skipping definition `IntSetProperties.prop_fromList' *)
+
 Definition prop_foldR' : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
     Data.IntSet.Internal.foldr' cons nil s GHC.Base.==
@@ -182,6 +202,10 @@ Definition prop_foldL : Data.IntSet.Internal.IntSet -> bool :=
     Data.IntSet.Internal.foldl (GHC.Base.flip cons) nil s GHC.Base.==
     Data.Foldable.foldl (GHC.Base.flip cons) nil (Data.IntSet.Internal.toList s).
 
+(* Skipping definition `IntSetProperties.prop_findMin' *)
+
+(* Skipping definition `IntSetProperties.prop_findMax' *)
+
 Definition prop_filter
    : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
@@ -197,6 +221,8 @@ Definition prop_disjoint
   fun a b =>
     Data.IntSet.Internal.disjoint a b GHC.Base.==
     Data.IntSet.Internal.null (Data.IntSet.Internal.intersection a b).
+
+(* Skipping definition `IntSetProperties.prop_bitcount' *)
 
 Definition prop_UnionInsert
    : Coq.Numbers.BinNums.N -> Data.IntSet.Internal.IntSet -> Prop :=
@@ -236,6 +262,8 @@ Fixpoint prop_Prefix (arg_0__ : Data.IntSet.Internal.IntSet) : bool
               | _ => true
               end.
 
+(* Skipping definition `IntSetProperties.prop_Ordered' *)
+
 Definition prop_NotMember
    : list Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> bool :=
   fun xs n =>
@@ -263,6 +291,14 @@ Definition prop_Member
     Data.Foldable.all (fun k =>
                          Data.IntSet.Internal.member k m GHC.Base.== (Data.Foldable.elem k xs)) (cons n
                                                                                                       xs).
+
+(* Skipping definition `IntSetProperties.prop_LookupLT' *)
+
+(* Skipping definition `IntSetProperties.prop_LookupLE' *)
+
+(* Skipping definition `IntSetProperties.prop_LookupGT' *)
+
+(* Skipping definition `IntSetProperties.prop_LookupGE' *)
 
 Definition prop_List : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
@@ -339,6 +375,8 @@ Fixpoint prop_MaskPow2 (arg_0__ : Data.IntSet.Internal.IntSet) : bool
                                                                          (prop_MaskPow2 right_))
               | _ => true
               end.
+
+(* Skipping definition `IntSetProperties.main' *)
 
 Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=

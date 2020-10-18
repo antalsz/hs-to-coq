@@ -92,6 +92,8 @@ Definition liftListen {m} {w} {a} `{(GHC.Base.Monad m)}
                    GHC.Base.return_ (GHC.Base.fmap (fun r => pair r w) a) in
                  listen m GHC.Base.>>= cont_0__).
 
+(* Skipping definition `Control.Monad.Trans.Maybe.liftCatch' *)
+
 Definition liftCallCC {m} {a} {b}
    : Control.Monad.Signatures.CallCC m (option a) (option b) ->
      Control.Monad.Signatures.CallCC (MaybeT m) a b :=

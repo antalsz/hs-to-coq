@@ -26,6 +26,8 @@ Infix "&" := (_&_) (at level 99).
 Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
   fun lop_ziztzi__ f => fun x y => lop_ziztzi__ (f x) (f y).
 
+(* Skipping definition `Data.Function.fix_' *)
+
 Module Notations.
 Notation "'_Data.Function.&_'" := (op_za__).
 Infix "Data.Function.&" := (_&_) (at level 99).

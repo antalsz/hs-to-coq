@@ -480,6 +480,8 @@ Definition tupleSortBoxity : TupleSort -> Boxity :=
     | ConstraintTuple => Boxed
     end.
 
+(* Skipping definition `BasicTypes.tupleParens' *)
+
 Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
@@ -557,6 +559,14 @@ Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
     | NoTailCallInfo => Panic.someSDoc
     end.
 
+(* Skipping definition `BasicTypes.pprSafeOverlap' *)
+
+(* Skipping definition `BasicTypes.pprRuleName' *)
+
+(* Skipping definition `BasicTypes.pprOneShotInfo' *)
+
+(* Skipping definition `BasicTypes.pprAlternative' *)
+
 Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
@@ -606,6 +616,10 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     | occ => zapOccTailCallInfo occ
     end.
 
+(* Skipping definition `BasicTypes.negateIntegralLit' *)
+
+(* Skipping definition `BasicTypes.negateFractionalLit' *)
+
 Definition negateFixity : Fixity :=
   Mk_Fixity NoSourceText #6 InfixL.
 
@@ -617,11 +631,17 @@ Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
     | Int a, Int b => Int (a GHC.Num.* b)
     end.
 
+(* Skipping definition `BasicTypes.mkIntegralLit' *)
+
 Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
   Int.
 
+(* Skipping definition `BasicTypes.mkFractionalLit' *)
+
 Definition minPrecedence : GHC.Num.Int :=
   #0.
+
+(* Skipping definition `BasicTypes.maybeParen' *)
 
 Definition maxPrecedence : GHC.Num.Int :=
   #9.
@@ -778,6 +798,8 @@ Definition isActive : CompilerPhase -> Activation -> bool :=
     | Phase p, act => isActiveIn p act
     end.
 
+(* Skipping definition `BasicTypes.integralFractionalLit' *)
+
 Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -859,6 +881,8 @@ Definition neverInlinePragma : InlinePragma :=
   let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
      inl_rule_4__ := defaultInlinePragma in
   Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ NeverActive inl_rule_4__.
+
+(* Skipping definition `BasicTypes.defaultFixity' *)
 
 Definition competesWith : Activation -> Activation -> bool :=
   fun arg_0__ arg_1__ =>

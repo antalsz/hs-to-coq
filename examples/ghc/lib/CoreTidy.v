@@ -49,6 +49,10 @@ Definition tidyTickish
     | _, other_tickish => other_tickish
     end.
 
+(* Skipping definition `CoreTidy.tidyRules' *)
+
+(* Skipping definition `CoreTidy.tidyRule' *)
+
 Definition tidyNameOcc : Core.TidyEnv -> Name.Name -> Name.Name :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with

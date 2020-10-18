@@ -148,6 +148,8 @@ Program Instance Semigroup__SLast {a} : GHC.Base.Semigroup (Last a) := fun _ k =
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.Semigroup.mtimesDefault' *)
+
 Definition diff {m} `{GHC.Base.Semigroup m}
    : m -> Data.SemigroupInternal.Endo m :=
   Data.SemigroupInternal.Mk_Endo GHC.Base.∘ _GHC.Base.<<>>_.
@@ -157,6 +159,8 @@ Definition destruct_option {b} {a} : b -> (a -> b) -> Option a -> b :=
     match arg_0__, arg_1__, arg_2__ with
     | n, j, Mk_Option m => Data.Maybe.maybe n j m
     end.
+
+(* Skipping definition `Data.Semigroup.cycle1' *)
 
 (* Skipping all instances of class `GHC.Enum.Bounded', including
    `Data.Semigroup.Bounded__Min' *)

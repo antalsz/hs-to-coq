@@ -70,6 +70,8 @@ Fixpoint mapOL {a} {b} (arg_0__ : (a -> b)) (arg_1__ : OrdList a) : OrdList b
               | f, Many xs => Many (GHC.Base.map f xs)
               end.
 
+(* Skipping definition `OrdList.lastOL' *)
+
 Definition isNilOL {a} : OrdList a -> bool :=
   fun arg_0__ => match arg_0__ with | None => true | _ => false end.
 

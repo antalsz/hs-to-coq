@@ -68,6 +68,10 @@ Definition stepUnique : Unique -> BinNums.N -> Unique :=
     | MkUnique i, n => MkUnique (i GHC.Num.+ n)
     end.
 
+(* Skipping definition `Unique.showUnique' *)
+
+(* Skipping definition `Unique.pprUniqueAlways' *)
+
 Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -78,6 +82,8 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
              then Lt
              else Gt
     end.
+
+(* Skipping definition `Unique.newTagUnique' *)
 
 Definition mkUniqueGrimily : BinNums.N -> Unique :=
   MkUnique.
@@ -168,6 +174,8 @@ Definition incrUnique : Unique -> Unique :=
 Definition tyConRepNameUnique : Unique -> Unique :=
   fun u => incrUnique u.
 
+(* Skipping definition `Unique.iToBase62' *)
+
 Definition eqUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -190,6 +198,8 @@ Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
 
 Definition getKey : Unique -> BinNums.N :=
   fun '(MkUnique x) => x.
+
+(* Skipping definition `Unique.finish_show' *)
 
 Definition deriveUnique : Unique -> BinNums.N -> Unique :=
   fun arg_0__ arg_1__ =>

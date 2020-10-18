@@ -193,6 +193,12 @@ Definition elem {f} `{Foldable f} {a} `{GHC.Base.Eq_ a} : a -> f a -> bool :=
 Definition notElem {t} {a} `{Foldable t} `{GHC.Base.Eq_ a} : a -> t a -> bool :=
   fun x => negb GHC.Base.∘ elem x.
 
+(* Skipping definition `Data.Foldable.msum' *)
+
+(* Skipping definition `Data.Foldable.minimumBy' *)
+
+(* Skipping definition `Data.Foldable.maximumBy' *)
+
 Definition mapM_ {t} {m} {a} {b} `{Foldable t} `{GHC.Base.Monad m}
    : (a -> m b) -> t a -> m unit :=
   fun f => foldr (_GHC.Base.>>_ GHC.Base.∘ f) (GHC.Base.return_ tt).
@@ -287,6 +293,8 @@ Definition concat {t} {a} `{Foldable t} : t (list a) -> list a :=
   fun xs =>
     GHC.Base.build' (fun _ =>
                        fun c n => foldr (fun x y => (@foldr _ Foldable__list _ _ c y x)) n xs).
+
+(* Skipping definition `Data.Foldable.asum' *)
 
 Definition and {t} `{Foldable t} : t bool -> bool :=
   Coq.Program.Basics.compose Data.SemigroupInternal.getAll (foldMap

@@ -34,6 +34,8 @@ Axiom mAX_REDUCTION_DEPTH : nat.
 
 Axiom mAX_CTUPLE_SIZE : nat.
 
+(* Skipping definition `Constants.hiVersion' *)
+
 Axiom fLOAT_SIZE : nat.
 
 (* External variables:

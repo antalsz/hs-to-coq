@@ -74,6 +74,10 @@ Instance MergeSetDefault {a} : Default (MergeSet a) :=
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.Set.Internal.withEmpty' *)
+
+(* Skipping definition `Data.Set.Internal.withBar' *)
+
 Definition size {a} : Set_ a -> GHC.Num.Int :=
   fun arg_0__ => match arg_0__ with | Tip => #0 | Bin sz _ _ _ => sz end.
 
@@ -102,6 +106,20 @@ Definition splitRoot {a} : Set_ a -> list (Set_ a) :=
     | Bin _ v l r => cons l (cons (singleton v) (cons r nil))
     end.
 
+(* Skipping definition `Data.Set.Internal.showsTreeHang' *)
+
+(* Skipping definition `Data.Set.Internal.showsTree' *)
+
+(* Skipping definition `Data.Set.Internal.showsBars' *)
+
+(* Skipping definition `Data.Set.Internal.showWide' *)
+
+(* Skipping definition `Data.Set.Internal.showTreeWith' *)
+
+(* Skipping definition `Data.Set.Internal.showTree' *)
+
+(* Skipping definition `Data.Set.Internal.setDataType' *)
+
 Definition ratio : GHC.Num.Int :=
   #2.
 
@@ -118,6 +136,8 @@ Definition ordered {a} `{GHC.Base.Ord a} : Set_ a -> bool :=
 
 Definition null {a} : Set_ a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ => false end.
+
+(* Skipping definition `Data.Set.Internal.node' *)
 
 Definition member {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
   let fix go arg_0__ arg_1__
@@ -264,6 +284,8 @@ Definition lookupGE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
                end in
   goNothing.
 
+(* Skipping definition `Data.Set.Internal.fromListConstr' *)
+
 Definition foldr' {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   fun f z =>
     let fix go arg_0__ arg_1__
@@ -318,14 +340,28 @@ Definition toDescList {a} : Set_ a -> list a :=
 Definition fold {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   foldr.
 
+(* Skipping definition `Data.Set.Internal.findMin' *)
+
+(* Skipping definition `Data.Set.Internal.findMax' *)
+
+(* Skipping definition `Data.Set.Internal.findIndex' *)
+
 Definition empty {a} : Set_ a :=
   Tip.
 
 Definition elems {a} : Set_ a -> list a :=
   toAscList.
 
+(* Skipping definition `Data.Set.Internal.elemAt' *)
+
 Definition delta : GHC.Num.Int :=
   #3.
+
+(* Skipping definition `Data.Set.Internal.deleteFindMin' *)
+
+(* Skipping definition `Data.Set.Internal.deleteFindMax' *)
+
+(* Skipping definition `Data.Set.Internal.deleteAt' *)
 
 Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
   fun arg_0__ =>

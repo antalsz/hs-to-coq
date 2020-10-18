@@ -144,6 +144,10 @@ Definition transitiveClosure {a}
                                       end) in
     go nil xs.
 
+(* Skipping definition `Util.toCmdArgs' *)
+
+(* Skipping definition `Util.toArgs' *)
+
 Definition third3 {c} {d} {a} {b}
    : (c -> d) -> (a * b * c)%type -> (a * b * d)%type :=
   fun arg_0__ arg_1__ =>
@@ -182,6 +186,8 @@ Fixpoint stretchZipWith {a} {b} {c} (arg_0__ : (a -> bool)) (arg_1__ : b)
                   | cons y ys => cons (f x y) (stretchZipWith p z f xs ys)
                   end
               end.
+
+(* Skipping definition `Util.splitLongestPrefix' *)
 
 Fixpoint splitEithers {a} {b} (arg_0__ : list (Data.Either.Either a b)) : (list
                                                                            a *
@@ -258,11 +264,35 @@ Definition sizedComplement {bv} `{Data.Bits.Bits bv} : bv -> bv -> bv :=
 Definition singleton {a} : a -> list a :=
   fun x => cons x nil.
 
+(* Skipping definition `Util.sharedGlobalM' *)
+
+(* Skipping definition `Util.sharedGlobal' *)
+
 Fixpoint seqList {a} {b} (arg_0__ : list a) (arg_1__ : b) : b
            := match arg_0__, arg_1__ with
               | nil, b => b
               | cons x xs, b => GHC.Prim.seq x (seqList xs b)
               end.
+
+(* Skipping definition `Util.restrictedDamerauLevenshteinDistanceWorker' *)
+
+(* Skipping definition `Util.restrictedDamerauLevenshteinDistanceWithLengths' *)
+
+(* Skipping definition `Util.restrictedDamerauLevenshteinDistance'' *)
+
+(* Skipping definition `Util.restrictedDamerauLevenshteinDistance' *)
+
+(* Skipping definition `Util.reslash' *)
+
+(* Skipping definition `Util.removeSpaces' *)
+
+(* Skipping definition `Util.readRational__' *)
+
+(* Skipping definition `Util.readRational' *)
+
+(* Skipping definition `Util.readHexRational__' *)
+
+(* Skipping definition `Util.readHexRational' *)
 
 Fixpoint partitionWith {a} {b} {c} (arg_0__ : (a -> Data.Either.Either b c))
                        (arg_1__ : list a) : (list b * list c)%type
@@ -317,6 +347,8 @@ Definition only {a} `{GHC.Err.Default a} : list a -> a :=
     | _ => Panic.panic (GHC.Base.hs_string__ "Util: only")
     end.
 
+(* Skipping definition `Util.nubSort' *)
+
 Definition notNull {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => false | _ => true end.
 
@@ -330,8 +362,22 @@ Fixpoint neLength {a} {b} (arg_0__ : list a) (arg_1__ : list b) : bool
 Definition ncgDebugIsOn : bool :=
   false.
 
+(* Skipping definition `Util.nTimes' *)
+
 Definition nOfThem {a} : nat -> a -> list a :=
   fun n thing => Coq.Lists.List.repeat thing n.
+
+(* Skipping definition `Util.mulHi' *)
+
+(* Skipping definition `Util.modificationTimeIfExists' *)
+
+(* Skipping definition `Util.minWith' *)
+
+(* Skipping definition `Util.maybeReadFuzzy' *)
+
+(* Skipping definition `Util.maybeRead' *)
+
+(* Skipping definition `Util.matchVectors' *)
 
 Definition mapSnd {b} {c} {a}
    : (b -> c) -> list (a * b)%type -> list (a * c)%type :=
@@ -365,9 +411,13 @@ Fixpoint mapAndUnzip {a} {b} {c} (arg_0__ : (a -> (b * c)%type)) (arg_1__
                   pair (cons r1 rs1) (cons r2 rs2)
               end.
 
+(* Skipping definition `Util.mapAccumL2' *)
+
 Axiom makeRelativeTo : GHC.Base.String -> GHC.Base.String -> GHC.Base.String.
 
 Axiom looksLikePackageName : GHC.Base.String -> bool.
+
+(* Skipping definition `Util.looksLikeModuleName' *)
 
 Definition liftSnd {a} {b} {c} : (a -> b) -> (c * a)%type -> (c * b)%type :=
   fun arg_0__ arg_1__ =>
@@ -398,11 +448,33 @@ Definition isIn {a} `{GHC.Base.Eq_ a}
 Definition isEqual : comparison -> bool :=
   fun arg_0__ => match arg_0__ with | Gt => false | Eq => true | Lt => false end.
 
+(* Skipping definition `Util.isDarwinHost' *)
+
+(* Skipping definition `Util.hashString' *)
+
+(* Skipping definition `Util.hashInt32' *)
+
+(* Skipping definition `Util.hSetTranslit' *)
+
+(* Skipping definition `Util.golden' *)
+
+(* Skipping definition `Util.globalM' *)
+
+(* Skipping definition `Util.global' *)
+
 Definition ghciTablesNextToCode : bool :=
   false.
 
 Definition ghciSupported : bool :=
   false.
+
+(* Skipping definition `Util.getModificationUTCTime' *)
+
+(* Skipping definition `Util.getCmd' *)
+
+(* Skipping definition `Util.fuzzyMatch' *)
+
+(* Skipping definition `Util.fuzzyLookup' *)
 
 Definition fstOf3 {a} {b} {c} : (a * b * c)%type -> a :=
   fun '(pair (pair a _) _) => a.
@@ -470,6 +542,8 @@ Definition exactLog2 : GHC.Num.Integer -> option GHC.Num.Integer :=
          then None
          else Some (pow2 x).
 
+(* Skipping definition `Util.escapeSpaces' *)
+
 Fixpoint equalLength {a} {b} (arg_0__ : list a) (arg_1__ : list b) : bool
            := match arg_0__, arg_1__ with
               | nil, nil => true
@@ -516,6 +590,8 @@ Fixpoint dropList {b} {a} (arg_0__ : list b) (arg_1__ : list a) : list a
               | cons _ xs, cons _ ys => dropList xs ys
               end.
 
+(* Skipping definition `Util.doesDirNameExist' *)
+
 Axiom debugIsOn : bool.
 
 Definition count {a} : (a -> bool) -> list a -> nat :=
@@ -526,6 +602,8 @@ Definition count {a} : (a -> bool) -> list a -> nat :=
                  | n, cons x xs => if p x : bool then go (n GHC.Num.+ #1) xs else go n xs
                  end in
     go #0.
+
+(* Skipping definition `Util.consIORef' *)
 
 Fixpoint compareLength {a} {b} (arg_0__ : list a) (arg_1__ : list b)
            : comparison
@@ -565,10 +643,14 @@ Fixpoint cmpList {a} (arg_0__ : (a -> a -> comparison)) (arg_1__ arg_2__
                   end
               end.
 
+(* Skipping definition `Util.chunkList' *)
+
 Definition chkAppend {a} : list a -> list a -> list a :=
   fun xs ys =>
     if Data.Foldable.null ys : bool then xs else
     Coq.Init.Datatypes.app xs ys.
+
+(* Skipping definition `Util.charToC' *)
 
 Fixpoint changeLast {a} (arg_0__ : list a) (arg_1__ : a) : list a
            := match arg_0__, arg_1__ with
@@ -631,6 +713,10 @@ Fixpoint all2 {a} {b} (arg_0__ : (a -> b -> bool)) (arg_1__ : list a) (arg_2__
               | p, cons x xs, cons y ys => andb (p x y) (all2 p xs ys)
               | _, _, _ => false
               end.
+
+(* Skipping definition `Util.abstractDataType' *)
+
+(* Skipping definition `Util.abstractConstr' *)
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Util.Show__OverridingBool' *)

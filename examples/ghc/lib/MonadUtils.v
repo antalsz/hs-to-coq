@@ -38,6 +38,8 @@ Axiom zipWith3M : forall {m} {a} {b} {c} {d},
 Axiom whenM : forall {m},
               forall `{GHC.Base.Monad m}, m bool -> m unit -> m unit.
 
+(* Skipping definition `MonadUtils.unlessM' *)
+
 Axiom orM : forall {m}, forall `{GHC.Base.Monad m}, m bool -> m bool -> m bool.
 
 Axiom maybeMapM : forall {m} {a} {b},
@@ -67,6 +69,14 @@ Axiom mapAndUnzip3M : forall {m} {a} {b} {c} {d},
 Axiom mapAccumLM : forall {m} {acc} {x} {y},
                    forall `{GHC.Base.Monad m},
                    (acc -> x -> m (acc * y)%type) -> acc -> list x -> m (acc * list y)%type.
+
+(* Skipping definition `MonadUtils.liftIO4' *)
+
+(* Skipping definition `MonadUtils.liftIO3' *)
+
+(* Skipping definition `MonadUtils.liftIO2' *)
+
+(* Skipping definition `MonadUtils.liftIO1' *)
 
 Axiom foldrM : forall {m} {b} {a},
                forall `{(GHC.Base.Monad m)}, (b -> a -> m a) -> a -> list b -> m a.

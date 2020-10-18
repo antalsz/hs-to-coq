@@ -96,7 +96,11 @@ Axiom unboxedTupleSumKind : Core.TyCon ->
 
 Axiom unboxedTupleKind : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 
+(* Skipping definition `TysWiredIn.unboxedTupleArr' *)
+
 Axiom unboxedSumKind : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
+
+(* Skipping definition `TysWiredIn.unboxedSumArr' *)
 
 Axiom typeSymbolKindConName : Name.Name.
 
@@ -211,6 +215,8 @@ Axiom parrTyConName : Name.Name.
 
 Axiom parrTyCon : Core.TyCon.
 
+(* Skipping definition `TysWiredIn.parrFakeConArr' *)
+
 Axiom parrFakeCon : BasicTypes.Arity -> Core.DataCon.
 
 Axiom parrDataConName : Name.Name.
@@ -230,6 +236,8 @@ Axiom nilDataConName : Name.Name.
 Axiom nilDataCon : Core.DataCon.
 
 Axiom mk_tuple : BasicTypes.Boxity -> nat -> (Core.TyCon * Core.DataCon)%type.
+
+(* Skipping definition `TysWiredIn.mk_sum' *)
 
 Axiom mk_special_dc_name : FastString.FastString ->
                            Unique.Unique -> Core.DataCon -> Name.Name.
@@ -425,6 +433,8 @@ Axiom boxing_constr_env : NameEnv.NameEnv Core.DataCon.
 
 Axiom boxingDataCon_maybe : Core.TyCon -> option Core.DataCon.
 
+(* Skipping definition `TysWiredIn.boxedTupleArr' *)
+
 Axiom boolTyCon_RDR : PrelNames.RdrName.
 
 Axiom boolTyConName : Name.Name.
@@ -444,6 +454,10 @@ Axiom anyTy : AxiomatizedTypes.Type_.
 Axiom alpha_tyvar : list Core.TyVar.
 
 Axiom alpha_ty : list AxiomatizedTypes.Type_.
+
+(* Skipping definition `AxiomatizedTypes.liftedTypeKind' *)
+
+(* Skipping definition `AxiomatizedTypes.constraintKind' *)
 
 (* External variables:
      bool list nat op_zt__ option AxiomatizedTypes.CType AxiomatizedTypes.Kind

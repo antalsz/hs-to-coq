@@ -90,6 +90,8 @@ Instance Default__Name : Default Name := Build_Default _ (Mk_Name default defaul
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Name.wiredInNameTyThing_maybe' *)
+
 Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -132,6 +134,32 @@ Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
   fun name loc =>
     let 'Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ := name in
     Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ loc.
+
+(* Skipping definition `Name.ppr_z_occ_name' *)
+
+(* Skipping definition `Name.ppr_underscore_unique' *)
+
+(* Skipping definition `Name.ppr_occ_name' *)
+
+(* Skipping definition `Name.pprUnique' *)
+
+(* Skipping definition `Name.pprSystem' *)
+
+(* Skipping definition `Name.pprPrefixName' *)
+
+(* Skipping definition `Name.pprNameDefnLoc' *)
+
+(* Skipping definition `Name.pprName' *)
+
+(* Skipping definition `Name.pprModulePrefix' *)
+
+(* Skipping definition `Name.pprInternal' *)
+
+(* Skipping definition `Name.pprInfixName' *)
+
+(* Skipping definition `Name.pprExternal' *)
+
+(* Skipping definition `Name.pprDefinedAt' *)
 
 Definition nameUnique : Name -> Unique.Unique :=
   fun name => n_uniq name.
@@ -209,6 +237,8 @@ Definition nameIsFromExternalPackage : Module.UnitId -> Name -> bool :=
         false
     | _ => false
     end.
+
+(* Skipping definition `Name.mkWiredInName' *)
 
 Definition mkSystemNameAt
    : Unique.Unique -> OccName.OccName -> SrcLoc.SrcSpan -> Name :=
@@ -289,6 +319,8 @@ Definition isSystemName : Name -> bool :=
     | Mk_Name System _ _ _ => true
     | _ => false
     end.
+
+(* Skipping definition `Name.isHoleName' *)
 
 Definition isExternalName : Name -> bool :=
   fun arg_0__ =>

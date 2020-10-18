@@ -106,6 +106,8 @@ Definition listen {m} {w} {a} `{(GHC.Base.Monad m)}
                   GHC.Base.return_ (pair (pair a w) w) in
                 runWriterT m GHC.Base.>>= cont_0__).
 
+(* Skipping definition `Control.Monad.Trans.Writer.Lazy.liftCatch' *)
+
 Definition liftCallCC {w} {m} {a} {b} `{(GHC.Base.Monoid w)}
    : Control.Monad.Signatures.CallCC m (a * w)%type (b * w)%type ->
      Control.Monad.Signatures.CallCC (WriterT w m) a b :=

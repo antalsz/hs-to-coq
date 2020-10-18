@@ -183,6 +183,12 @@ Instance instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_  {f}
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.SemigroupInternal.stimesMonoid' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesMaybe' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesList' *)
+
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
   `{GHC.Base.Monoid a}
    : b -> a -> a :=
@@ -194,6 +200,10 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
     | Eq => GHC.Base.mempty
     | Gt => x
     end.
+
+(* Skipping definition `Data.SemigroupInternal.stimesIdempotent' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesDefault' *)
 
 Instance Unpeel_Dual a : GHC.Prim.Unpeel (Dual a) a :=
   GHC.Prim.Build_Unpeel _ _ getDual Mk_Dual.

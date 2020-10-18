@@ -123,6 +123,8 @@ Definition mkOpenSubst : InScopeSet -> list (Var * CoreArg)%type -> Subst :=
 Definition mkEmptySubst : InScopeSet -> Subst :=
   fun in_scope => Mk_Subst in_scope emptyVarEnv emptyVarEnv emptyVarEnv.
 
+(* Skipping definition `CoreSubst.lookupTCvSubst' *)
+
 Definition lookupIdSubst : String -> Subst -> Id -> CoreExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with

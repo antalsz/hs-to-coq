@@ -39,6 +39,8 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
     | None, _ => GHC.Base.return_ tt
     end.
 
+(* Skipping definition `Maybes.tryMaybeT' *)
+
 Definition orElse {a} : option a -> a -> a :=
   GHC.Base.flip Data.Maybe.fromMaybe.
 
@@ -48,6 +50,10 @@ Definition liftMaybeT {m} {a} `{GHC.Base.Monad m}
 
 Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
   fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
+
+(* Skipping definition `Maybes.firstJusts' *)
+
+(* Skipping definition `Maybes.firstJust' *)
 
 Definition failME {err} {val} : err -> MaybeErr err val :=
   fun e => Failed e.

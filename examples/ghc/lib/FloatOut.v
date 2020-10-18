@@ -169,6 +169,8 @@ Definition installUnderLambdas
 Definition get_stats : FloatStats -> (nat * nat * nat)%type :=
   fun '(FlS a b c) => pair (pair a b) c.
 
+(* Skipping definition `FloatOut.floatOutwards' *)
+
 Axiom floatExpr : SetLevels.LevelledExpr ->
                   (FloatStats * FloatBinds * Core.CoreExpr)%type.
 

@@ -41,7 +41,7 @@ in CoreFVs.expr_fvs rewrite forall x, CoreFVs.rhs_fvs x = (match x with | pair b
 
 # replace mapUnionFV with unions . map  (and also inline an occurrence of rhs_fvs)
 in CoreFVs.expr_fvs rewrite forall alts,  (FV.mapUnionFV alt_fvs alts)  = FV.unionsFV (Lists.List.map alt_fvs alts)
-in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr) end) pairs)
+in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => FV.unionFV (expr_fvs rhs) (CoreFVs.bndrRuleAndUnfoldingFVs bndr) end) pairs)
 
 
 # `freeVars = go where go = …`.  Since `go` is a function but `freeVars` isn't,

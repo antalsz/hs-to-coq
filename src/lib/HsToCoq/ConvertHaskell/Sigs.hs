@@ -70,7 +70,7 @@ collectSigs sigs = do
     MinimalSig  NOEXTP _ _     -> mempty
     SCCFunSig{}        -> mempty
     CompleteMatchSig{} -> mempty
-    PatSynSig NOEXTP _ _ -> throwError "pattern synonym signatures"
+    PatSynSig NOEXTP _ _ -> mempty
     IdSig     NOEXTP _   -> throwError "generated-code signatures"
 
   pure $ flip M.mapWithKey multimap $ \_key info@(_,_) -> case info of

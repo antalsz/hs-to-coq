@@ -20,15 +20,16 @@ import qualified Data.Text as T
 import Control.Monad
 
 import GHC (GhcMonad,AmbiguousFieldOcc(..),GhcRn)
---import GHC hiding (Name)
 import qualified GHC
 import Outputable (OutputableBndr)
 import Name(occNameString, nameOccName, nameModule_maybe)
--- import Name hiding (Name)
 
 import HsToCoq.Util.Monad (failIO)
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
+#if __GLASGOW_HASKELL__ >= 806
+import HsToCoq.Util.GHC.HsTypes (noExtCon)
+#endif
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Pretty
@@ -119,6 +120,7 @@ var ns name = do
 
 recordField :: (ConversionMonad r m) => AmbiguousFieldOcc GhcRn -> m Qualid
 #if __GLASGOW_HASKELL__ >= 806
+recordField (XAmbiguousFieldOcc v) = noExtCon v
 recordField (Unambiguous sel _) = var ExprNS sel
 #else
 recordField (Unambiguous _ sel) = var ExprNS sel

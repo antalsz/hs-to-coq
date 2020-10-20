@@ -145,6 +145,7 @@ convertAssociatedTypeDefault classArgs
 
 #if __GLASGOW_HASKELL__ >= 810
 convertAssociatedTypeDefault _ (TyFamInstDecl (HsIB { hsib_body = XFamEqn v })) = noExtCon v
+convertAssociatedTypeDefault _ (TyFamInstDecl (XHsImplicitBndrs v)) = noExtCon v
 #elif __GLASGOW_HASKELL__ >= 806
 convertAssociatedTypeDefault _ (XFamEqn v) = noExtCon v
 #endif

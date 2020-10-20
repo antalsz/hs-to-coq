@@ -66,7 +66,7 @@ redefine Local Definition OccName.Ord__NameSpace_op_zlze__ : NameSpace -> (NameS
             | _  => false
           end.
 
-order OccName.Eq___NameSpace OccName.Eq___OccName_op_zeze__ OccName.Eq___OccName OccName.Ord__OccName_compare OccName.Ord__OccName
+order OccName.Eq___NameSpace OccName.Ord__NameSpace OccName.Eq___OccName_op_zeze__
 
 order OccName.Eq___NameSpace OccName.nameSpacesRelated
 

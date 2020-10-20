@@ -57,103 +57,119 @@ Local Definition Monad_tmp {inst_m} `{(GHC.Base.Monad inst_m)}
 
 (* Converted value declarations: *)
 
-Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
-   : e -> MaybeT m a -> Control.Monad.Trans.Except.ExceptT e m a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | e, Mk_MaybeT m =>
-        Control.Monad.Trans.Except.Mk_ExceptT (GHC.Base.fmap (Data.Maybe.maybe
-                                                              (Data.Either.Left e) Data.Either.Right) m)
-    end.
+Local Definition Eq1__MaybeT_liftEq {inst_m} `{(Data.Functor.Classes.Eq1
+   inst_m)}
+   : forall {a} {b},
+     (a -> b -> bool) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> bool :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | eq, Mk_MaybeT x, Mk_MaybeT y =>
+          Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) x y
+      end.
+
+Program Instance Eq1__MaybeT {m} `{(Data.Functor.Classes.Eq1 m)}
+   : Data.Functor.Classes.Eq1 (MaybeT m) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__MaybeT_liftEq |}.
+
+Local Definition Ord1__MaybeT_liftCompare {inst_m} `{(Data.Functor.Classes.Ord1
+   inst_m)}
+   : forall {a} {b},
+     (a -> b -> comparison) ->
+     (MaybeT inst_m) a -> (MaybeT inst_m) b -> comparison :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | comp, Mk_MaybeT x, Mk_MaybeT y =>
+          Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare comp) x y
+      end.
+
+Program Instance Ord1__MaybeT {m} `{(Data.Functor.Classes.Ord1 m)}
+   : Data.Functor.Classes.Ord1 (MaybeT m) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__MaybeT_liftCompare |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read1', including
+   `Control.Monad.Trans.Maybe.Read1__MaybeT' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show1', including
+   `Control.Monad.Trans.Maybe.Show1__MaybeT' *)
+
+Local Definition Eq___MaybeT_op_zeze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  Data.Functor.Classes.eq1.
+
+Local Definition Eq___MaybeT_op_zsze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => negb (Eq___MaybeT_op_zeze__ x y).
+
+Program Instance Eq___MaybeT {m} {a} `{Data.Functor.Classes.Eq1 m}
+  `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (MaybeT m a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___MaybeT_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___MaybeT_op_zsze__ |}.
+
+Local Definition Ord__MaybeT_compare {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> comparison :=
+  Data.Functor.Classes.compare1.
+
+Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => Ord__MaybeT_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__MaybeT_op_zlze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => Ord__MaybeT_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => Ord__MaybeT_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__MaybeT_op_zgze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => Ord__MaybeT_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__MaybeT_max {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
+  fun x y => if Ord__MaybeT_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__MaybeT_min {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_m} `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
+  fun x y => if Ord__MaybeT_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__MaybeT {m} {a} `{Data.Functor.Classes.Ord1 m}
+  `{GHC.Base.Ord a}
+   : GHC.Base.Ord (MaybeT m a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__MaybeT_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__MaybeT_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__MaybeT_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__MaybeT_op_zgze__ ;
+           GHC.Base.compare__ := Ord__MaybeT_compare ;
+           GHC.Base.max__ := Ord__MaybeT_max ;
+           GHC.Base.min__ := Ord__MaybeT_min |}.
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Control.Monad.Trans.Maybe.Read__MaybeT' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Control.Monad.Trans.Maybe.Show__MaybeT' *)
 
 Definition mapMaybeT {m} {a} {n} {b}
    : (m (option a) -> n (option b)) -> MaybeT m a -> MaybeT n b :=
   fun f => Mk_MaybeT GHC.Base.∘ (f GHC.Base.∘ runMaybeT).
-
-Definition liftPass {m} {w} {a} `{(GHC.Base.Monad m)}
-   : Control.Monad.Signatures.Pass w m (option a) ->
-     Control.Monad.Signatures.Pass w (MaybeT m) a :=
-  fun pass =>
-    mapMaybeT (fun m =>
-                 pass (m GHC.Base.>>=
-                       (fun a =>
-                          GHC.Base.return_ (match a with
-                                            | None => pair None GHC.Base.id
-                                            | Some (pair v f) => pair (Some v) f
-                                            end)))).
-
-Definition liftListen {m} {w} {a} `{(GHC.Base.Monad m)}
-   : Control.Monad.Signatures.Listen w m (option a) ->
-     Control.Monad.Signatures.Listen w (MaybeT m) a :=
-  fun listen =>
-    mapMaybeT (fun m =>
-                 let cont_0__ arg_1__ :=
-                   let 'pair a w := arg_1__ in
-                   GHC.Base.return_ (GHC.Base.fmap (fun r => pair r w) a) in
-                 listen m GHC.Base.>>= cont_0__).
-
-(* Skipping definition `Control.Monad.Trans.Maybe.liftCatch' *)
-
-Definition liftCallCC {m} {a} {b}
-   : Control.Monad.Signatures.CallCC m (option a) (option b) ->
-     Control.Monad.Signatures.CallCC (MaybeT m) a b :=
-  fun callCC f =>
-    Mk_MaybeT (callCC (fun c =>
-                         runMaybeT (f (Mk_MaybeT GHC.Base.∘ (c GHC.Base.∘ Some))))).
-
-Definition exceptToMaybeT {m} {e} {a} `{(GHC.Base.Functor m)}
-   : Control.Monad.Trans.Except.ExceptT e m a -> MaybeT m a :=
-  fun '(Control.Monad.Trans.Except.Mk_ExceptT m) =>
-    Mk_MaybeT (GHC.Base.fmap (Data.Either.either (GHC.Base.const None) Some) m).
-
-(* Skipping all instances of class `Control.Monad.Zip.MonadZip', including
-   `Control.Monad.Trans.Maybe.MonadZip__MaybeT' *)
-
-(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
-   `Control.Monad.Trans.Maybe.MonadIO__MaybeT' *)
-
-Local Definition MonadTrans__MaybeT_lift
-   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> MaybeT m a :=
-  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_MaybeT GHC.Base.∘ GHC.Base.liftM Some.
-
-Program Instance MonadTrans__MaybeT
-   : Control.Monad.Trans.Class.MonadTrans MaybeT :=
-  fun _ k__ =>
-    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-             MonadTrans__MaybeT_lift |}.
-
-(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
-   `Control.Monad.Trans.Maybe.MonadFix__MaybeT' *)
-
-(* Skipping all instances of class `GHC.Base.MonadPlus', including
-   `Control.Monad.Trans.Maybe.MonadPlus__MaybeT' *)
-
-Definition Monad__MaybeT_op_zgzgze__ {inst_m} `{_ : GHC.Base.Monad inst_m} :=
-  fun {a} {b} => (@Monad_tmp inst_m _ _ _ a b).
-
-Local Definition Monad__MaybeT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a} {b},
-     (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) b :=
-  fun {a} {b} => fun m k => Monad__MaybeT_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Applicative__MaybeT_op_zlztzg__ {inst_m} `{GHC.Base.Functor
-  inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a} {b},
-     (MaybeT inst_m) (a -> b) -> (MaybeT inst_m) a -> (MaybeT inst_m) b :=
-  fun {a} {b} =>
-    fun mf mx =>
-      Mk_MaybeT (runMaybeT mf GHC.Base.>>=
-                 (fun mb_f =>
-                    match mb_f with
-                    | None => GHC.Base.return_ None
-                    | Some f =>
-                        runMaybeT mx GHC.Base.>>=
-                        (fun mb_x =>
-                           match mb_x with
-                           | None => GHC.Base.return_ None
-                           | Some x => GHC.Base.return_ (Some (f x))
-                           end)
-                    end)).
 
 Local Definition Functor__MaybeT_fmap {inst_m} `{(GHC.Base.Functor inst_m)}
    : forall {a} {b}, (a -> b) -> (MaybeT inst_m) a -> (MaybeT inst_m) b :=
@@ -168,88 +184,6 @@ Program Instance Functor__MaybeT {m} `{(GHC.Base.Functor m)}
   fun _ k__ =>
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeT_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeT_op_zlzd__ |}.
-
-Local Definition Applicative__MaybeT_liftA2 {inst_m} `{GHC.Base.Functor inst_m}
-  `{GHC.Base.Monad inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__MaybeT_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
-  `{GHC.Base.Monad inst_m}
-   : forall {a}, a -> (MaybeT inst_m) a :=
-  fun {a} => Mk_MaybeT GHC.Base.∘ (GHC.Base.return_ GHC.Base.∘ Some).
-
-Local Definition Applicative__MaybeT_op_ztzg__ {inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a} {b}, MaybeT inst_m a -> MaybeT inst_m b -> MaybeT inst_m b :=
-  fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).
-
-Program Instance Applicative__MaybeT {m} `{GHC.Base.Functor m} `{GHC.Base.Monad
-  m}
-   : GHC.Base.Applicative (MaybeT m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeT_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeT_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeT_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__MaybeT_pure |}.
-
-Local Definition Monad__MaybeT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a}, a -> (MaybeT inst_m) a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__MaybeT {m} `{(GHC.Base.Monad m)}
-   : GHC.Base.Monad (MaybeT m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeT_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeT_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__MaybeT_return_ |}.
-
-Local Definition MonadFail__MaybeT_fail {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a}, GHC.Base.String -> (MaybeT inst_m) a :=
-  fun {a} => fun arg_0__ => Mk_MaybeT (GHC.Base.return_ None).
-
-Program Instance MonadFail__MaybeT {m} `{(GHC.Base.Monad m)}
-   : Control.Monad.Fail.MonadFail (MaybeT m) :=
-  fun _ k__ =>
-    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__MaybeT_fail |}.
-
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Monad.Trans.Maybe.Alternative__MaybeT' *)
-
-Local Definition Traversable__MaybeT_traverse {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> (MaybeT inst_f) a -> f ((MaybeT inst_f) b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_MaybeT a =>
-          Mk_MaybeT Data.Functor.<$>
-          Data.Traversable.traverse (Data.Traversable.traverse f) a
-      end.
-
-Local Definition Traversable__MaybeT_mapM {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (MaybeT inst_f) a -> m ((MaybeT inst_f) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__MaybeT_traverse.
-
-Local Definition Traversable__MaybeT_sequenceA {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     (MaybeT inst_f) (f a) -> f ((MaybeT inst_f) a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    Traversable__MaybeT_traverse GHC.Base.id.
-
-Local Definition Traversable__MaybeT_sequence {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m}, (MaybeT inst_f) (m a) -> m ((MaybeT inst_f) a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__MaybeT_sequenceA.
 
 Local Definition Foldable__MaybeT_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -351,6 +285,40 @@ Program Instance Foldable__MaybeT {f} `{(Data.Foldable.Foldable f)}
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__MaybeT_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__MaybeT_toList |}.
 
+Local Definition Traversable__MaybeT_traverse {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (MaybeT inst_f) a -> f ((MaybeT inst_f) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_MaybeT a =>
+          Mk_MaybeT Data.Functor.<$>
+          Data.Traversable.traverse (Data.Traversable.traverse f) a
+      end.
+
+Local Definition Traversable__MaybeT_mapM {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (MaybeT inst_f) a -> m ((MaybeT inst_f) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__MaybeT_traverse.
+
+Local Definition Traversable__MaybeT_sequenceA {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     (MaybeT inst_f) (f a) -> f ((MaybeT inst_f) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__MaybeT_traverse GHC.Base.id.
+
+Local Definition Traversable__MaybeT_sequence {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m}, (MaybeT inst_f) (m a) -> m ((MaybeT inst_f) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__MaybeT_sequenceA.
+
 Program Instance Traversable__MaybeT {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (MaybeT f) :=
   fun _ k__ =>
@@ -363,115 +331,147 @@ Program Instance Traversable__MaybeT {f} `{(Data.Traversable.Traversable f)}
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__MaybeT_traverse |}.
 
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Control.Monad.Trans.Maybe.Show__MaybeT' *)
-
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Control.Monad.Trans.Maybe.Read__MaybeT' *)
-
-Local Definition Ord1__MaybeT_liftCompare {inst_m} `{(Data.Functor.Classes.Ord1
-   inst_m)}
+Local Definition Applicative__MaybeT_op_zlztzg__ {inst_m} `{GHC.Base.Functor
+  inst_m} `{GHC.Base.Monad inst_m}
    : forall {a} {b},
-     (a -> b -> comparison) ->
-     (MaybeT inst_m) a -> (MaybeT inst_m) b -> comparison :=
+     (MaybeT inst_m) (a -> b) -> (MaybeT inst_m) a -> (MaybeT inst_m) b :=
   fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_MaybeT x, Mk_MaybeT y =>
-          Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare comp) x y
-      end.
+    fun mf mx =>
+      Mk_MaybeT (runMaybeT mf GHC.Base.>>=
+                 (fun mb_f =>
+                    match mb_f with
+                    | None => GHC.Base.return_ None
+                    | Some f =>
+                        runMaybeT mx GHC.Base.>>=
+                        (fun mb_x =>
+                           match mb_x with
+                           | None => GHC.Base.return_ None
+                           | Some x => GHC.Base.return_ (Some (f x))
+                           end)
+                    end)).
 
-Local Definition Eq1__MaybeT_liftEq {inst_m} `{(Data.Functor.Classes.Eq1
-   inst_m)}
+Local Definition Applicative__MaybeT_liftA2 {inst_m} `{GHC.Base.Functor inst_m}
+  `{GHC.Base.Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__MaybeT_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
+  `{GHC.Base.Monad inst_m}
+   : forall {a}, a -> (MaybeT inst_m) a :=
+  fun {a} => Mk_MaybeT GHC.Base.∘ (GHC.Base.return_ GHC.Base.∘ Some).
+
+Local Definition Applicative__MaybeT_op_ztzg__ {inst_m} `{GHC.Base.Monad inst_m}
+   : forall {a} {b}, MaybeT inst_m a -> MaybeT inst_m b -> MaybeT inst_m b :=
+  fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).
+
+Program Instance Applicative__MaybeT {m} `{GHC.Base.Functor m} `{GHC.Base.Monad
+  m}
+   : GHC.Base.Applicative (MaybeT m) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__MaybeT_pure |}.
+
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Monad.Trans.Maybe.Alternative__MaybeT' *)
+
+Definition Monad__MaybeT_op_zgzgze__ {inst_m} `{_ : GHC.Base.Monad inst_m} :=
+  fun {a} {b} => (@Monad_tmp inst_m _ _ _ a b).
+
+Local Definition Monad__MaybeT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a} {b},
-     (a -> b -> bool) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> bool :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_MaybeT x, Mk_MaybeT y =>
-          Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) x y
-      end.
+     (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) b :=
+  fun {a} {b} => fun m k => Monad__MaybeT_op_zgzgze__ m (fun arg_0__ => k).
 
-Program Instance Eq1__MaybeT {m} `{(Data.Functor.Classes.Eq1 m)}
-   : Data.Functor.Classes.Eq1 (MaybeT m) :=
+Local Definition Monad__MaybeT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a}, a -> (MaybeT inst_m) a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__MaybeT {m} `{(GHC.Base.Monad m)}
+   : GHC.Base.Monad (MaybeT m) :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__MaybeT_liftEq |}.
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__MaybeT_return_ |}.
 
-Program Instance Ord1__MaybeT {m} `{(Data.Functor.Classes.Ord1 m)}
-   : Data.Functor.Classes.Ord1 (MaybeT m) :=
+Local Definition MonadTrans__MaybeT_lift
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> MaybeT m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_MaybeT GHC.Base.∘ GHC.Base.liftM Some.
+
+Program Instance MonadTrans__MaybeT
+   : Control.Monad.Trans.Class.MonadTrans MaybeT :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-             Ord1__MaybeT_liftCompare |}.
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__MaybeT_lift |}.
 
-Local Definition Ord__MaybeT_compare {inst_m} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> comparison :=
-  Data.Functor.Classes.compare1.
+Local Definition MonadFail__MaybeT_fail {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a}, GHC.Base.String -> (MaybeT inst_m) a :=
+  fun {a} => fun arg_0__ => Mk_MaybeT (GHC.Base.return_ None).
 
-Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__MaybeT_op_zlze__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__MaybeT_op_zgze__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__MaybeT_max {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
-  inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
-  fun x y => if Ord__MaybeT_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__MaybeT_min {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
-  inst_m} `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
-  fun x y => if Ord__MaybeT_op_zlze__ x y : bool then x else y.
-
-Local Definition Eq___MaybeT_op_zeze__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  Data.Functor.Classes.eq1.
-
-Local Definition Eq___MaybeT_op_zsze__ {inst_m} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => negb (Eq___MaybeT_op_zeze__ x y).
-
-Program Instance Eq___MaybeT {m} {a} `{Data.Functor.Classes.Eq1 m}
-  `{GHC.Base.Eq_ a}
-   : GHC.Base.Eq_ (MaybeT m a) :=
+Program Instance MonadFail__MaybeT {m} `{(GHC.Base.Monad m)}
+   : Control.Monad.Fail.MonadFail (MaybeT m) :=
   fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___MaybeT_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___MaybeT_op_zsze__ |}.
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__MaybeT_fail |}.
 
-Program Instance Ord__MaybeT {m} {a} `{Data.Functor.Classes.Ord1 m}
-  `{GHC.Base.Ord a}
-   : GHC.Base.Ord (MaybeT m a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__MaybeT_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__MaybeT_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__MaybeT_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__MaybeT_op_zgze__ ;
-           GHC.Base.compare__ := Ord__MaybeT_compare ;
-           GHC.Base.max__ := Ord__MaybeT_max ;
-           GHC.Base.min__ := Ord__MaybeT_min |}.
+(* Skipping all instances of class `GHC.Base.MonadPlus', including
+   `Control.Monad.Trans.Maybe.MonadPlus__MaybeT' *)
 
-(* Skipping all instances of class `Data.Functor.Classes.Show1', including
-   `Control.Monad.Trans.Maybe.Show1__MaybeT' *)
+(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
+   `Control.Monad.Trans.Maybe.MonadFix__MaybeT' *)
 
-(* Skipping all instances of class `Data.Functor.Classes.Read1', including
-   `Control.Monad.Trans.Maybe.Read1__MaybeT' *)
+(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
+   `Control.Monad.Trans.Maybe.MonadIO__MaybeT' *)
+
+(* Skipping all instances of class `Control.Monad.Zip.MonadZip', including
+   `Control.Monad.Trans.Maybe.MonadZip__MaybeT' *)
+
+Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
+   : e -> MaybeT m a -> Control.Monad.Trans.Except.ExceptT e m a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | e, Mk_MaybeT m =>
+        Control.Monad.Trans.Except.Mk_ExceptT (GHC.Base.fmap (Data.Maybe.maybe
+                                                              (Data.Either.Left e) Data.Either.Right) m)
+    end.
+
+Definition exceptToMaybeT {m} {e} {a} `{(GHC.Base.Functor m)}
+   : Control.Monad.Trans.Except.ExceptT e m a -> MaybeT m a :=
+  fun '(Control.Monad.Trans.Except.Mk_ExceptT m) =>
+    Mk_MaybeT (GHC.Base.fmap (Data.Either.either (GHC.Base.const None) Some) m).
+
+Definition liftCallCC {m} {a} {b}
+   : Control.Monad.Signatures.CallCC m (option a) (option b) ->
+     Control.Monad.Signatures.CallCC (MaybeT m) a b :=
+  fun callCC f =>
+    Mk_MaybeT (callCC (fun c =>
+                         runMaybeT (f (Mk_MaybeT GHC.Base.∘ (c GHC.Base.∘ Some))))).
+
+(* Skipping definition `Control.Monad.Trans.Maybe.liftCatch' *)
+
+Definition liftListen {m} {w} {a} `{(GHC.Base.Monad m)}
+   : Control.Monad.Signatures.Listen w m (option a) ->
+     Control.Monad.Signatures.Listen w (MaybeT m) a :=
+  fun listen =>
+    mapMaybeT (fun m =>
+                 let cont_0__ arg_1__ :=
+                   let 'pair a w := arg_1__ in
+                   GHC.Base.return_ (GHC.Base.fmap (fun r => pair r w) a) in
+                 listen m GHC.Base.>>= cont_0__).
+
+Definition liftPass {m} {w} {a} `{(GHC.Base.Monad m)}
+   : Control.Monad.Signatures.Pass w m (option a) ->
+     Control.Monad.Signatures.Pass w (MaybeT m) a :=
+  fun pass =>
+    mapMaybeT (fun m =>
+                 pass (m GHC.Base.>>=
+                       (fun a =>
+                          GHC.Base.return_ (match a with
+                                            | None => pair None GHC.Base.id
+                                            | Some (pair v f) => pair (Some v) f
+                                            end)))).
 
 (* External variables:
      Gt Lt Monad_tmp None Some bool comparison false list negb option pair true

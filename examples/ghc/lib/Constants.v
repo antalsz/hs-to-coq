@@ -20,23 +20,23 @@ Require GHC.Nat.
 
 (* Converted value declarations: *)
 
-Axiom wORD64_SIZE : nat.
-
-Axiom tARGET_MAX_CHAR : nat.
+(* Skipping definition `Constants.hiVersion' *)
 
 Axiom mAX_TUPLE_SIZE : nat.
 
-Axiom mAX_SUM_SIZE : nat.
+Axiom mAX_CTUPLE_SIZE : nat.
 
-Axiom mAX_SOLVER_ITERATIONS : nat.
+Axiom mAX_SUM_SIZE : nat.
 
 Axiom mAX_REDUCTION_DEPTH : nat.
 
-Axiom mAX_CTUPLE_SIZE : nat.
+Axiom mAX_SOLVER_ITERATIONS : nat.
 
-(* Skipping definition `Constants.hiVersion' *)
+Axiom wORD64_SIZE : nat.
 
 Axiom fLOAT_SIZE : nat.
+
+Axiom tARGET_MAX_CHAR : nat.
 
 (* External variables:
      nat

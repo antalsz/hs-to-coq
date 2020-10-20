@@ -58,107 +58,6 @@ Admitted.
 
 (* Converted value declarations: *)
 
-Fixpoint uniqsFromSupply (arg_0__ : UniqSupply) : list Unique.Unique
-           := let 'MkSplitUniqSupply n _ s2 := arg_0__ in
-              cons (Unique.mkUniqueGrimily n) (uniqsFromSupply s2).
-
-Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
-  fun '(MkSplitUniqSupply n _ _) => Unique.mkUniqueGrimily n.
-
-Definition thenUs_ {a} {b} : UniqSM a -> UniqSM b -> UniqSM b :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | USM expr, USM cont => USM (fun us => let 'pair _ us' := (expr us) in cont us')
-    end.
-
-Definition thenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | USM expr, cont =>
-        USM (fun us => let 'pair result us' := (expr us) in unUSM (cont result) us')
-    end.
-
-Definition takeUniqFromSupply
-   : UniqSupply -> (Unique.Unique * UniqSupply)%type :=
-  fun '(MkSplitUniqSupply n s1 _) => pair (Unique.mkUniqueGrimily n) s1.
-
-Definition splitUniqSupply : UniqSupply -> (UniqSupply * UniqSupply)%type :=
-  fun '(MkSplitUniqSupply _ s1 s2) => pair s1 s2.
-
-Definition splitUniqSupply3
-   : UniqSupply -> (UniqSupply * UniqSupply * UniqSupply)%type :=
-  fun us =>
-    let 'pair us1 us' := splitUniqSupply us in
-    let 'pair us2 us3 := splitUniqSupply us' in
-    pair (pair us1 us2) us3.
-
-Definition splitUniqSupply4
-   : UniqSupply -> (UniqSupply * UniqSupply * UniqSupply * UniqSupply)%type :=
-  fun us =>
-    let 'pair (pair us1 us2) us' := splitUniqSupply3 us in
-    let 'pair us3 us4 := splitUniqSupply us' in
-    pair (pair (pair us1 us2) us3) us4.
-
-Definition returnUs {a} : a -> UniqSM a :=
-  fun result => USM (fun us => pair result us).
-
-(* Skipping definition `UniqSupply.mkSplitUniqSupply' *)
-
-Fixpoint listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
-           := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
-              cons s1 (listSplitUniqSupply s2).
-
-Definition liftUSM {a} : UniqSM a -> UniqSupply -> (a * UniqSupply)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | USM m, us => let 'pair a us' := m us in pair a us'
-    end.
-
-Definition lazyThenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
-  fun expr cont =>
-    USM (fun us =>
-           let 'pair result us' := liftUSM expr us in
-           unUSM (cont result) us').
-
-Fixpoint lazyMapUs {a} {b} (arg_0__ : (a -> UniqSM b)) (arg_1__ : list a)
-           : UniqSM (list b)
-           := match arg_0__, arg_1__ with
-              | _, nil => returnUs nil
-              | f, cons x xs =>
-                  lazyThenUs (f x) (fun r =>
-                                lazyThenUs (lazyMapUs f xs) (fun rs => returnUs (cons r rs)))
-              end.
-
-Definition initUs_ {a} : UniqSupply -> UniqSM a -> a :=
-  fun init_us m => let 'pair r _ := unUSM m init_us in r.
-
-Definition liftUs {m} {a} `{MonadUnique m} : UniqSM a -> m a :=
-  fun m =>
-    getUniqueSupplyM GHC.Base.>>=
-    (GHC.Base.return_ GHC.Base.∘ GHC.Base.flip initUs_ m).
-
-Definition initUs {a} : UniqSupply -> UniqSM a -> (a * UniqSupply)%type :=
-  fun init_us m => let 'pair r us := unUSM m init_us in pair r us.
-
-Definition getUs : UniqSM UniqSupply :=
-  USM (fun us => let 'pair us1 us2 := splitUniqSupply us in pair us1 us2).
-
-Definition getUniquesUs : UniqSM (list Unique.Unique) :=
-  USM (fun us =>
-         let 'pair us1 us2 := splitUniqSupply us in
-         pair (uniqsFromSupply us1) us2).
-
-Definition getUniqueUs : UniqSM Unique.Unique :=
-  USM (fun us => let 'pair u us' := takeUniqFromSupply us in pair u us').
-
-Definition getUniqueSupplyM3 {m} `{MonadUnique m}
-   : m (UniqSupply * UniqSupply * UniqSupply)%type :=
-  GHC.Base.liftM3 GHC.Tuple.pair3 getUniqueSupplyM getUniqueSupplyM
-  getUniqueSupplyM.
-
-(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
-   `UniqSupply.MonadFix__UniqSM' *)
-
 Local Definition Applicative__UniqSM_op_zlztzg__
    : forall {a} {b}, UniqSM (a -> b) -> UniqSM a -> UniqSM b :=
   fun {a} {b} =>
@@ -193,9 +92,18 @@ Local Definition Applicative__UniqSM_liftA2
   fun {a} {b} {c} =>
     fun f x => Applicative__UniqSM_op_zlztzg__ (GHC.Base.fmap f x).
 
+Definition thenUs_ {a} {b} : UniqSM a -> UniqSM b -> UniqSM b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | USM expr, USM cont => USM (fun us => let 'pair _ us' := (expr us) in cont us')
+    end.
+
 Local Definition Applicative__UniqSM_op_ztzg__
    : forall {a} {b}, UniqSM a -> UniqSM b -> UniqSM b :=
   fun {a} {b} => thenUs_.
+
+Definition returnUs {a} : a -> UniqSM a :=
+  fun result => USM (fun us => pair result us).
 
 Local Definition Applicative__UniqSM_pure : forall {a}, a -> UniqSM a :=
   fun {a} => returnUs.
@@ -211,6 +119,13 @@ Local Definition Monad__UniqSM_op_zgzg__
    : forall {a} {b}, UniqSM a -> UniqSM b -> UniqSM b :=
   fun {a} {b} => _GHC.Base.*>_.
 
+Definition thenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | USM expr, cont =>
+        USM (fun us => let 'pair result us' := (expr us) in unUSM (cont result) us')
+    end.
+
 Local Definition Monad__UniqSM_op_zgzgze__
    : forall {a} {b}, UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
   fun {a} {b} => thenUs.
@@ -224,11 +139,36 @@ Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM :=
            GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__UniqSM_op_zgzgze__ ;
            GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
 
+(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
+   `UniqSupply.MonadFix__UniqSM' *)
+
+Definition takeUniqFromSupply
+   : UniqSupply -> (Unique.Unique * UniqSupply)%type :=
+  fun '(MkSplitUniqSupply n s1 _) => pair (Unique.mkUniqueGrimily n) s1.
+
+Definition getUniqueUs : UniqSM Unique.Unique :=
+  USM (fun us => let 'pair u us' := takeUniqFromSupply us in pair u us').
+
 Local Definition MonadUnique__UniqSM_getUniqueM : UniqSM Unique.Unique :=
   getUniqueUs.
 
+Definition splitUniqSupply : UniqSupply -> (UniqSupply * UniqSupply)%type :=
+  fun '(MkSplitUniqSupply _ s1 s2) => pair s1 s2.
+
+Definition getUs : UniqSM UniqSupply :=
+  USM (fun us => let 'pair us1 us2 := splitUniqSupply us in pair us1 us2).
+
 Local Definition MonadUnique__UniqSM_getUniqueSupplyM : UniqSM UniqSupply :=
   getUs.
+
+Fixpoint uniqsFromSupply (arg_0__ : UniqSupply) : list Unique.Unique
+           := let 'MkSplitUniqSupply n _ s2 := arg_0__ in
+              cons (Unique.mkUniqueGrimily n) (uniqsFromSupply s2).
+
+Definition getUniquesUs : UniqSM (list Unique.Unique) :=
+  USM (fun us =>
+         let 'pair us1 us2 := splitUniqSupply us in
+         pair (uniqsFromSupply us1) us2).
 
 Local Definition MonadUnique__UniqSM_getUniquesM
    : UniqSM (list Unique.Unique) :=
@@ -239,6 +179,66 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
     k__ {| getUniqueM__ := MonadUnique__UniqSM_getUniqueM ;
            getUniqueSupplyM__ := MonadUnique__UniqSM_getUniqueSupplyM ;
            getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
+
+(* Skipping definition `UniqSupply.mkSplitUniqSupply' *)
+
+Fixpoint listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
+           := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
+              cons s1 (listSplitUniqSupply s2).
+
+Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
+  fun '(MkSplitUniqSupply n _ _) => Unique.mkUniqueGrimily n.
+
+Definition splitUniqSupply3
+   : UniqSupply -> (UniqSupply * UniqSupply * UniqSupply)%type :=
+  fun us =>
+    let 'pair us1 us' := splitUniqSupply us in
+    let 'pair us2 us3 := splitUniqSupply us' in
+    pair (pair us1 us2) us3.
+
+Definition splitUniqSupply4
+   : UniqSupply -> (UniqSupply * UniqSupply * UniqSupply * UniqSupply)%type :=
+  fun us =>
+    let 'pair (pair us1 us2) us' := splitUniqSupply3 us in
+    let 'pair us3 us4 := splitUniqSupply us' in
+    pair (pair (pair us1 us2) us3) us4.
+
+Definition initUs {a} : UniqSupply -> UniqSM a -> (a * UniqSupply)%type :=
+  fun init_us m => let 'pair r us := unUSM m init_us in pair r us.
+
+Definition initUs_ {a} : UniqSupply -> UniqSM a -> a :=
+  fun init_us m => let 'pair r _ := unUSM m init_us in r.
+
+Definition liftUSM {a} : UniqSM a -> UniqSupply -> (a * UniqSupply)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | USM m, us => let 'pair a us' := m us in pair a us'
+    end.
+
+Definition lazyThenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
+  fun expr cont =>
+    USM (fun us =>
+           let 'pair result us' := liftUSM expr us in
+           unUSM (cont result) us').
+
+Definition getUniqueSupplyM3 {m} `{MonadUnique m}
+   : m (UniqSupply * UniqSupply * UniqSupply)%type :=
+  GHC.Base.liftM3 GHC.Tuple.pair3 getUniqueSupplyM getUniqueSupplyM
+  getUniqueSupplyM.
+
+Definition liftUs {m} {a} `{MonadUnique m} : UniqSM a -> m a :=
+  fun m =>
+    getUniqueSupplyM GHC.Base.>>=
+    (GHC.Base.return_ GHC.Base.∘ GHC.Base.flip initUs_ m).
+
+Fixpoint lazyMapUs {a} {b} (arg_0__ : (a -> UniqSM b)) (arg_1__ : list a)
+           : UniqSM (list b)
+           := match arg_0__, arg_1__ with
+              | _, nil => returnUs nil
+              | f, cons x xs =>
+                  lazyThenUs (f x) (fun r =>
+                                lazyThenUs (lazyMapUs f xs) (fun rs => returnUs (cons r rs)))
+              end.
 
 (* External variables:
      cons list nil op_zt__ pair BinNums.N GHC.Base.Applicative GHC.Base.Functor

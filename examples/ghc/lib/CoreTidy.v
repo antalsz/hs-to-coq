@@ -30,38 +30,46 @@ Require UniqFM.
 
 (* Converted value declarations: *)
 
-Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=
+Definition op_zeZC__ {a} {b} : a -> (a -> b) -> b :=
+  fun m k => GHC.Prim.seq m (k m).
+
+Notation "'_=:_'" := (op_zeZC__).
+
+Infix "=:" := (_=:_) (at level 99).
+
+Definition tidyIdBndr
+   : Core.TidyEnv -> Core.Id -> (Core.TidyEnv * Core.Id)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | pair _ var_env, v => Maybes.orElse (Core.lookupVarEnv var_env v) v
+    | (pair tidy_env var_env as env), id =>
+        let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
+        let old_info := Core.idInfo id in
+        let old_unf := Core.unfoldingInfo old_info in
+        let new_unf := Core.noUnfolding in
+        let new_info :=
+          Core.setOneShotInfo (Core.setUnfoldingInfo (Core.setOccInfo Core.vanillaIdInfo
+                                                                      (Core.occInfo old_info)) new_unf)
+                              (Core.oneShotInfo old_info) in
+        let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
+        let ty' := Core.tidyType env (Id.idType id) in
+        let id' := Id.mkLocalIdWithInfo name' ty' new_info in
+        let var_env' := Core.extendVarEnv var_env id id' in
+        pair (pair tidy_env' var_env') id'
     end.
+
+Definition tidyBndr
+   : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
+  fun env var =>
+    if Core.isTyCoVar var : bool then Core.tidyTyCoVarBndr env var else
+    tidyIdBndr env var.
+
+Definition tidyBndrs
+   : Core.TidyEnv -> list Core.Var -> (Core.TidyEnv * list Core.Var)%type :=
+  fun env vars => Data.Traversable.mapAccumL tidyBndr env vars.
 
 Definition tidyUnfolding
    : Core.TidyEnv -> Core.Unfolding -> Core.Unfolding -> Core.Unfolding :=
   fun e u v => u.
-
-Definition tidyTickish
-   : Core.TidyEnv -> Core.Tickish Core.Id -> Core.Tickish Core.Id :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | env, Core.Breakpoint ix ids =>
-        Core.Breakpoint ix (GHC.Base.map (tidyVarOcc env) ids)
-    | _, other_tickish => other_tickish
-    end.
-
-(* Skipping definition `CoreTidy.tidyRules' *)
-
-(* Skipping definition `CoreTidy.tidyRule' *)
-
-Definition tidyNameOcc : Core.TidyEnv -> Name.Name -> Name.Name :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair _ var_env, n =>
-        match UniqFM.lookupUFM var_env n with
-        | None => n
-        | Some v => Id.idName v
-        end
-    end.
 
 Definition tidyLetBndr
    : Core.TidyEnv ->
@@ -97,42 +105,11 @@ Definition tidyLetBndr
         pair (pair tidy_env' var_env') id'
     end.
 
-Definition tidyIdBndr
-   : Core.TidyEnv -> Core.Id -> (Core.TidyEnv * Core.Id)%type :=
+Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | (pair tidy_env var_env as env), id =>
-        let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := Core.idInfo id in
-        let old_unf := Core.unfoldingInfo old_info in
-        let new_unf := Core.noUnfolding in
-        let new_info :=
-          Core.setOneShotInfo (Core.setUnfoldingInfo (Core.setOccInfo Core.vanillaIdInfo
-                                                                      (Core.occInfo old_info)) new_unf)
-                              (Core.oneShotInfo old_info) in
-        let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
-        let ty' := Core.tidyType env (Id.idType id) in
-        let id' := Id.mkLocalIdWithInfo name' ty' new_info in
-        let var_env' := Core.extendVarEnv var_env id id' in
-        pair (pair tidy_env' var_env') id'
+    | pair _ var_env, v => Maybes.orElse (Core.lookupVarEnv var_env v) v
     end.
-
-Definition tidyBndr
-   : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
-  fun env var =>
-    if Core.isTyCoVar var : bool then Core.tidyTyCoVarBndr env var else
-    tidyIdBndr env var.
-
-Definition tidyBndrs
-   : Core.TidyEnv -> list Core.Var -> (Core.TidyEnv * list Core.Var)%type :=
-  fun env vars => Data.Traversable.mapAccumL tidyBndr env vars.
-
-Definition op_zeZC__ {a} {b} : a -> (a -> b) -> b :=
-  fun m k => GHC.Prim.seq m (k m).
-
-Notation "'_=:_'" := (op_zeZC__).
-
-Infix "=:" := (_=:_) (at level 99).
 
 Definition tidyBind
    : Core.TidyEnv -> Core.CoreBind -> (Core.TidyEnv * Core.CoreBind)%type :=
@@ -217,6 +194,29 @@ Definition tidyAlt : Core.TidyEnv -> Core.CoreAlt -> Core.CoreAlt :=
     | env, pair (pair con vs) rhs =>
         tidyBndrs env vs =:
         (fun '(pair env' vs) => pair (pair con vs) (tidyExpr env' rhs))
+    end.
+
+Definition tidyTickish
+   : Core.TidyEnv -> Core.Tickish Core.Id -> Core.Tickish Core.Id :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | env, Core.Breakpoint ix ids =>
+        Core.Breakpoint ix (GHC.Base.map (tidyVarOcc env) ids)
+    | _, other_tickish => other_tickish
+    end.
+
+(* Skipping definition `CoreTidy.tidyRules' *)
+
+(* Skipping definition `CoreTidy.tidyRule' *)
+
+Definition tidyNameOcc : Core.TidyEnv -> Name.Name -> Name.Name :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | pair _ var_env, n =>
+        match UniqFM.lookupUFM var_env n with
+        | None => n
+        | Some v => Id.idName v
+        end
     end.
 
 Module Notations.

@@ -42,6 +42,7 @@ skip Data.Foldable.Foldable__Last
 # skip Data.Foldable.GHC_Base_Ord_a___GHC_Base_Monoid__Min_a_
 
 order Data.Foldable.Foldable__list Data.Foldable.concatMap Data.Foldable.concat
+order Data.Foldable.Foldable__list Data.Foldable.Foldable__NonEmpty_fold
 redefine Definition Data.Foldable.hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
 
 # Generic stuff

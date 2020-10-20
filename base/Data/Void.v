@@ -21,12 +21,6 @@ Inductive Void : Type :=.
 
 (* Converted value declarations: *)
 
-Definition absurd {a} : Void -> a :=
-  fun a => match a with end.
-
-Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
-  GHC.Base.fmap absurd.
-
 Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => true end.
 
@@ -81,6 +75,12 @@ Program Instance Ord__Void : GHC.Base.Ord Void :=
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Void.Show__Void' *)
 
+(* Skipping all instances of class `GHC.Arr.Ix', including
+   `Data.Void.Ix__Void' *)
+
+(* Skipping all instances of class `GHC.Exception.Exception', including
+   `Data.Void.Exception__Void' *)
+
 Local Definition Semigroup__Void_op_zlzlzgzg__ : Void -> Void -> Void :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => a end.
 
@@ -88,11 +88,11 @@ Program Instance Semigroup__Void : GHC.Base.Semigroup Void :=
   fun _ k__ =>
     k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Void_op_zlzlzgzg__ |}.
 
-(* Skipping all instances of class `GHC.Exception.Exception', including
-   `Data.Void.Exception__Void' *)
+Definition absurd {a} : Void -> a :=
+  fun a => match a with end.
 
-(* Skipping all instances of class `GHC.Arr.Ix', including
-   `Data.Void.Ix__Void' *)
+Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
+  GHC.Base.fmap absurd.
 
 (* External variables:
      Eq Gt Lt bool comparison negb true GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord

@@ -39,62 +39,120 @@ Definition runIdentityT {f : Type -> Type} {a} (arg_0__ : IdentityT f a) :=
 
 (* Converted value declarations: *)
 
+Local Definition Eq1__IdentityT_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
+   inst_f)}
+   : forall {a} {b},
+     (a -> b -> bool) -> (IdentityT inst_f) a -> (IdentityT inst_f) b -> bool :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | eq, Mk_IdentityT x, Mk_IdentityT y => Data.Functor.Classes.liftEq eq x y
+      end.
+
+Program Instance Eq1__IdentityT {f} `{(Data.Functor.Classes.Eq1 f)}
+   : Data.Functor.Classes.Eq1 (IdentityT f) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__IdentityT_liftEq |}.
+
+Local Definition Ord1__IdentityT_liftCompare {inst_f}
+  `{(Data.Functor.Classes.Ord1 inst_f)}
+   : forall {a} {b},
+     (a -> b -> comparison) ->
+     (IdentityT inst_f) a -> (IdentityT inst_f) b -> comparison :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | comp, Mk_IdentityT x, Mk_IdentityT y =>
+          Data.Functor.Classes.liftCompare comp x y
+      end.
+
+Program Instance Ord1__IdentityT {f} `{(Data.Functor.Classes.Ord1 f)}
+   : Data.Functor.Classes.Ord1 (IdentityT f) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__IdentityT_liftCompare |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read1', including
+   `Control.Monad.Trans.Identity.Read1__IdentityT' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show1', including
+   `Control.Monad.Trans.Identity.Show1__IdentityT' *)
+
+Local Definition Eq___IdentityT_op_zeze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  Data.Functor.Classes.eq1.
+
+Local Definition Eq___IdentityT_op_zsze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => negb (Eq___IdentityT_op_zeze__ x y).
+
+Program Instance Eq___IdentityT {f} {a} `{Data.Functor.Classes.Eq1 f}
+  `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (IdentityT f a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IdentityT_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IdentityT_op_zsze__ |}.
+
+Local Definition Ord__IdentityT_compare {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> comparison :=
+  Data.Functor.Classes.compare1.
+
+Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => Ord__IdentityT_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__IdentityT_op_zlze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => Ord__IdentityT_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => Ord__IdentityT_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__IdentityT_op_zgze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => Ord__IdentityT_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__IdentityT_max {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) ->
+     (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
+  fun x y => if Ord__IdentityT_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__IdentityT_min {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) ->
+     (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
+  fun x y => if Ord__IdentityT_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__IdentityT {f} {a} `{Data.Functor.Classes.Ord1 f}
+  `{GHC.Base.Ord a}
+   : GHC.Base.Ord (IdentityT f a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__IdentityT_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__IdentityT_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__IdentityT_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__IdentityT_op_zgze__ ;
+           GHC.Base.compare__ := Ord__IdentityT_compare ;
+           GHC.Base.max__ := Ord__IdentityT_max ;
+           GHC.Base.min__ := Ord__IdentityT_min |}.
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Control.Monad.Trans.Identity.Read__IdentityT' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Control.Monad.Trans.Identity.Show__IdentityT' *)
+
 Definition mapIdentityT {m} {a} {n} {b}
    : (m a -> n b) -> IdentityT m a -> IdentityT n b :=
   fun f => Mk_IdentityT GHC.Base.∘ (f GHC.Base.∘ runIdentityT).
-
-(* Skipping definition `Control.Monad.Trans.Identity.liftCatch' *)
-
-Definition liftCallCC {m} {a} {b}
-   : Control.Monad.Signatures.CallCC m a b ->
-     Control.Monad.Signatures.CallCC (IdentityT m) a b :=
-  fun callCC f =>
-    Mk_IdentityT (callCC (fun c => runIdentityT (f (Mk_IdentityT GHC.Base.∘ c)))).
-
-Definition lift2IdentityT {m} {a} {n} {b} {p} {c}
-   : (m a -> n b -> p c) -> IdentityT m a -> IdentityT n b -> IdentityT p c :=
-  fun f a b => Mk_IdentityT (f (runIdentityT a) (runIdentityT b)).
-
-Local Definition MonadTrans__IdentityT_lift
-   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> IdentityT m a :=
-  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_IdentityT.
-
-Program Instance MonadTrans__IdentityT
-   : Control.Monad.Trans.Class.MonadTrans IdentityT :=
-  fun _ k__ =>
-    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-             MonadTrans__IdentityT_lift |}.
-
-(* Skipping all instances of class `Control.Monad.Zip.MonadZip', including
-   `Control.Monad.Trans.Identity.MonadZip__IdentityT' *)
-
-(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
-   `Control.Monad.Trans.Identity.MonadIO__IdentityT' *)
-
-(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
-   `Control.Monad.Trans.Identity.MonadFix__IdentityT' *)
-
-(* Skipping all instances of class `GHC.Base.MonadPlus', including
-   `Control.Monad.Trans.Identity.MonadPlus__IdentityT' *)
-
-Local Definition MonadFail__IdentityT_fail {inst_m}
-  `{(Control.Monad.Fail.MonadFail inst_m)}
-   : forall {a}, GHC.Base.String -> (IdentityT inst_m) a :=
-  fun {a} => fun msg => Mk_IdentityT (Control.Monad.Fail.fail msg).
-
-Local Definition Monad__IdentityT_op_zgzgze__ {inst_m} `{(GHC.Base.Monad
-   inst_m)}
-   : forall {a} {b},
-     (IdentityT inst_m) a -> (a -> (IdentityT inst_m) b) -> (IdentityT inst_m) b :=
-  fun {a} {b} =>
-    fun m k =>
-      Mk_IdentityT ((runIdentityT GHC.Base.∘ k) GHC.Base.=<< runIdentityT m).
-
-Local Definition Applicative__IdentityT_op_zlztzg__ {inst_m}
-  `{(GHC.Base.Applicative inst_m)}
-   : forall {a} {b},
-     (IdentityT inst_m) (a -> b) -> (IdentityT inst_m) a -> (IdentityT inst_m) b :=
-  fun {a} {b} => lift2IdentityT _GHC.Base.<*>_.
 
 Local Definition Functor__IdentityT_fmap {inst_m} `{(GHC.Base.Functor inst_m)}
    : forall {a} {b}, (a -> b) -> (IdentityT inst_m) a -> (IdentityT inst_m) b :=
@@ -110,91 +168,6 @@ Program Instance Functor__IdentityT {m} `{(GHC.Base.Functor m)}
   fun _ k__ =>
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__IdentityT_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IdentityT_op_zlzd__ |}.
-
-Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
-   inst_m)}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__IdentityT_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
-  `{(GHC.Base.Applicative inst_m)}
-   : forall {a} {b},
-     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
-  fun {a} {b} => lift2IdentityT _GHC.Base.*>_.
-
-Local Definition Applicative__IdentityT_pure {inst_m} `{(GHC.Base.Applicative
-   inst_m)}
-   : forall {a}, a -> (IdentityT inst_m) a :=
-  fun {a} => fun x => Mk_IdentityT (GHC.Base.pure x).
-
-Program Instance Applicative__IdentityT {m} `{(GHC.Base.Applicative m)}
-   : GHC.Base.Applicative (IdentityT m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__IdentityT_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__IdentityT_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__IdentityT_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__IdentityT_pure |}.
-
-Local Definition Monad__IdentityT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a} {b},
-     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
-  fun {a} {b} => fun m k => Monad__IdentityT_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__IdentityT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a}, a -> (IdentityT inst_m) a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__IdentityT {m} `{(GHC.Base.Monad m)}
-   : GHC.Base.Monad (IdentityT m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__IdentityT_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__IdentityT_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__IdentityT_return_ |}.
-
-Program Instance MonadFail__IdentityT {m} `{(Control.Monad.Fail.MonadFail m)}
-   : Control.Monad.Fail.MonadFail (IdentityT m) :=
-  fun _ k__ =>
-    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__IdentityT_fail |}.
-
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Monad.Trans.Identity.Alternative__IdentityT' *)
-
-Local Definition Traversable__IdentityT_traverse {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> (IdentityT inst_f) a -> f ((IdentityT inst_f) b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_IdentityT a =>
-          Mk_IdentityT Data.Functor.<$> Data.Traversable.traverse f a
-      end.
-
-Local Definition Traversable__IdentityT_mapM {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (IdentityT inst_f) a -> m ((IdentityT inst_f) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__IdentityT_traverse.
-
-Local Definition Traversable__IdentityT_sequenceA {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     (IdentityT inst_f) (f a) -> f ((IdentityT inst_f) a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    Traversable__IdentityT_traverse GHC.Base.id.
-
-Local Definition Traversable__IdentityT_sequence {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m},
-     (IdentityT inst_f) (m a) -> m ((IdentityT inst_f) a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__IdentityT_sequenceA.
 
 Local Definition Foldable__IdentityT_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -294,6 +267,40 @@ Program Instance Foldable__IdentityT {f} `{(Data.Foldable.Foldable f)}
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__IdentityT_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__IdentityT_toList |}.
 
+Local Definition Traversable__IdentityT_traverse {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (IdentityT inst_f) a -> f ((IdentityT inst_f) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_IdentityT a =>
+          Mk_IdentityT Data.Functor.<$> Data.Traversable.traverse f a
+      end.
+
+Local Definition Traversable__IdentityT_mapM {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (IdentityT inst_f) a -> m ((IdentityT inst_f) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__IdentityT_traverse.
+
+Local Definition Traversable__IdentityT_sequenceA {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     (IdentityT inst_f) (f a) -> f ((IdentityT inst_f) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__IdentityT_traverse GHC.Base.id.
+
+Local Definition Traversable__IdentityT_sequence {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m},
+     (IdentityT inst_f) (m a) -> m ((IdentityT inst_f) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__IdentityT_sequenceA.
+
 Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (IdentityT f) :=
   fun _ k__ =>
@@ -306,116 +313,109 @@ Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__IdentityT_traverse |}.
 
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Control.Monad.Trans.Identity.Show__IdentityT' *)
+Definition lift2IdentityT {m} {a} {n} {b} {p} {c}
+   : (m a -> n b -> p c) -> IdentityT m a -> IdentityT n b -> IdentityT p c :=
+  fun f a b => Mk_IdentityT (f (runIdentityT a) (runIdentityT b)).
 
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Control.Monad.Trans.Identity.Read__IdentityT' *)
-
-Local Definition Ord1__IdentityT_liftCompare {inst_f}
-  `{(Data.Functor.Classes.Ord1 inst_f)}
+Local Definition Applicative__IdentityT_op_zlztzg__ {inst_m}
+  `{(GHC.Base.Applicative inst_m)}
    : forall {a} {b},
-     (a -> b -> comparison) ->
-     (IdentityT inst_f) a -> (IdentityT inst_f) b -> comparison :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_IdentityT x, Mk_IdentityT y =>
-          Data.Functor.Classes.liftCompare comp x y
-      end.
+     (IdentityT inst_m) (a -> b) -> (IdentityT inst_m) a -> (IdentityT inst_m) b :=
+  fun {a} {b} => lift2IdentityT _GHC.Base.<*>_.
 
-Local Definition Eq1__IdentityT_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
-   inst_f)}
+Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
+   inst_m)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__IdentityT_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
+  `{(GHC.Base.Applicative inst_m)}
    : forall {a} {b},
-     (a -> b -> bool) -> (IdentityT inst_f) a -> (IdentityT inst_f) b -> bool :=
+     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
+  fun {a} {b} => lift2IdentityT _GHC.Base.*>_.
+
+Local Definition Applicative__IdentityT_pure {inst_m} `{(GHC.Base.Applicative
+   inst_m)}
+   : forall {a}, a -> (IdentityT inst_m) a :=
+  fun {a} => fun x => Mk_IdentityT (GHC.Base.pure x).
+
+Program Instance Applicative__IdentityT {m} `{(GHC.Base.Applicative m)}
+   : GHC.Base.Applicative (IdentityT m) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__IdentityT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__IdentityT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__IdentityT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__IdentityT_pure |}.
+
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Monad.Trans.Identity.Alternative__IdentityT' *)
+
+Local Definition Monad__IdentityT_op_zgzgze__ {inst_m} `{(GHC.Base.Monad
+   inst_m)}
+   : forall {a} {b},
+     (IdentityT inst_m) a -> (a -> (IdentityT inst_m) b) -> (IdentityT inst_m) b :=
   fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_IdentityT x, Mk_IdentityT y => Data.Functor.Classes.liftEq eq x y
-      end.
+    fun m k =>
+      Mk_IdentityT ((runIdentityT GHC.Base.∘ k) GHC.Base.=<< runIdentityT m).
 
-Program Instance Eq1__IdentityT {f} `{(Data.Functor.Classes.Eq1 f)}
-   : Data.Functor.Classes.Eq1 (IdentityT f) :=
+Local Definition Monad__IdentityT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
+  fun {a} {b} => fun m k => Monad__IdentityT_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__IdentityT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a}, a -> (IdentityT inst_m) a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__IdentityT {m} `{(GHC.Base.Monad m)}
+   : GHC.Base.Monad (IdentityT m) :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__IdentityT_liftEq |}.
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__IdentityT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__IdentityT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__IdentityT_return_ |}.
 
-Program Instance Ord1__IdentityT {f} `{(Data.Functor.Classes.Ord1 f)}
-   : Data.Functor.Classes.Ord1 (IdentityT f) :=
+Local Definition MonadFail__IdentityT_fail {inst_m}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (IdentityT inst_m) a :=
+  fun {a} => fun msg => Mk_IdentityT (Control.Monad.Fail.fail msg).
+
+Program Instance MonadFail__IdentityT {m} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (IdentityT m) :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-             Ord1__IdentityT_liftCompare |}.
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__IdentityT_fail |}.
 
-Local Definition Ord__IdentityT_compare {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> comparison :=
-  Data.Functor.Classes.compare1.
+(* Skipping all instances of class `GHC.Base.MonadPlus', including
+   `Control.Monad.Trans.Identity.MonadPlus__IdentityT' *)
 
-Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base.== Lt.
+(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
+   `Control.Monad.Trans.Identity.MonadFix__IdentityT' *)
 
-Local Definition Ord__IdentityT_op_zlze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base./= Gt.
+(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
+   `Control.Monad.Trans.Identity.MonadIO__IdentityT' *)
 
-Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base.== Gt.
+(* Skipping all instances of class `Control.Monad.Zip.MonadZip', including
+   `Control.Monad.Trans.Identity.MonadZip__IdentityT' *)
 
-Local Definition Ord__IdentityT_op_zgze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base./= Lt.
+Local Definition MonadTrans__IdentityT_lift
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> IdentityT m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_IdentityT.
 
-Local Definition Ord__IdentityT_max {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) ->
-     (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
-  fun x y => if Ord__IdentityT_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__IdentityT_min {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) ->
-     (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
-  fun x y => if Ord__IdentityT_op_zlze__ x y : bool then x else y.
-
-Local Definition Eq___IdentityT_op_zeze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  Data.Functor.Classes.eq1.
-
-Local Definition Eq___IdentityT_op_zsze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => negb (Eq___IdentityT_op_zeze__ x y).
-
-Program Instance Eq___IdentityT {f} {a} `{Data.Functor.Classes.Eq1 f}
-  `{GHC.Base.Eq_ a}
-   : GHC.Base.Eq_ (IdentityT f a) :=
+Program Instance MonadTrans__IdentityT
+   : Control.Monad.Trans.Class.MonadTrans IdentityT :=
   fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___IdentityT_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___IdentityT_op_zsze__ |}.
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__IdentityT_lift |}.
 
-Program Instance Ord__IdentityT {f} {a} `{Data.Functor.Classes.Ord1 f}
-  `{GHC.Base.Ord a}
-   : GHC.Base.Ord (IdentityT f a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__IdentityT_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__IdentityT_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__IdentityT_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__IdentityT_op_zgze__ ;
-           GHC.Base.compare__ := Ord__IdentityT_compare ;
-           GHC.Base.max__ := Ord__IdentityT_max ;
-           GHC.Base.min__ := Ord__IdentityT_min |}.
+Definition liftCallCC {m} {a} {b}
+   : Control.Monad.Signatures.CallCC m a b ->
+     Control.Monad.Signatures.CallCC (IdentityT m) a b :=
+  fun callCC f =>
+    Mk_IdentityT (callCC (fun c => runIdentityT (f (Mk_IdentityT GHC.Base.∘ c)))).
 
-(* Skipping all instances of class `Data.Functor.Classes.Show1', including
-   `Control.Monad.Trans.Identity.Show1__IdentityT' *)
-
-(* Skipping all instances of class `Data.Functor.Classes.Read1', including
-   `Control.Monad.Trans.Identity.Read1__IdentityT' *)
+(* Skipping definition `Control.Monad.Trans.Identity.liftCatch' *)
 
 (* External variables:
      Gt Lt Type bool comparison list negb Control.Monad.Fail.MonadFail

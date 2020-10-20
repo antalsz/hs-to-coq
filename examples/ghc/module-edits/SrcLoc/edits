@@ -12,8 +12,7 @@ order SrcLoc.Eq___RealSrcLoc SrcLoc.Ord__RealSrcLoc_min SrcLoc.Ord__RealSrcLoc_m
 
 order SrcLoc.Ord__SrcSpan SrcLoc.rightmost SrcLoc.leftmost_smallest
 
-order SrcLoc.Eq___RealSrcSpan  SrcLoc.Eq___SrcSpan_op_zeze__ SrcLoc.Ord__RealSrcSpan SrcLoc.Ord__SrcSpan_op_zlze__ SrcLoc.Ord__SrcSpan_op_zl__ SrcLoc.Ord__SrcSpan_op_zgze__ SrcLoc.Ord__SrcSpan_op_zg__ SrcLoc.Ord__SrcSpan_compare
-order SrcLoc.Eq___RealSrcLoc  SrcLoc.Eq___SrcLoc_op_zeze__ SrcLoc.Ord__RealSrcLoc SrcLoc.Ord__SrcLoc_op_zlze__ SrcLoc.Ord__SrcLoc_op_zl__ SrcLoc.Ord__SrcLoc_op_zgze__ SrcLoc.Ord__SrcLoc_op_zg__ SrcLoc.Ord__SrcLoc_compare
+order SrcLoc.Eq___RealSrcLoc SrcLoc.Ord__RealSrcLoc SrcLoc.Eq___RealSrcSpan SrcLoc.Ord__RealSrcSpan_compare
 
 
 order SrcLoc.Eq___GenLocated SrcLoc.Ord__GenLocated

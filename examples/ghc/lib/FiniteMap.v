@@ -20,6 +20,15 @@ Require GHC.Base.
 
 (* Converted value declarations: *)
 
+Definition insertList {key} {elt} `{GHC.Base.Ord key}
+   : list (key * elt)%type ->
+     Data.Map.Internal.Map key elt -> Data.Map.Internal.Map key elt :=
+  fun xs m =>
+    Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                           match arg_0__, arg_1__ with
+                           | m, pair k v => Data.Map.Internal.insert k v m
+                           end) m xs.
+
 Definition insertListWith {key} {elt} `{GHC.Base.Ord key}
    : (elt -> elt -> elt) ->
      list (key * elt)%type ->
@@ -30,26 +39,17 @@ Definition insertListWith {key} {elt} `{GHC.Base.Ord key}
                            | m, pair k v => Data.Map.Internal.insertWith f k v m
                            end) m0 xs.
 
-Definition insertList {key} {elt} `{GHC.Base.Ord key}
-   : list (key * elt)%type ->
-     Data.Map.Internal.Map key elt -> Data.Map.Internal.Map key elt :=
-  fun xs m =>
-    Data.Foldable.foldl (fun arg_0__ arg_1__ =>
-                           match arg_0__, arg_1__ with
-                           | m, pair k v => Data.Map.Internal.insert k v m
-                           end) m xs.
-
-Definition foldRightWithKey {key} {elt} {a}
-   : (key -> elt -> a -> a) -> a -> Data.Map.Internal.Map key elt -> a :=
-  Data.Map.Internal.foldrWithKey.
+Definition deleteList {key} {elt} `{GHC.Base.Ord key}
+   : list key -> Data.Map.Internal.Map key elt -> Data.Map.Internal.Map key elt :=
+  fun ks m => Data.Foldable.foldl (GHC.Base.flip Data.Map.Internal.delete) m ks.
 
 Definition foldRight {elt} {a} {key}
    : (elt -> a -> a) -> a -> Data.Map.Internal.Map key elt -> a :=
   Data.Map.Internal.foldr.
 
-Definition deleteList {key} {elt} `{GHC.Base.Ord key}
-   : list key -> Data.Map.Internal.Map key elt -> Data.Map.Internal.Map key elt :=
-  fun ks m => Data.Foldable.foldl (GHC.Base.flip Data.Map.Internal.delete) m ks.
+Definition foldRightWithKey {key} {elt} {a}
+   : (key -> elt -> a -> a) -> a -> Data.Map.Internal.Map key elt -> a :=
+  Data.Map.Internal.foldrWithKey.
 
 (* External variables:
      list op_zt__ pair Data.Foldable.foldl Data.Map.Internal.Map

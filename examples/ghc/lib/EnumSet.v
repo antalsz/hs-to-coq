@@ -25,19 +25,19 @@ Arguments Mk_EnumSet {_} _.
 
 (* Converted value declarations: *)
 
-Axiom toList : forall {a}, forall `{GHC.Enum.Enum a}, EnumSet a -> list a.
-
 Axiom member : forall {a}, forall `{GHC.Enum.Enum a}, a -> EnumSet a -> bool.
 
 Axiom insert : forall {a},
                forall `{GHC.Enum.Enum a}, a -> EnumSet a -> EnumSet a.
 
+Axiom delete : forall {a},
+               forall `{GHC.Enum.Enum a}, a -> EnumSet a -> EnumSet a.
+
+Axiom toList : forall {a}, forall `{GHC.Enum.Enum a}, EnumSet a -> list a.
+
 Axiom fromList : forall {a}, forall `{GHC.Enum.Enum a}, list a -> EnumSet a.
 
 Axiom empty : forall {a}, EnumSet a.
-
-Axiom delete : forall {a},
-               forall `{GHC.Enum.Enum a}, a -> EnumSet a -> EnumSet a.
 
 Definition fromEnumN {a} `{GHC.Enum.Enum a} (e : a) :=
   Coq.ZArith.BinInt.Z.to_N (GHC.Enum.fromEnum e).

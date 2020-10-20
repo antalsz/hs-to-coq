@@ -31,6 +31,11 @@ order TrieMap.TrieMap__TypeMap        TrieMap.lookupTypeMap
 order TrieMap.TrieMap__CoreMap        TrieMap.lookupCoreMap
 order TrieMap.Eq___DeBruijn__Type_    TrieMap.xtBndr
 
+order TrieMap.Eq___DeBruijn__CoreExpr TrieMap.TrieMap__CoreMapX TrieMap.TrieMap__CoreMapG TrieMap.TrieMap__CoreMap_alterTM
+order TrieMap.TrieMap__TypeMapX TrieMap.TrieMap__CoercionMapX_emptyTM
+order TrieMap.Eq___DeBruijn__Coercion TrieMap.TrieMap__CoercionMapX TrieMap.TrieMap__CoercionMapG
+order TrieMap.Eq___DeBruijn__Type_ TrieMap.Eq___DeBruijn__Coercion_op_zeze__
+
 # Why do I need to specify explicit type class instances for Coq?
 in TrieMap.xtTickish                      rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TickishMap)
 in TrieMap.lkTickish                      rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.TickishMap)
@@ -48,7 +53,11 @@ in TrieMap.TrieMap__CoreMap_alterTM       rewrite forall, TrieMap.alterTM      =
 in TrieMap.TrieMap__CoreMap_lookupTM      rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.CoreMapG)
 in TrieMap.TrieMap__LooseTypeMap_alterTM  rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TypeMapG)
 in TrieMap.TrieMap__LooseTypeMap_lookupTM rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.TypeMapG)
+in TrieMap.lookupTypeMap                  rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.TypeMap)
 in TrieMap.extendTypeMap                  rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TypeMap)
+in TrieMap.lookupCoreMap                  rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.CoreMap)
+in TrieMap.extendCoreMap                  rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.CoreMap)
+in TrieMap.xtBndr                         rewrite forall, TrieMap.xtG          = TrieMap.xtG          (m := TrieMap.TypeMapX)
 
 # Why do I need to `add` redundant instances that should be computable?
 

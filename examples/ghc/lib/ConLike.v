@@ -28,30 +28,48 @@ Inductive ConLike : Type
 
 (* Converted value declarations: *)
 
+Instance Eq___ConLike : GHC.Base.Eq_ ConLike.
+Proof.
+Admitted.
+
 Instance Uniquable__ConLike : Unique.Uniquable ConLike.
 Proof.
 Admitted.
 
+Instance NamedThing__ConLike : Name.NamedThing ConLike.
+Proof.
+Admitted.
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `ConLike.Outputable__ConLike' *)
+
+(* Skipping all instances of class `Outputable.OutputableBndr', including
+   `ConLike.OutputableBndr__ConLike' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `ConLike.Data__ConLike' *)
+
 Axiom eqConLike : ConLike -> ConLike -> bool.
 
-Axiom conLikesWithFields : list ConLike ->
-                           list FieldLabel.FieldLabelString -> list ConLike.
+Axiom conLikeArity : ConLike -> BasicTypes.Arity.
 
-Axiom conLikeWrapId_maybe : ConLike -> option Core.Id.
-
-Axiom conLikeStupidTheta : ConLike -> AxiomatizedTypes.ThetaType.
-
-Axiom conLikeResTy : ConLike ->
-                     list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
-
-Axiom conLikeName : ConLike -> Name.Name.
-
-Axiom conLikeIsInfix : ConLike -> bool.
+Axiom conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel.
 
 Axiom conLikeInstOrigArgTys : ConLike ->
                               list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
 
+Axiom conLikeExTyVars : ConLike -> list Core.TyVar.
+
+Axiom conLikeName : ConLike -> Name.Name.
+
+Axiom conLikeStupidTheta : ConLike -> AxiomatizedTypes.ThetaType.
+
+Axiom conLikeWrapId_maybe : ConLike -> option Core.Id.
+
 Axiom conLikeImplBangs : ConLike -> list Core.HsImplBang.
+
+Axiom conLikeResTy : ConLike ->
+                     list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom conLikeFullSig : ConLike ->
                        (list Core.TyVar * list Core.TyVar * list Core.EqSpec *
@@ -63,28 +81,10 @@ Axiom conLikeFullSig : ConLike ->
 Axiom conLikeFieldType : ConLike ->
                          FieldLabel.FieldLabelString -> AxiomatizedTypes.Type_.
 
-Axiom conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel.
+Axiom conLikesWithFields : list ConLike ->
+                           list FieldLabel.FieldLabelString -> list ConLike.
 
-Axiom conLikeExTyVars : ConLike -> list Core.TyVar.
-
-Axiom conLikeArity : ConLike -> BasicTypes.Arity.
-
-(* Skipping all instances of class `Data.Data.Data', including
-   `ConLike.Data__ConLike' *)
-
-(* Skipping all instances of class `Outputable.OutputableBndr', including
-   `ConLike.OutputableBndr__ConLike' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `ConLike.Outputable__ConLike' *)
-
-Instance NamedThing__ConLike : Name.NamedThing ConLike.
-Proof.
-Admitted.
-
-Instance Eq___ConLike : GHC.Base.Eq_ ConLike.
-Proof.
-Admitted.
+Axiom conLikeIsInfix : ConLike -> bool.
 
 (* External variables:
      bool list op_zt__ option AxiomatizedTypes.ThetaType AxiomatizedTypes.Type_

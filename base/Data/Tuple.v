@@ -19,20 +19,20 @@ Require Coq.Program.Wf.
 
 (* Converted value declarations: *)
 
-Definition swap {a} {b} : (a * b)%type -> (b * a)%type :=
-  fun '(pair a b) => pair b a.
+Definition fst {a} {b} : (a * b)%type -> a :=
+  fun '(pair x _) => x.
 
 Definition snd {a} {b} : (a * b)%type -> b :=
   fun '(pair _ y) => y.
 
-Definition fst {a} {b} : (a * b)%type -> a :=
-  fun '(pair x _) => x.
+Definition curry {a} {b} {c} : ((a * b)%type -> c) -> a -> b -> c :=
+  fun f x y => f (pair x y).
 
 Definition uncurry {a} {b} {c} : (a -> b -> c) -> ((a * b)%type -> c) :=
   fun f p => f (fst p) (snd p).
 
-Definition curry {a} {b} {c} : ((a * b)%type -> c) -> a -> b -> c :=
-  fun f x y => f (pair x y).
+Definition swap {a} {b} : (a * b)%type -> (b * a)%type :=
+  fun '(pair a b) => pair b a.
 
 (* External variables:
      op_zt__ pair

@@ -181,169 +181,6 @@ Local Definition BooleanFormula_foldr
 
 (* Converted value declarations: *)
 
-(* Skipping definition `BooleanFormula.pprBooleanFormulaNormal' *)
-
-(* Skipping definition `BooleanFormula.pprBooleanFormulaNice' *)
-
-(* Skipping definition `BooleanFormula.pprBooleanFormula'' *)
-
-(* Skipping definition `BooleanFormula.pprBooleanFormula' *)
-
-Definition mkVar {a} : a -> BooleanFormula a :=
-  Var.
-
-Definition mkTrue {a} : BooleanFormula a :=
-  And nil.
-
-Definition mkOr {a} `{GHC.Base.Eq_ a}
-   : list (LBooleanFormula a) -> BooleanFormula a :=
-  let mkOr' :=
-    fun arg_0__ =>
-      match arg_0__ with
-      | cons x nil => SrcLoc.unLoc x
-      | xs => Or xs
-      end in
-  let fromOr :=
-    fun arg_4__ =>
-      match arg_4__ with
-      | SrcLoc.L _ (Or xs) => Some xs
-      | SrcLoc.L _ (And nil) => None
-      | x => Some (cons x nil)
-      end in
-  Data.Maybe.maybe mkTrue (mkOr' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
-  MonadUtils.concatMapM fromOr.
-
-Definition mkFalse {a} : BooleanFormula a :=
-  Or nil.
-
-Definition mkBool {a} : bool -> BooleanFormula a :=
-  fun arg_0__ => match arg_0__ with | false => mkFalse | true => mkTrue end.
-
-Definition mkAnd {a} `{GHC.Base.Eq_ a}
-   : list (LBooleanFormula a) -> BooleanFormula a :=
-  let mkAnd' :=
-    fun arg_0__ =>
-      match arg_0__ with
-      | cons x nil => SrcLoc.unLoc x
-      | xs => And xs
-      end in
-  let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
-    fun arg_4__ =>
-      match arg_4__ with
-      | SrcLoc.L _ (And xs) => Some xs
-      | SrcLoc.L _ (Or nil) => None
-      | x => Some (cons x nil)
-      end in
-  Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
-  MonadUtils.concatMapM fromAnd.
-
-Fixpoint simplify {a} `{GHC.Base.Eq_ a} (arg_0__ : (a -> option bool)) (arg_1__
-                    : BooleanFormula a) : BooleanFormula a
-           := match arg_0__, arg_1__ with
-              | f, Var a => match f a with | None => Var a | Some b => mkBool b end
-              | f, And xs =>
-                  mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-              | f, Or xs =>
-                  mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-              | f, Parens x => simplify f (SrcLoc.unLoc x)
-              end.
-
-Definition memberClauseAtoms {a} `{Unique.Uniquable a}
-   : a -> Clause a -> bool :=
-  fun x c => UniqSet.elementOfUniqSet x (clauseAtoms c).
-
-Definition isTrue {a} : BooleanFormula a -> bool :=
-  fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
-
-Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
-   : (a -> bool) -> BooleanFormula a -> option (BooleanFormula a) :=
-  fun f bf =>
-    let f' := fun x => if f x : bool then Some true else None in
-    let bf' := simplify f' bf in if isTrue bf' : bool then None else Some bf'.
-
-Definition isFalse {a} : BooleanFormula a -> bool :=
-  fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
-
-Fixpoint impliesAtom {a} `{GHC.Base.Eq_ a} (arg_0__ : BooleanFormula a) (arg_1__
-                       : a) : bool
-           := match arg_0__, arg_1__ with
-              | Var x, y => x GHC.Base.== y
-              | And xs, y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-              | Or xs, y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-              | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
-              end.
-
-Definition extendClauseAtoms {a} `{Unique.Uniquable a}
-   : Clause a -> a -> Clause a :=
-  fun c x =>
-    let 'Mk_Clause clauseAtoms_0__ clauseExprs_1__ := c in
-    Mk_Clause (UniqSet.addOneToUniqSet (clauseAtoms c) x) clauseExprs_1__.
-
-Definition implies {a} `{Unique.Uniquable a}
-   : BooleanFormula a -> BooleanFormula a -> bool :=
-  fun e1 e2 =>
-    let go {a} `{Unique.Uniquable a} : Clause a -> Clause a -> bool :=
-      GHC.DeferredFix.deferredFix1 (fun go (arg_0__ arg_1__ : Clause a) =>
-                                      match arg_0__, arg_1__ with
-                                      | (Mk_Clause _ (cons hyp hyps) as l), r =>
-                                          match hyp with
-                                          | Var x =>
-                                              if memberClauseAtoms x r : bool then true else
-                                              go (let 'Mk_Clause clauseAtoms_2__ clauseExprs_3__ := (extendClauseAtoms l
-                                                                                                       x) in
-                                                  Mk_Clause clauseAtoms_2__ hyps) r
-                                          | Parens hyp' =>
-                                              go (let 'Mk_Clause clauseAtoms_9__ clauseExprs_10__ := l in
-                                                  Mk_Clause clauseAtoms_9__ (cons (SrcLoc.unLoc hyp') hyps)) r
-                                          | And hyps' =>
-                                              go (let 'Mk_Clause clauseAtoms_14__ clauseExprs_15__ := l in
-                                                  Mk_Clause clauseAtoms_14__ (Coq.Init.Datatypes.app (GHC.Base.map
-                                                                                                      SrcLoc.unLoc
-                                                                                                      hyps') hyps)) r
-                                          | Or hyps' =>
-                                              Data.Foldable.all (fun hyp' =>
-                                                                   go (let 'Mk_Clause clauseAtoms_19__
-                                                                          clauseExprs_20__ := l in
-                                                                       Mk_Clause clauseAtoms_19__ (cons (SrcLoc.unLoc
-                                                                                                         hyp') hyps)) r)
-                                              hyps'
-                                          end
-                                      | l, (Mk_Clause _ (cons con cons_) as r) =>
-                                          match con with
-                                          | Var x =>
-                                              if memberClauseAtoms x l : bool then true else
-                                              go l (let 'Mk_Clause clauseAtoms_27__ clauseExprs_28__ :=
-                                                      (extendClauseAtoms r x) in
-                                                    Mk_Clause clauseAtoms_27__ cons_)
-                                          | Parens con' =>
-                                              go l (let 'Mk_Clause clauseAtoms_34__ clauseExprs_35__ := r in
-                                                    Mk_Clause clauseAtoms_34__ (cons (SrcLoc.unLoc con') cons_))
-                                          | And cons' =>
-                                              Data.Foldable.all (fun con' =>
-                                                                   go l (let 'Mk_Clause clauseAtoms_39__
-                                                                            clauseExprs_40__ := r in
-                                                                         Mk_Clause clauseAtoms_39__ (cons (SrcLoc.unLoc
-                                                                                                           con')
-                                                                                                          cons_))) cons'
-                                          | Or cons' =>
-                                              go l (let 'Mk_Clause clauseAtoms_45__ clauseExprs_46__ := r in
-                                                    Mk_Clause clauseAtoms_45__ (Coq.Init.Datatypes.app (GHC.Base.map
-                                                                                                        SrcLoc.unLoc
-                                                                                                        cons') cons_))
-                                          end
-                                      | _, _ => false
-                                      end) in
-    go (Mk_Clause UniqSet.emptyUniqSet (cons e1 nil)) (Mk_Clause
-                                                       UniqSet.emptyUniqSet (cons e2 nil)).
-
-Fixpoint eval {a} (arg_0__ : (a -> bool)) (arg_1__ : BooleanFormula a) : bool
-           := match arg_0__, arg_1__ with
-              | f, Var x => f x
-              | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-              | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-              | f, Parens x => eval f (SrcLoc.unLoc x)
-              end.
-
 Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
   fun arg_0__ arg_1__ =>
@@ -515,11 +352,174 @@ Program Instance Traversable__BooleanFormula
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__BooleanFormula_traverse |}.
 
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BooleanFormula.Outputable__BooleanFormula' *)
+
 (* Skipping all instances of class `Binary.Binary', including
    `BooleanFormula.Binary__BooleanFormula' *)
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BooleanFormula.Outputable__BooleanFormula' *)
+Definition mkVar {a} : a -> BooleanFormula a :=
+  Var.
+
+Definition mkFalse {a} : BooleanFormula a :=
+  Or nil.
+
+Definition mkTrue {a} : BooleanFormula a :=
+  And nil.
+
+Definition mkBool {a} : bool -> BooleanFormula a :=
+  fun arg_0__ => match arg_0__ with | false => mkFalse | true => mkTrue end.
+
+Definition mkAnd {a} `{GHC.Base.Eq_ a}
+   : list (LBooleanFormula a) -> BooleanFormula a :=
+  let mkAnd' :=
+    fun arg_0__ =>
+      match arg_0__ with
+      | cons x nil => SrcLoc.unLoc x
+      | xs => And xs
+      end in
+  let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
+    fun arg_4__ =>
+      match arg_4__ with
+      | SrcLoc.L _ (And xs) => Some xs
+      | SrcLoc.L _ (Or nil) => None
+      | x => Some (cons x nil)
+      end in
+  Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
+  MonadUtils.concatMapM fromAnd.
+
+Definition mkOr {a} `{GHC.Base.Eq_ a}
+   : list (LBooleanFormula a) -> BooleanFormula a :=
+  let mkOr' :=
+    fun arg_0__ =>
+      match arg_0__ with
+      | cons x nil => SrcLoc.unLoc x
+      | xs => Or xs
+      end in
+  let fromOr :=
+    fun arg_4__ =>
+      match arg_4__ with
+      | SrcLoc.L _ (Or xs) => Some xs
+      | SrcLoc.L _ (And nil) => None
+      | x => Some (cons x nil)
+      end in
+  Data.Maybe.maybe mkTrue (mkOr' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
+  MonadUtils.concatMapM fromOr.
+
+Definition isFalse {a} : BooleanFormula a -> bool :=
+  fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
+
+Definition isTrue {a} : BooleanFormula a -> bool :=
+  fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
+
+Fixpoint eval {a} (arg_0__ : (a -> bool)) (arg_1__ : BooleanFormula a) : bool
+           := match arg_0__, arg_1__ with
+              | f, Var x => f x
+              | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+              | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+              | f, Parens x => eval f (SrcLoc.unLoc x)
+              end.
+
+Fixpoint simplify {a} `{GHC.Base.Eq_ a} (arg_0__ : (a -> option bool)) (arg_1__
+                    : BooleanFormula a) : BooleanFormula a
+           := match arg_0__, arg_1__ with
+              | f, Var a => match f a with | None => Var a | Some b => mkBool b end
+              | f, And xs =>
+                  mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+              | f, Or xs =>
+                  mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+              | f, Parens x => simplify f (SrcLoc.unLoc x)
+              end.
+
+Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
+   : (a -> bool) -> BooleanFormula a -> option (BooleanFormula a) :=
+  fun f bf =>
+    let f' := fun x => if f x : bool then Some true else None in
+    let bf' := simplify f' bf in if isTrue bf' : bool then None else Some bf'.
+
+Fixpoint impliesAtom {a} `{GHC.Base.Eq_ a} (arg_0__ : BooleanFormula a) (arg_1__
+                       : a) : bool
+           := match arg_0__, arg_1__ with
+              | Var x, y => x GHC.Base.== y
+              | And xs, y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+              | Or xs, y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+              | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
+              end.
+
+Definition extendClauseAtoms {a} `{Unique.Uniquable a}
+   : Clause a -> a -> Clause a :=
+  fun c x =>
+    let 'Mk_Clause clauseAtoms_0__ clauseExprs_1__ := c in
+    Mk_Clause (UniqSet.addOneToUniqSet (clauseAtoms c) x) clauseExprs_1__.
+
+Definition memberClauseAtoms {a} `{Unique.Uniquable a}
+   : a -> Clause a -> bool :=
+  fun x c => UniqSet.elementOfUniqSet x (clauseAtoms c).
+
+Definition implies {a} `{Unique.Uniquable a}
+   : BooleanFormula a -> BooleanFormula a -> bool :=
+  fun e1 e2 =>
+    let go {a} `{Unique.Uniquable a} : Clause a -> Clause a -> bool :=
+      GHC.DeferredFix.deferredFix1 (fun go (arg_0__ arg_1__ : Clause a) =>
+                                      match arg_0__, arg_1__ with
+                                      | (Mk_Clause _ (cons hyp hyps) as l), r =>
+                                          match hyp with
+                                          | Var x =>
+                                              if memberClauseAtoms x r : bool then true else
+                                              go (let 'Mk_Clause clauseAtoms_2__ clauseExprs_3__ := (extendClauseAtoms l
+                                                                                                       x) in
+                                                  Mk_Clause clauseAtoms_2__ hyps) r
+                                          | Parens hyp' =>
+                                              go (let 'Mk_Clause clauseAtoms_9__ clauseExprs_10__ := l in
+                                                  Mk_Clause clauseAtoms_9__ (cons (SrcLoc.unLoc hyp') hyps)) r
+                                          | And hyps' =>
+                                              go (let 'Mk_Clause clauseAtoms_14__ clauseExprs_15__ := l in
+                                                  Mk_Clause clauseAtoms_14__ (Coq.Init.Datatypes.app (GHC.Base.map
+                                                                                                      SrcLoc.unLoc
+                                                                                                      hyps') hyps)) r
+                                          | Or hyps' =>
+                                              Data.Foldable.all (fun hyp' =>
+                                                                   go (let 'Mk_Clause clauseAtoms_19__
+                                                                          clauseExprs_20__ := l in
+                                                                       Mk_Clause clauseAtoms_19__ (cons (SrcLoc.unLoc
+                                                                                                         hyp') hyps)) r)
+                                              hyps'
+                                          end
+                                      | l, (Mk_Clause _ (cons con cons_) as r) =>
+                                          match con with
+                                          | Var x =>
+                                              if memberClauseAtoms x l : bool then true else
+                                              go l (let 'Mk_Clause clauseAtoms_27__ clauseExprs_28__ :=
+                                                      (extendClauseAtoms r x) in
+                                                    Mk_Clause clauseAtoms_27__ cons_)
+                                          | Parens con' =>
+                                              go l (let 'Mk_Clause clauseAtoms_34__ clauseExprs_35__ := r in
+                                                    Mk_Clause clauseAtoms_34__ (cons (SrcLoc.unLoc con') cons_))
+                                          | And cons' =>
+                                              Data.Foldable.all (fun con' =>
+                                                                   go l (let 'Mk_Clause clauseAtoms_39__
+                                                                            clauseExprs_40__ := r in
+                                                                         Mk_Clause clauseAtoms_39__ (cons (SrcLoc.unLoc
+                                                                                                           con')
+                                                                                                          cons_))) cons'
+                                          | Or cons' =>
+                                              go l (let 'Mk_Clause clauseAtoms_45__ clauseExprs_46__ := r in
+                                                    Mk_Clause clauseAtoms_45__ (Coq.Init.Datatypes.app (GHC.Base.map
+                                                                                                        SrcLoc.unLoc
+                                                                                                        cons') cons_))
+                                          end
+                                      | _, _ => false
+                                      end) in
+    go (Mk_Clause UniqSet.emptyUniqSet (cons e1 nil)) (Mk_Clause
+                                                       UniqSet.emptyUniqSet (cons e2 nil)).
+
+(* Skipping definition `BooleanFormula.pprBooleanFormula'' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormula' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormulaNice' *)
+
+(* Skipping definition `BooleanFormula.pprBooleanFormulaNormal' *)
 
 (* External variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr

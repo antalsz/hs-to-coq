@@ -201,764 +201,6 @@ Instance Unpeel_NDModule : Prim.Unpeel NDModule Module :=
 
 (* Converted value declarations: *)
 
-(* Skipping definition `Module.wiredInUnitIds' *)
-
-Definition unitModuleSet : Module -> ModuleSet :=
-  GHC.Prim.coerce Data.Set.Internal.singleton.
-
-Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
-  fun m x => Mk_ModuleEnv (Data.Map.Internal.singleton (Mk_NDModule m) x).
-
-Definition unitIdFreeHoles : UnitId -> UniqSet.UniqSet ModuleName :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IndefiniteUnitId x => indefUnitIdFreeHoles x
-    | DefiniteUnitId _ => UniqSet.emptyUniqSet
-    end.
-
-Definition unitIdIsDefinite : UnitId -> bool :=
-  UniqSet.isEmptyUniqSet GHC.Base.∘ unitIdFreeHoles.
-
-Definition unitIdFS : UnitId -> FastString.FastString :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IndefiniteUnitId x => indefUnitIdFS x
-    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdFS x
-    end.
-
-Definition unitIdString : UnitId -> GHC.Base.String :=
-  FastString.unpackFS GHC.Base.∘ unitIdFS.
-
-Local Definition Uniquable__ModuleName_getUnique
-   : ModuleName -> Unique.Unique :=
-  fun '(Mk_ModuleName nm) => Unique.getUnique nm.
-
-Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
-
-Definition installedUnitIdKey : InstalledUnitId -> Unique.Unique :=
-  Unique.getUnique GHC.Base.∘ installedUnitIdFS.
-
-Definition unitIdKey : UnitId -> Unique.Unique :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IndefiniteUnitId x => indefUnitIdKey x
-    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
-    end.
-
-Local Definition Uniquable__UnitId_getUnique : UnitId -> Unique.Unique :=
-  unitIdKey.
-
-Program Instance Uniquable__UnitId : Unique.Uniquable UnitId :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__UnitId_getUnique |}.
-
-Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_NDModule (Mk_Module p1 n1), Mk_NDModule (Mk_Module p2 n2) =>
-        Util.thenCmp (Unique.nonDetCmpUnique (Unique.getUnique p1) (Unique.getUnique
-                                              p2)) (Unique.nonDetCmpUnique (Unique.getUnique n1) (Unique.getUnique n2))
-    end.
-
-Local Definition Ord__NDModule_op_zlze__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__NDModule_max : NDModule -> NDModule -> NDModule :=
-  fun x y => if Ord__NDModule_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__NDModule_min : NDModule -> NDModule -> NDModule :=
-  fun x y => if Ord__NDModule_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__NDModule_op_zg__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__NDModule_op_zgze__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__NDModule_op_zl__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base.== Lt.
-
-Local Definition Eq___ModuleName_op_zeze__ : ModuleName -> ModuleName -> bool :=
-  fun nm1 nm2 => Unique.getUnique nm1 GHC.Base.== Unique.getUnique nm2.
-
-Local Definition Eq___ModuleName_op_zsze__ : ModuleName -> ModuleName -> bool :=
-  fun x y => negb (Eq___ModuleName_op_zeze__ x y).
-
-Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___ModuleName_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
-
-Local Definition Eq___UnitId_op_zeze__ : UnitId -> UnitId -> bool :=
-  fun uid1 uid2 => unitIdKey uid1 GHC.Base.== unitIdKey uid2.
-
-Local Definition Eq___UnitId_op_zsze__ : UnitId -> UnitId -> bool :=
-  fun x y => negb (Eq___UnitId_op_zeze__ x y).
-
-Program Instance Eq___UnitId : GHC.Base.Eq_ UnitId :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___UnitId_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___UnitId_op_zsze__ |}.
-
-Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Module a1 a2, Mk_Module b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    end.
-
-Local Definition Eq___Module_op_zsze__ : Module -> Module -> bool :=
-  fun x y => negb (Eq___Module_op_zeze__ x y).
-
-Program Instance Eq___Module : GHC.Base.Eq_ Module :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___Module_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___Module_op_zsze__ |}.
-
-Local Definition Eq___NDModule_op_zeze__ : NDModule -> NDModule -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
-Local Definition Eq___NDModule_op_zsze__ : NDModule -> NDModule -> bool :=
-  GHC.Prim.coerce _GHC.Base./=_.
-
-Program Instance Eq___NDModule : GHC.Base.Eq_ NDModule :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___NDModule_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___NDModule_op_zsze__ |}.
-
-Program Instance Ord__NDModule : GHC.Base.Ord NDModule :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__NDModule_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__NDModule_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__NDModule_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__NDModule_op_zgze__ ;
-           GHC.Base.compare__ := Ord__NDModule_compare ;
-           GHC.Base.max__ := Ord__NDModule_max ;
-           GHC.Base.min__ := Ord__NDModule_min |}.
-
-Definition unionModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
-  GHC.Prim.coerce Data.Set.Internal.union.
-
-Definition stableUnitIdCmp : UnitId -> UnitId -> comparison :=
-  fun p1 p2 => GHC.Base.compare (unitIdFS p1) (unitIdFS p2).
-
-(* Skipping definition `Module.renameHoleUnitId'' *)
-
-(* Skipping definition `Module.renameHoleUnitId' *)
-
-(* Skipping definition `Module.renameHoleModule'' *)
-
-(* Skipping definition `Module.renameHoleModule' *)
-
-(* Skipping definition `Module.rawHashUnitId' *)
-
-Definition pprUnitId : UnitId -> GHC.Base.String :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | DefiniteUnitId uid => Panic.someSDoc
-    | IndefiniteUnitId uid => Panic.someSDoc
-    end.
-
-(* Skipping definition `Module.pprModuleName' *)
-
-(* Skipping definition `Module.pprModule' *)
-
-Definition plusModuleEnv_C {a}
-   : (a -> a -> a) -> ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | f, Mk_ModuleEnv e1, Mk_ModuleEnv e2 =>
-        Mk_ModuleEnv (Data.Map.Internal.unionWith f e1 e2)
-    end.
-
-Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_ModuleEnv e1, Mk_ModuleEnv e2 =>
-        Mk_ModuleEnv (Data.Map.Internal.union e1 e2)
-    end.
-
-(* Skipping definition `Module.parseUnitId' *)
-
-(* Skipping definition `Module.parseModuleName' *)
-
-(* Skipping definition `Module.parseModuleId' *)
-
-(* Skipping definition `Module.parseModSubst' *)
-
-(* Skipping definition `Module.parseComponentId' *)
-
-(* Skipping definition `Module.newUnitId' *)
-
-(* Skipping definition `Module.newIndefUnitId' *)
-
-Local Definition Ord__ModuleName_compare
-   : ModuleName -> ModuleName -> comparison :=
-  fun nm1 nm2 => Eq.
-
-Local Definition Ord__ModuleName_op_zlze__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
-  fun x y => if Ord__ModuleName_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__ModuleName_min : ModuleName -> ModuleName -> ModuleName :=
-  fun x y => if Ord__ModuleName_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__ModuleName_op_zg__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__ModuleName_op_zgze__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__ModuleName_op_zl__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base.== Lt.
-
-Program Instance Ord__ModuleName : GHC.Base.Ord ModuleName :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__ModuleName_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__ModuleName_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__ModuleName_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__ModuleName_op_zgze__ ;
-           GHC.Base.compare__ := Ord__ModuleName_compare ;
-           GHC.Base.max__ := Ord__ModuleName_max ;
-           GHC.Base.min__ := Ord__ModuleName_min |}.
-
-Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
-  fun nm1 nm2 => Eq.
-
-Local Definition Ord__UnitId_op_zlze__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
-  fun x y => if Ord__UnitId_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
-  fun x y => if Ord__UnitId_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__UnitId_op_zg__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__UnitId_op_zgze__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__UnitId_op_zl__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base.== Lt.
-
-Program Instance Ord__UnitId : GHC.Base.Ord UnitId :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__UnitId_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__UnitId_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__UnitId_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__UnitId_op_zgze__ ;
-           GHC.Base.compare__ := Ord__UnitId_compare ;
-           GHC.Base.max__ := Ord__UnitId_max ;
-           GHC.Base.min__ := Ord__UnitId_min |}.
-
-Local Definition Ord__Module_compare : Module -> Module -> comparison :=
-  fun a b =>
-    let 'Mk_Module a1 a2 := a in
-    let 'Mk_Module b1 b2 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => Lt
-    | Eq => (GHC.Base.compare a2 b2)
-    | Gt => Gt
-    end.
-
-Local Definition Ord__Module_op_zl__ : Module -> Module -> bool :=
-  fun a b =>
-    let 'Mk_Module a1 a2 := a in
-    let 'Mk_Module b1 b2 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => true
-    | Eq => (a2 GHC.Base.< b2)
-    | Gt => false
-    end.
-
-Local Definition Ord__Module_op_zlze__ : Module -> Module -> bool :=
-  fun a b => negb (Ord__Module_op_zl__ b a).
-
-Local Definition Ord__Module_max : Module -> Module -> Module :=
-  fun x y => if Ord__Module_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__Module_min : Module -> Module -> Module :=
-  fun x y => if Ord__Module_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__Module_op_zg__ : Module -> Module -> bool :=
-  fun a b => Ord__Module_op_zl__ b a.
-
-Local Definition Ord__Module_op_zgze__ : Module -> Module -> bool :=
-  fun a b => negb (Ord__Module_op_zl__ a b).
-
-Program Instance Ord__Module : GHC.Base.Ord Module :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__Module_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__Module_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__Module_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__Module_op_zgze__ ;
-           GHC.Base.compare__ := Ord__Module_compare ;
-           GHC.Base.max__ := Ord__Module_max ;
-           GHC.Base.min__ := Ord__Module_min |}.
-
-Definition moduleSetElts : ModuleSet -> list Module :=
-  Data.OldList.sort GHC.Base.∘
-  (GHC.Prim.coerce GHC.Base.∘ Data.Set.Internal.toList).
-
-Definition moduleNameString : ModuleName -> GHC.Base.String :=
-  fun '(Mk_ModuleName mod_) => FastString.unpackFS mod_.
-
-Definition moduleStableString : Module -> GHC.Base.String :=
-  fun '(Mk_Module moduleUnitId moduleName) =>
-    Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$") (Coq.Init.Datatypes.app
-                            (unitIdString moduleUnitId) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$")
-                                                                                (moduleNameString moduleName))).
-
-(* Skipping definition `Module.moduleNameSlashes' *)
-
-Definition moduleNameFS : ModuleName -> FastString.FastString :=
-  fun '(Mk_ModuleName mod_) => mod_.
-
-Definition stableModuleNameCmp : ModuleName -> ModuleName -> comparison :=
-  fun n1 n2 => GHC.Base.compare (moduleNameFS n1) (moduleNameFS n2).
-
-Definition stableModuleCmp : Module -> Module -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Module p1 n1, Mk_Module p2 n2 =>
-        Util.thenCmp (stableUnitIdCmp p1 p2) (stableModuleNameCmp n1 n2)
-    end.
-
-Definition moduleNameColons : ModuleName -> GHC.Base.String :=
-  let dots_to_colons :=
-    GHC.Base.map (fun c =>
-                    if c GHC.Base.== GHC.Char.hs_char__ "." : bool
-                    then GHC.Char.hs_char__ ":"
-                    else c) in
-  dots_to_colons GHC.Base.∘ moduleNameString.
-
-Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
-  fun '(Mk_ModuleEnv e) =>
-    Data.OldList.sortBy (Data.Ord.comparing Data.Tuple.fst) (let cont_1__ arg_2__ :=
-                                                               let 'pair (Mk_NDModule m) v := arg_2__ in
-                                                               cons (pair m v) nil in
-                                                             Coq.Lists.List.flat_map cont_1__ (Data.Map.Internal.toList
-                                                                                      e)).
-
-Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
-  fun '(Mk_ModuleEnv e) =>
-    Data.OldList.sort (GHC.Base.map unNDModule (Data.Map.Internal.keys e)).
-
-Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
-  fun e => GHC.Base.map Data.Tuple.snd (moduleEnvToList e).
-
-Definition mkModuleSet : list Module -> ModuleSet :=
-  Data.Set.Internal.fromList GHC.Base.∘ GHC.Prim.coerce.
-
-Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
-  fun s => Mk_ModuleName s.
-
-(* Skipping definition `Module.mkModuleName' *)
-
-Definition mkModuleEnv {a} : list (Module * a)%type -> ModuleEnv a :=
-  fun xs =>
-    Mk_ModuleEnv (Data.Map.Internal.fromList (let cont_0__ arg_1__ :=
-                                                let 'pair k v := arg_1__ in
-                                                cons (pair (Mk_NDModule k) v) nil in
-                                              Coq.Lists.List.flat_map cont_0__ xs)).
-
-Definition mkModule : UnitId -> ModuleName -> Module :=
-  Mk_Module.
-
-Definition minusModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
-  GHC.Prim.coerce Data.Set.Internal.difference.
-
-Definition mapModuleEnv {a} {b} : (a -> b) -> ModuleEnv a -> ModuleEnv b :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, Mk_ModuleEnv e =>
-        Mk_ModuleEnv (Data.Map.Internal.mapWithKey (fun arg_2__ arg_3__ =>
-                                                      match arg_2__, arg_3__ with
-                                                      | _, v => f v
-                                                      end) e)
-    end.
-
-Definition lookupWithDefaultModuleEnv {a} : ModuleEnv a -> a -> Module -> a :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | Mk_ModuleEnv e, x, m => Data.Map.Internal.findWithDefault x (Mk_NDModule m) e
-    end.
-
-Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_ModuleEnv e, m => Data.Map.Internal.lookup (Mk_NDModule m) e
-    end.
-
-Local Definition Ord__InstalledUnitId_compare
-   : InstalledUnitId -> InstalledUnitId -> comparison :=
-  fun u1 u2 => GHC.Base.compare (installedUnitIdFS u1) (installedUnitIdFS u2).
-
-Local Definition Ord__InstalledUnitId_op_zlze__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__InstalledUnitId_max
-   : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
-  fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__InstalledUnitId_min
-   : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
-  fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__InstalledUnitId_op_zg__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__InstalledUnitId_op_zgze__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__InstalledUnitId_op_zl__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Lt.
-
-Local Definition Eq___InstalledUnitId_op_zeze__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun uid1 uid2 => installedUnitIdKey uid1 GHC.Base.== installedUnitIdKey uid2.
-
-Local Definition Eq___InstalledUnitId_op_zsze__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => negb (Eq___InstalledUnitId_op_zeze__ x y).
-
-Program Instance Eq___InstalledUnitId : GHC.Base.Eq_ InstalledUnitId :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___InstalledUnitId_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___InstalledUnitId_op_zsze__ |}.
-
-Program Instance Ord__InstalledUnitId : GHC.Base.Ord InstalledUnitId :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__InstalledUnitId_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__InstalledUnitId_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__InstalledUnitId_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__InstalledUnitId_op_zgze__ ;
-           GHC.Base.compare__ := Ord__InstalledUnitId_compare ;
-           GHC.Base.max__ := Ord__InstalledUnitId_max ;
-           GHC.Base.min__ := Ord__InstalledUnitId_min |}.
-
-Local Definition Ord__InstalledModule_compare
-   : InstalledModule -> InstalledModule -> comparison :=
-  fun a b =>
-    let 'Mk_InstalledModule a1 a2 := a in
-    let 'Mk_InstalledModule b1 b2 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => Lt
-    | Eq => (GHC.Base.compare a2 b2)
-    | Gt => Gt
-    end.
-
-Local Definition Ord__InstalledModule_op_zl__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b =>
-    let 'Mk_InstalledModule a1 a2 := a in
-    let 'Mk_InstalledModule b1 b2 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => true
-    | Eq => (a2 GHC.Base.< b2)
-    | Gt => false
-    end.
-
-Local Definition Ord__InstalledModule_op_zlze__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b => negb (Ord__InstalledModule_op_zl__ b a).
-
-Local Definition Ord__InstalledModule_max
-   : InstalledModule -> InstalledModule -> InstalledModule :=
-  fun x y => if Ord__InstalledModule_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__InstalledModule_min
-   : InstalledModule -> InstalledModule -> InstalledModule :=
-  fun x y => if Ord__InstalledModule_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__InstalledModule_op_zg__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b => Ord__InstalledModule_op_zl__ b a.
-
-Local Definition Ord__InstalledModule_op_zgze__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b => negb (Ord__InstalledModule_op_zl__ a b).
-
-Local Definition Eq___InstalledModule_op_zeze__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_InstalledModule a1 a2, Mk_InstalledModule b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    end.
-
-Local Definition Eq___InstalledModule_op_zsze__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun x y => negb (Eq___InstalledModule_op_zeze__ x y).
-
-Program Instance Eq___InstalledModule : GHC.Base.Eq_ InstalledModule :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___InstalledModule_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___InstalledModule_op_zsze__ |}.
-
-Program Instance Ord__InstalledModule : GHC.Base.Ord InstalledModule :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__InstalledModule_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__InstalledModule_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__InstalledModule_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__InstalledModule_op_zgze__ ;
-           GHC.Base.compare__ := Ord__InstalledModule_compare ;
-           GHC.Base.max__ := Ord__InstalledModule_max ;
-           GHC.Base.min__ := Ord__InstalledModule_min |}.
-
-Definition lookupInstalledModuleEnv {a}
-   : InstalledModuleEnv a -> InstalledModule -> option a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_InstalledModuleEnv e, m => Data.Map.Internal.lookup m e
-    end.
-
-Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
-  fun '(Mk_ModuleEnv e) => Data.Map.Internal.null e.
-
-Definition intersectModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
-  GHC.Prim.coerce Data.Set.Internal.intersection.
-
-(* Skipping definition `Module.integerUnitId' *)
-
-Definition installedUnitIdString : InstalledUnitId -> GHC.Base.String :=
-  FastString.unpackFS GHC.Base.∘ installedUnitIdFS.
-
-(* Skipping definition `Module.indefUnitIdToUnitId' *)
-
-(* Skipping definition `Module.indefModuleToModule' *)
-
-(* Skipping definition `Module.hashUnitId' *)
-
-(* Skipping definition `Module.generalizeIndefUnitId' *)
-
-(* Skipping definition `Module.generalizeIndefModule' *)
-
-Definition fsToUnitId : FastString.FastString -> UnitId :=
-  DefiniteUnitId GHC.Base.∘ (Mk_DefUnitId GHC.Base.∘ Mk_InstalledUnitId).
-
-Definition holeUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "hole")).
-
-Definition isHoleModule : Module -> bool :=
-  fun mod_ => moduleUnitId mod_ GHC.Base.== holeUnitId.
-
-Definition moduleFreeHoles : Module -> UniqSet.UniqSet ModuleName :=
-  fun m =>
-    if isHoleModule m : bool then UniqSet.unitUniqSet (moduleName m) else
-    unitIdFreeHoles (moduleUnitId m).
-
-Definition moduleIsDefinite : Module -> bool :=
-  UniqSet.isEmptyUniqSet GHC.Base.∘ moduleFreeHoles.
-
-Definition mkHoleModule : ModuleName -> Module :=
-  mkModule holeUnitId.
-
-Definition interactiveUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "interactive")).
-
-Definition isInteractiveModule : Module -> bool :=
-  fun mod_ => moduleUnitId mod_ GHC.Base.== interactiveUnitId.
-
-Definition mainUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "main")).
-
-Definition newSimpleUnitId : ComponentId -> UnitId :=
-  fun '(Mk_ComponentId fs) => fsToUnitId fs.
-
-Definition primUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc-prim")).
-
-Definition rtsUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "rts")).
-
-Definition stringToUnitId : GHC.Base.String -> UnitId :=
-  fsToUnitId GHC.Base.∘ FastString.mkFastString.
-
-Definition thUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "template-haskell")).
-
-Definition thisGhcUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc")).
-
-Definition fsToInstalledUnitId : FastString.FastString -> InstalledUnitId :=
-  fun fs => Mk_InstalledUnitId fs.
-
-Definition stringToInstalledUnitId : GHC.Base.String -> InstalledUnitId :=
-  fsToInstalledUnitId GHC.Base.∘ FastString.mkFastString.
-
-(* Skipping definition `Module.fingerprintUnitId' *)
-
-(* Skipping definition `Module.fingerprintByteString' *)
-
-Definition filterModuleEnv {a}
-   : (Module -> a -> bool) -> ModuleEnv a -> ModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, Mk_ModuleEnv e =>
-        Mk_ModuleEnv (Data.Map.Internal.filterWithKey (f GHC.Base.∘ unNDModule) e)
-    end.
-
-Definition filterInstalledModuleEnv {a}
-   : (InstalledModule -> a -> bool) ->
-     InstalledModuleEnv a -> InstalledModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, Mk_InstalledModuleEnv e =>
-        Mk_InstalledModuleEnv (Data.Map.Internal.filterWithKey f e)
-    end.
-
-Definition extendModuleSetList : ModuleSet -> list Module -> ModuleSet :=
-  fun s ms =>
-    Data.Foldable.foldl' (GHC.Prim.coerce GHC.Base.∘
-                          GHC.Base.flip Data.Set.Internal.insert) s ms.
-
-Definition extendModuleSet : ModuleSet -> Module -> ModuleSet :=
-  fun s m => Data.Set.Internal.insert (Mk_NDModule m) s.
-
-Definition extendModuleEnvWith {a}
-   : (a -> a -> a) -> ModuleEnv a -> Module -> a -> ModuleEnv a :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | f, Mk_ModuleEnv e, m, x =>
-        Mk_ModuleEnv (Data.Map.Internal.insertWith f (Mk_NDModule m) x e)
-    end.
-
-Definition extendModuleEnvList_C {a}
-   : (a -> a -> a) -> ModuleEnv a -> list (Module * a)%type -> ModuleEnv a :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | f, Mk_ModuleEnv e, xs =>
-        Mk_ModuleEnv (FiniteMap.insertListWith f (let cont_3__ arg_4__ :=
-                                                    let 'pair k v := arg_4__ in
-                                                    cons (pair (Mk_NDModule k) v) nil in
-                                                  Coq.Lists.List.flat_map cont_3__ xs) e)
-    end.
-
-Definition extendModuleEnvList {a}
-   : ModuleEnv a -> list (Module * a)%type -> ModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_ModuleEnv e, xs =>
-        Mk_ModuleEnv (FiniteMap.insertList (let cont_2__ arg_3__ :=
-                                              let 'pair k v := arg_3__ in
-                                              cons (pair (Mk_NDModule k) v) nil in
-                                            Coq.Lists.List.flat_map cont_2__ xs) e)
-    end.
-
-Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | Mk_ModuleEnv e, m, x =>
-        Mk_ModuleEnv (Data.Map.Internal.insert (Mk_NDModule m) x e)
-    end.
-
-Definition extendInstalledModuleEnv {a}
-   : InstalledModuleEnv a -> InstalledModule -> a -> InstalledModuleEnv a :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | Mk_InstalledModuleEnv e, m, x =>
-        Mk_InstalledModuleEnv (Data.Map.Internal.insert m x e)
-    end.
-
-Definition emptyModuleSet : ModuleSet :=
-  Data.Set.Internal.empty.
-
-Definition emptyModuleEnv {a} : ModuleEnv a :=
-  Mk_ModuleEnv Data.Map.Internal.empty.
-
-Definition emptyInstalledModuleEnv {a} : InstalledModuleEnv a :=
-  Mk_InstalledModuleEnv Data.Map.Internal.empty.
-
-Definition elemModuleSet : Module -> ModuleSet -> bool :=
-  Data.Set.Internal.member GHC.Base.∘ GHC.Prim.coerce.
-
-Definition elemModuleEnv {a} : Module -> ModuleEnv a -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | m, Mk_ModuleEnv e => Data.Map.Internal.member (Mk_NDModule m) e
-    end.
-
-Definition dphSeqUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-seq")).
-
-Definition dphParUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-par")).
-
-Definition delModuleSet : ModuleSet -> Module -> ModuleSet :=
-  GHC.Prim.coerce (GHC.Base.flip Data.Set.Internal.delete).
-
-Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_ModuleEnv e, ms =>
-        Mk_ModuleEnv (FiniteMap.deleteList (GHC.Base.map Mk_NDModule ms) e)
-    end.
-
-Definition delModuleEnv {a} : ModuleEnv a -> Module -> ModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_ModuleEnv e, m => Mk_ModuleEnv (Data.Map.Internal.delete (Mk_NDModule m) e)
-    end.
-
-Definition delInstalledModuleEnv {a}
-   : InstalledModuleEnv a -> InstalledModule -> InstalledModuleEnv a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_InstalledModuleEnv e, m =>
-        Mk_InstalledModuleEnv (Data.Map.Internal.delete m e)
-    end.
-
-Definition componentIdToInstalledUnitId : ComponentId -> InstalledUnitId :=
-  fun '(Mk_ComponentId fs) => fsToInstalledUnitId fs.
-
-Definition splitUnitIdInsts
-   : UnitId -> (InstalledUnitId * option IndefUnitId)%type :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IndefiniteUnitId iuid =>
-        pair (componentIdToInstalledUnitId (indefUnitIdComponentId iuid)) (Some iuid)
-    | DefiniteUnitId (Mk_DefUnitId uid) => pair uid None
-    end.
-
-Definition installedUnitIdEq : InstalledUnitId -> UnitId -> bool :=
-  fun iuid uid => Data.Tuple.fst (splitUnitIdInsts uid) GHC.Base.== iuid.
-
-Definition splitModuleInsts
-   : Module -> (InstalledModule * option IndefModule)%type :=
-  fun m =>
-    let 'pair uid mb_iuid := splitUnitIdInsts (moduleUnitId m) in
-    pair (Mk_InstalledModule uid (moduleName m)) (GHC.Base.fmap (fun iuid =>
-                                                                   Mk_IndefModule iuid (moduleName m)) mb_iuid).
-
-Definition installedModuleEq : InstalledModule -> Module -> bool :=
-  fun imod mod_ => Data.Tuple.fst (splitModuleInsts mod_) GHC.Base.== imod.
-
-Definition toInstalledUnitId : UnitId -> InstalledUnitId :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | DefiniteUnitId (Mk_DefUnitId iuid) => iuid
-    | IndefiniteUnitId indef =>
-        componentIdToInstalledUnitId (indefUnitIdComponentId indef)
-    end.
-
-Definition baseUnitId : UnitId :=
-  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "base")).
-
-(* Skipping definition `Module.addBootSuffix_maybe' *)
-
-(* Skipping definition `Module.addBootSuffixLocn' *)
-
-(* Skipping definition `Module.addBootSuffix' *)
-
 (* Skipping all instances of class `GHC.Show.Show', including
    `Module.Show__ModLocation' *)
 
@@ -1017,6 +259,179 @@ Program Instance Ord__ComponentId : GHC.Base.Ord ComponentId :=
            GHC.Base.max__ := Ord__ComponentId_max ;
            GHC.Base.min__ := Ord__ComponentId_min |}.
 
+Definition installedUnitIdKey : InstalledUnitId -> Unique.Unique :=
+  Unique.getUnique GHC.Base.∘ installedUnitIdFS.
+
+Local Definition Eq___InstalledUnitId_op_zeze__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun uid1 uid2 => installedUnitIdKey uid1 GHC.Base.== installedUnitIdKey uid2.
+
+Local Definition Eq___InstalledUnitId_op_zsze__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => negb (Eq___InstalledUnitId_op_zeze__ x y).
+
+Program Instance Eq___InstalledUnitId : GHC.Base.Eq_ InstalledUnitId :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___InstalledUnitId_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___InstalledUnitId_op_zsze__ |}.
+
+Local Definition Uniquable__ModuleName_getUnique
+   : ModuleName -> Unique.Unique :=
+  fun '(Mk_ModuleName nm) => Unique.getUnique nm.
+
+Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
+
+Local Definition Eq___ModuleName_op_zeze__ : ModuleName -> ModuleName -> bool :=
+  fun nm1 nm2 => Unique.getUnique nm1 GHC.Base.== Unique.getUnique nm2.
+
+Local Definition Eq___ModuleName_op_zsze__ : ModuleName -> ModuleName -> bool :=
+  fun x y => negb (Eq___ModuleName_op_zeze__ x y).
+
+Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___ModuleName_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
+
+Local Definition Eq___InstalledModule_op_zeze__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_InstalledModule a1 a2, Mk_InstalledModule b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    end.
+
+Local Definition Eq___InstalledModule_op_zsze__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun x y => negb (Eq___InstalledModule_op_zeze__ x y).
+
+Program Instance Eq___InstalledModule : GHC.Base.Eq_ InstalledModule :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___InstalledModule_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___InstalledModule_op_zsze__ |}.
+
+Local Definition Ord__InstalledUnitId_compare
+   : InstalledUnitId -> InstalledUnitId -> comparison :=
+  fun u1 u2 => GHC.Base.compare (installedUnitIdFS u1) (installedUnitIdFS u2).
+
+Local Definition Ord__InstalledUnitId_op_zlze__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__InstalledUnitId_max
+   : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
+  fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__InstalledUnitId_min
+   : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
+  fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__InstalledUnitId_op_zg__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__InstalledUnitId_op_zgze__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__InstalledUnitId_op_zl__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Lt.
+
+Program Instance Ord__InstalledUnitId : GHC.Base.Ord InstalledUnitId :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__InstalledUnitId_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__InstalledUnitId_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__InstalledUnitId_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__InstalledUnitId_op_zgze__ ;
+           GHC.Base.compare__ := Ord__InstalledUnitId_compare ;
+           GHC.Base.max__ := Ord__InstalledUnitId_max ;
+           GHC.Base.min__ := Ord__InstalledUnitId_min |}.
+
+Local Definition Ord__ModuleName_compare
+   : ModuleName -> ModuleName -> comparison :=
+  fun nm1 nm2 => Eq.
+
+Local Definition Ord__ModuleName_op_zlze__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
+  fun x y => if Ord__ModuleName_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__ModuleName_min : ModuleName -> ModuleName -> ModuleName :=
+  fun x y => if Ord__ModuleName_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__ModuleName_op_zg__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__ModuleName_op_zgze__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__ModuleName_op_zl__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Lt.
+
+Program Instance Ord__ModuleName : GHC.Base.Ord ModuleName :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__ModuleName_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__ModuleName_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__ModuleName_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__ModuleName_op_zgze__ ;
+           GHC.Base.compare__ := Ord__ModuleName_compare ;
+           GHC.Base.max__ := Ord__ModuleName_max ;
+           GHC.Base.min__ := Ord__ModuleName_min |}.
+
+Local Definition Ord__InstalledModule_op_zl__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b =>
+    let 'Mk_InstalledModule a1 a2 := a in
+    let 'Mk_InstalledModule b1 b2 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => true
+    | Eq => (a2 GHC.Base.< b2)
+    | Gt => false
+    end.
+
+Local Definition Ord__InstalledModule_op_zlze__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b => negb (Ord__InstalledModule_op_zl__ b a).
+
+Local Definition Ord__InstalledModule_op_zg__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b => Ord__InstalledModule_op_zl__ b a.
+
+Local Definition Ord__InstalledModule_op_zgze__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b => negb (Ord__InstalledModule_op_zl__ a b).
+
+Local Definition Ord__InstalledModule_compare
+   : InstalledModule -> InstalledModule -> comparison :=
+  fun a b =>
+    let 'Mk_InstalledModule a1 a2 := a in
+    let 'Mk_InstalledModule b1 b2 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => Lt
+    | Eq => (GHC.Base.compare a2 b2)
+    | Gt => Gt
+    end.
+
+Local Definition Ord__InstalledModule_max
+   : InstalledModule -> InstalledModule -> InstalledModule :=
+  fun x y => if Ord__InstalledModule_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__InstalledModule_min
+   : InstalledModule -> InstalledModule -> InstalledModule :=
+  fun x y => if Ord__InstalledModule_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__InstalledModule : GHC.Base.Ord InstalledModule :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__InstalledModule_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__InstalledModule_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__InstalledModule_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__InstalledModule_op_zgze__ ;
+           GHC.Base.compare__ := Ord__InstalledModule_compare ;
+           GHC.Base.max__ := Ord__InstalledModule_max ;
+           GHC.Base.min__ := Ord__InstalledModule_min |}.
+
 Local Definition Eq___DefUnitId_op_zeze__ : DefUnitId -> DefUnitId -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
 
@@ -1059,6 +474,115 @@ Program Instance Ord__DefUnitId : GHC.Base.Ord DefUnitId :=
            GHC.Base.compare__ := Ord__DefUnitId_compare ;
            GHC.Base.max__ := Ord__DefUnitId_max ;
            GHC.Base.min__ := Ord__DefUnitId_min |}.
+
+Definition unitIdKey : UnitId -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IndefiniteUnitId x => indefUnitIdKey x
+    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
+    end.
+
+Local Definition Eq___UnitId_op_zeze__ : UnitId -> UnitId -> bool :=
+  fun uid1 uid2 => unitIdKey uid1 GHC.Base.== unitIdKey uid2.
+
+Local Definition Eq___UnitId_op_zsze__ : UnitId -> UnitId -> bool :=
+  fun x y => negb (Eq___UnitId_op_zeze__ x y).
+
+Program Instance Eq___UnitId : GHC.Base.Eq_ UnitId :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___UnitId_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___UnitId_op_zsze__ |}.
+
+Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Module a1 a2, Mk_Module b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    end.
+
+Local Definition Eq___Module_op_zsze__ : Module -> Module -> bool :=
+  fun x y => negb (Eq___Module_op_zeze__ x y).
+
+Program Instance Eq___Module : GHC.Base.Eq_ Module :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Module_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Module_op_zsze__ |}.
+
+Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
+  fun nm1 nm2 => Eq.
+
+Local Definition Ord__UnitId_op_zlze__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
+  fun x y => if Ord__UnitId_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
+  fun x y => if Ord__UnitId_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__UnitId_op_zg__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__UnitId_op_zgze__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__UnitId_op_zl__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Lt.
+
+Program Instance Ord__UnitId : GHC.Base.Ord UnitId :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__UnitId_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__UnitId_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__UnitId_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__UnitId_op_zgze__ ;
+           GHC.Base.compare__ := Ord__UnitId_compare ;
+           GHC.Base.max__ := Ord__UnitId_max ;
+           GHC.Base.min__ := Ord__UnitId_min |}.
+
+Local Definition Ord__Module_op_zl__ : Module -> Module -> bool :=
+  fun a b =>
+    let 'Mk_Module a1 a2 := a in
+    let 'Mk_Module b1 b2 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => true
+    | Eq => (a2 GHC.Base.< b2)
+    | Gt => false
+    end.
+
+Local Definition Ord__Module_op_zlze__ : Module -> Module -> bool :=
+  fun a b => negb (Ord__Module_op_zl__ b a).
+
+Local Definition Ord__Module_op_zg__ : Module -> Module -> bool :=
+  fun a b => Ord__Module_op_zl__ b a.
+
+Local Definition Ord__Module_op_zgze__ : Module -> Module -> bool :=
+  fun a b => negb (Ord__Module_op_zl__ a b).
+
+Local Definition Ord__Module_compare : Module -> Module -> comparison :=
+  fun a b =>
+    let 'Mk_Module a1 a2 := a in
+    let 'Mk_Module b1 b2 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => Lt
+    | Eq => (GHC.Base.compare a2 b2)
+    | Gt => Gt
+    end.
+
+Local Definition Ord__Module_max : Module -> Module -> Module :=
+  fun x y => if Ord__Module_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Module_min : Module -> Module -> Module :=
+  fun x y => if Ord__Module_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__Module : GHC.Base.Ord Module :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Module_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Module_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Module_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Module_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Module_compare ;
+           GHC.Base.max__ := Ord__Module_max ;
+           GHC.Base.min__ := Ord__Module_min |}.
 
 Local Definition Eq___IndefUnitId_op_zeze__
    : IndefUnitId -> IndefUnitId -> bool :=
@@ -1180,29 +704,69 @@ Program Instance Ord__IndefModule : GHC.Base.Ord IndefModule :=
            GHC.Base.max__ := Ord__IndefModule_max ;
            GHC.Base.min__ := Ord__IndefModule_min |}.
 
+Local Definition Eq___NDModule_op_zeze__ : NDModule -> NDModule -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
+
+Local Definition Eq___NDModule_op_zsze__ : NDModule -> NDModule -> bool :=
+  GHC.Prim.coerce _GHC.Base./=_.
+
+Program Instance Eq___NDModule : GHC.Base.Eq_ NDModule :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___NDModule_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___NDModule_op_zsze__ |}.
+
 (* Skipping all instances of class `Outputable.Outputable', including
    `Module.Outputable__ModLocation' *)
-
-(* Skipping all instances of class `Control.DeepSeq.NFData', including
-   `Module.NFData__ModuleName' *)
-
-(* Skipping all instances of class `Data.Data.Data', including
-   `Module.Data__ModuleName' *)
-
-(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
-   `Module.BinaryStringRep__ModuleName' *)
-
-(* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__ModuleName' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Module.Outputable__ModuleName' *)
 
 (* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__ComponentId' *)
+   `Module.Binary__ModuleName' *)
+
+(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
+   `Module.BinaryStringRep__ModuleName' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Module.Data__ModuleName' *)
+
+(* Skipping all instances of class `Control.DeepSeq.NFData', including
+   `Module.NFData__ModuleName' *)
+
+Definition moduleNameFS : ModuleName -> FastString.FastString :=
+  fun '(Mk_ModuleName mod_) => mod_.
+
+Definition unitIdFS : UnitId -> FastString.FastString :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IndefiniteUnitId x => indefUnitIdFS x
+    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdFS x
+    end.
+
+Local Definition Uniquable__Module_getUnique : Module -> Unique.Unique :=
+  fun '(Mk_Module p n) =>
+    Unique.getUnique (FastString.appendFS (unitIdFS p) (moduleNameFS n)).
+
+Program Instance Uniquable__Module : Unique.Uniquable Module :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Module_getUnique |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__ComponentId' *)
+   `Module.Outputable__Module' *)
+
+(* Skipping all instances of class `Binary.Binary', including
+   `Module.Binary__Module' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Module.Data__Module' *)
+
+(* Skipping all instances of class `Control.DeepSeq.NFData', including
+   `Module.NFData__Module' *)
+
+(* Skipping all instances of class `GHC.PackageDb.DbUnitIdModuleRep', including
+   `Module.DbUnitIdModuleRep__InstalledUnitId__ComponentId__UnitId__ModuleName__Module' *)
+
+(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
+   `Module.BinaryStringRep__ComponentId' *)
 
 Local Definition Uniquable__ComponentId_getUnique
    : ComponentId -> Unique.Unique :=
@@ -1211,11 +775,20 @@ Local Definition Uniquable__ComponentId_getUnique
 Program Instance Uniquable__ComponentId : Unique.Uniquable ComponentId :=
   fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ComponentId_getUnique |}.
 
-(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
-   `Module.BinaryStringRep__ComponentId' *)
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Module.Outputable__ComponentId' *)
+
+(* Skipping all instances of class `Binary.Binary', including
+   `Module.Binary__IndefUnitId' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__InstalledUnitId' *)
+   `Module.Outputable__IndefModule' *)
+
+(* Skipping all instances of class `Binary.Binary', including
+   `Module.Binary__InstalledUnitId' *)
+
+(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
+   `Module.BinaryStringRep__InstalledUnitId' *)
 
 Local Definition Uniquable__InstalledUnitId_getUnique
    : InstalledUnitId -> Unique.Unique :=
@@ -1226,66 +799,493 @@ Program Instance Uniquable__InstalledUnitId
   fun _ k__ =>
     k__ {| Unique.getUnique__ := Uniquable__InstalledUnitId_getUnique |}.
 
-(* Skipping all instances of class `GHC.PackageDb.BinaryStringRep', including
-   `Module.BinaryStringRep__InstalledUnitId' *)
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Module.Outputable__InstalledUnitId' *)
 
-(* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__InstalledUnitId' *)
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Module.Outputable__IndefUnitId' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Module.Outputable__InstalledModule' *)
-
-(* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__DefUnitId' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Module.Outputable__DefUnitId' *)
 
 (* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__UnitId' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__UnitId' *)
-
-(* Skipping all instances of class `Control.DeepSeq.NFData', including
-   `Module.NFData__UnitId' *)
-
-(* Skipping all instances of class `Data.Data.Data', including
-   `Module.Data__UnitId' *)
+   `Module.Binary__DefUnitId' *)
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Module.Show__UnitId' *)
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__IndefUnitId' *)
+Local Definition Uniquable__UnitId_getUnique : UnitId -> Unique.Unique :=
+  unitIdKey.
 
-(* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__IndefUnitId' *)
-
-(* Skipping all instances of class `GHC.PackageDb.DbUnitIdModuleRep', including
-   `Module.DbUnitIdModuleRep__InstalledUnitId__ComponentId__UnitId__ModuleName__Module' *)
-
-(* Skipping all instances of class `Control.DeepSeq.NFData', including
-   `Module.NFData__Module' *)
+Program Instance Uniquable__UnitId : Unique.Uniquable UnitId :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__UnitId_getUnique |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
-   `Module.Data__Module' *)
+   `Module.Data__UnitId' *)
+
+(* Skipping all instances of class `Control.DeepSeq.NFData', including
+   `Module.NFData__UnitId' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Module.Outputable__UnitId' *)
 
 (* Skipping all instances of class `Binary.Binary', including
-   `Module.Binary__Module' *)
+   `Module.Binary__UnitId' *)
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__Module' *)
+(* Skipping all instances of class `Binary.Binary', including
+   `Module.Binary__ComponentId' *)
 
-Local Definition Uniquable__Module_getUnique : Module -> Unique.Unique :=
-  fun '(Mk_Module p n) =>
-    Unique.getUnique (FastString.appendFS (unitIdFS p) (moduleNameFS n)).
+Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_NDModule (Mk_Module p1 n1), Mk_NDModule (Mk_Module p2 n2) =>
+        Util.thenCmp (Unique.nonDetCmpUnique (Unique.getUnique p1) (Unique.getUnique
+                                              p2)) (Unique.nonDetCmpUnique (Unique.getUnique n1) (Unique.getUnique n2))
+    end.
 
-Program Instance Uniquable__Module : Unique.Uniquable Module :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Module_getUnique |}.
+Local Definition Ord__NDModule_op_zl__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Lt.
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Module.Outputable__IndefModule' *)
+Local Definition Ord__NDModule_op_zlze__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__NDModule_op_zg__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__NDModule_op_zgze__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__NDModule_max : NDModule -> NDModule -> NDModule :=
+  fun x y => if Ord__NDModule_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__NDModule_min : NDModule -> NDModule -> NDModule :=
+  fun x y => if Ord__NDModule_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__NDModule : GHC.Base.Ord NDModule :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__NDModule_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__NDModule_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__NDModule_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__NDModule_op_zgze__ ;
+           GHC.Base.compare__ := Ord__NDModule_compare ;
+           GHC.Base.max__ := Ord__NDModule_max ;
+           GHC.Base.min__ := Ord__NDModule_min |}.
+
+(* Skipping definition `Module.addBootSuffix' *)
+
+(* Skipping definition `Module.addBootSuffix_maybe' *)
+
+(* Skipping definition `Module.addBootSuffixLocn' *)
+
+Definition stableModuleNameCmp : ModuleName -> ModuleName -> comparison :=
+  fun n1 n2 => GHC.Base.compare (moduleNameFS n1) (moduleNameFS n2).
+
+(* Skipping definition `Module.pprModuleName' *)
+
+Definition moduleNameString : ModuleName -> GHC.Base.String :=
+  fun '(Mk_ModuleName mod_) => FastString.unpackFS mod_.
+
+Definition unitIdString : UnitId -> GHC.Base.String :=
+  FastString.unpackFS GHC.Base.∘ unitIdFS.
+
+Definition moduleStableString : Module -> GHC.Base.String :=
+  fun '(Mk_Module moduleUnitId moduleName) =>
+    Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$") (Coq.Init.Datatypes.app
+                            (unitIdString moduleUnitId) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$")
+                                                                                (moduleNameString moduleName))).
+
+(* Skipping definition `Module.mkModuleName' *)
+
+Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
+  fun s => Mk_ModuleName s.
+
+(* Skipping definition `Module.moduleNameSlashes' *)
+
+Definition moduleNameColons : ModuleName -> GHC.Base.String :=
+  let dots_to_colons :=
+    GHC.Base.map (fun c =>
+                    if c GHC.Base.== GHC.Char.hs_char__ "." : bool
+                    then GHC.Char.hs_char__ ":"
+                    else c) in
+  dots_to_colons GHC.Base.∘ moduleNameString.
+
+Definition fsToUnitId : FastString.FastString -> UnitId :=
+  DefiniteUnitId GHC.Base.∘ (Mk_DefUnitId GHC.Base.∘ Mk_InstalledUnitId).
+
+Definition holeUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "hole")).
+
+Definition isHoleModule : Module -> bool :=
+  fun mod_ => moduleUnitId mod_ GHC.Base.== holeUnitId.
+
+Definition unitIdFreeHoles : UnitId -> UniqSet.UniqSet ModuleName :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IndefiniteUnitId x => indefUnitIdFreeHoles x
+    | DefiniteUnitId _ => UniqSet.emptyUniqSet
+    end.
+
+Definition moduleFreeHoles : Module -> UniqSet.UniqSet ModuleName :=
+  fun m =>
+    if isHoleModule m : bool then UniqSet.unitUniqSet (moduleName m) else
+    unitIdFreeHoles (moduleUnitId m).
+
+Definition moduleIsDefinite : Module -> bool :=
+  UniqSet.isEmptyUniqSet GHC.Base.∘ moduleFreeHoles.
+
+Definition mkModule : UnitId -> ModuleName -> Module :=
+  Mk_Module.
+
+Definition mkHoleModule : ModuleName -> Module :=
+  mkModule holeUnitId.
+
+Definition stableUnitIdCmp : UnitId -> UnitId -> comparison :=
+  fun p1 p2 => GHC.Base.compare (unitIdFS p1) (unitIdFS p2).
+
+Definition stableModuleCmp : Module -> Module -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Module p1 n1, Mk_Module p2 n2 =>
+        Util.thenCmp (stableUnitIdCmp p1 p2) (stableModuleNameCmp n1 n2)
+    end.
+
+(* Skipping definition `Module.pprModule' *)
+
+(* Skipping definition `Module.newIndefUnitId' *)
+
+(* Skipping definition `Module.indefUnitIdToUnitId' *)
+
+(* Skipping definition `Module.indefModuleToModule' *)
+
+Definition fsToInstalledUnitId : FastString.FastString -> InstalledUnitId :=
+  fun fs => Mk_InstalledUnitId fs.
+
+Definition componentIdToInstalledUnitId : ComponentId -> InstalledUnitId :=
+  fun '(Mk_ComponentId fs) => fsToInstalledUnitId fs.
+
+Definition toInstalledUnitId : UnitId -> InstalledUnitId :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | DefiniteUnitId (Mk_DefUnitId iuid) => iuid
+    | IndefiniteUnitId indef =>
+        componentIdToInstalledUnitId (indefUnitIdComponentId indef)
+    end.
+
+Definition installedUnitIdString : InstalledUnitId -> GHC.Base.String :=
+  FastString.unpackFS GHC.Base.∘ installedUnitIdFS.
+
+Definition stringToInstalledUnitId : GHC.Base.String -> InstalledUnitId :=
+  fsToInstalledUnitId GHC.Base.∘ FastString.mkFastString.
+
+Definition splitUnitIdInsts
+   : UnitId -> (InstalledUnitId * option IndefUnitId)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IndefiniteUnitId iuid =>
+        pair (componentIdToInstalledUnitId (indefUnitIdComponentId iuid)) (Some iuid)
+    | DefiniteUnitId (Mk_DefUnitId uid) => pair uid None
+    end.
+
+Definition splitModuleInsts
+   : Module -> (InstalledModule * option IndefModule)%type :=
+  fun m =>
+    let 'pair uid mb_iuid := splitUnitIdInsts (moduleUnitId m) in
+    pair (Mk_InstalledModule uid (moduleName m)) (GHC.Base.fmap (fun iuid =>
+                                                                   Mk_IndefModule iuid (moduleName m)) mb_iuid).
+
+Definition installedModuleEq : InstalledModule -> Module -> bool :=
+  fun imod mod_ => Data.Tuple.fst (splitModuleInsts mod_) GHC.Base.== imod.
+
+Definition installedUnitIdEq : InstalledUnitId -> UnitId -> bool :=
+  fun iuid uid => Data.Tuple.fst (splitUnitIdInsts uid) GHC.Base.== iuid.
+
+Definition emptyInstalledModuleEnv {a} : InstalledModuleEnv a :=
+  Mk_InstalledModuleEnv Data.Map.Internal.empty.
+
+Definition lookupInstalledModuleEnv {a}
+   : InstalledModuleEnv a -> InstalledModule -> option a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_InstalledModuleEnv e, m => Data.Map.Internal.lookup m e
+    end.
+
+Definition extendInstalledModuleEnv {a}
+   : InstalledModuleEnv a -> InstalledModule -> a -> InstalledModuleEnv a :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_InstalledModuleEnv e, m, x =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.insert m x e)
+    end.
+
+Definition filterInstalledModuleEnv {a}
+   : (InstalledModule -> a -> bool) ->
+     InstalledModuleEnv a -> InstalledModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, Mk_InstalledModuleEnv e =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.filterWithKey f e)
+    end.
+
+Definition delInstalledModuleEnv {a}
+   : InstalledModuleEnv a -> InstalledModule -> InstalledModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_InstalledModuleEnv e, m =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.delete m e)
+    end.
+
+Definition unitIdIsDefinite : UnitId -> bool :=
+  UniqSet.isEmptyUniqSet GHC.Base.∘ unitIdFreeHoles.
+
+(* Skipping definition `Module.hashUnitId' *)
+
+(* Skipping definition `Module.rawHashUnitId' *)
+
+(* Skipping definition `Module.fingerprintByteString' *)
+
+(* Skipping definition `Module.fingerprintUnitId' *)
+
+(* Skipping definition `Module.newUnitId' *)
+
+Definition pprUnitId : UnitId -> GHC.Base.String :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | DefiniteUnitId uid => Panic.someSDoc
+    | IndefiniteUnitId uid => Panic.someSDoc
+    end.
+
+Definition newSimpleUnitId : ComponentId -> UnitId :=
+  fun '(Mk_ComponentId fs) => fsToUnitId fs.
+
+Definition stringToUnitId : GHC.Base.String -> UnitId :=
+  fsToUnitId GHC.Base.∘ FastString.mkFastString.
+
+(* Skipping definition `Module.renameHoleModule' *)
+
+(* Skipping definition `Module.renameHoleUnitId' *)
+
+(* Skipping definition `Module.renameHoleModule'' *)
+
+(* Skipping definition `Module.renameHoleUnitId'' *)
+
+(* Skipping definition `Module.generalizeIndefUnitId' *)
+
+(* Skipping definition `Module.generalizeIndefModule' *)
+
+(* Skipping definition `Module.parseModuleName' *)
+
+(* Skipping definition `Module.parseUnitId' *)
+
+(* Skipping definition `Module.parseComponentId' *)
+
+(* Skipping definition `Module.parseModuleId' *)
+
+(* Skipping definition `Module.parseModSubst' *)
+
+Definition primUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc-prim")).
+
+(* Skipping definition `Module.integerUnitId' *)
+
+Definition baseUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "base")).
+
+Definition rtsUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "rts")).
+
+Definition thUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "template-haskell")).
+
+Definition dphSeqUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-seq")).
+
+Definition dphParUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-par")).
+
+Definition thisGhcUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc")).
+
+Definition interactiveUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "interactive")).
+
+Definition mainUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "main")).
+
+Definition isInteractiveModule : Module -> bool :=
+  fun mod_ => moduleUnitId mod_ GHC.Base.== interactiveUnitId.
+
+(* Skipping definition `Module.wiredInUnitIds' *)
+
+Definition filterModuleEnv {a}
+   : (Module -> a -> bool) -> ModuleEnv a -> ModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, Mk_ModuleEnv e =>
+        Mk_ModuleEnv (Data.Map.Internal.filterWithKey (f GHC.Base.∘ unNDModule) e)
+    end.
+
+Definition elemModuleEnv {a} : Module -> ModuleEnv a -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | m, Mk_ModuleEnv e => Data.Map.Internal.member (Mk_NDModule m) e
+    end.
+
+Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_ModuleEnv e, m, x =>
+        Mk_ModuleEnv (Data.Map.Internal.insert (Mk_NDModule m) x e)
+    end.
+
+Definition extendModuleEnvWith {a}
+   : (a -> a -> a) -> ModuleEnv a -> Module -> a -> ModuleEnv a :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | f, Mk_ModuleEnv e, m, x =>
+        Mk_ModuleEnv (Data.Map.Internal.insertWith f (Mk_NDModule m) x e)
+    end.
+
+Definition extendModuleEnvList {a}
+   : ModuleEnv a -> list (Module * a)%type -> ModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ModuleEnv e, xs =>
+        Mk_ModuleEnv (FiniteMap.insertList (let cont_2__ arg_3__ :=
+                                              let 'pair k v := arg_3__ in
+                                              cons (pair (Mk_NDModule k) v) nil in
+                                            Coq.Lists.List.flat_map cont_2__ xs) e)
+    end.
+
+Definition extendModuleEnvList_C {a}
+   : (a -> a -> a) -> ModuleEnv a -> list (Module * a)%type -> ModuleEnv a :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | f, Mk_ModuleEnv e, xs =>
+        Mk_ModuleEnv (FiniteMap.insertListWith f (let cont_3__ arg_4__ :=
+                                                    let 'pair k v := arg_4__ in
+                                                    cons (pair (Mk_NDModule k) v) nil in
+                                                  Coq.Lists.List.flat_map cont_3__ xs) e)
+    end.
+
+Definition plusModuleEnv_C {a}
+   : (a -> a -> a) -> ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | f, Mk_ModuleEnv e1, Mk_ModuleEnv e2 =>
+        Mk_ModuleEnv (Data.Map.Internal.unionWith f e1 e2)
+    end.
+
+Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ModuleEnv e, ms =>
+        Mk_ModuleEnv (FiniteMap.deleteList (GHC.Base.map Mk_NDModule ms) e)
+    end.
+
+Definition delModuleEnv {a} : ModuleEnv a -> Module -> ModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ModuleEnv e, m => Mk_ModuleEnv (Data.Map.Internal.delete (Mk_NDModule m) e)
+    end.
+
+Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ModuleEnv e1, Mk_ModuleEnv e2 =>
+        Mk_ModuleEnv (Data.Map.Internal.union e1 e2)
+    end.
+
+Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ModuleEnv e, m => Data.Map.Internal.lookup (Mk_NDModule m) e
+    end.
+
+Definition lookupWithDefaultModuleEnv {a} : ModuleEnv a -> a -> Module -> a :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_ModuleEnv e, x, m => Data.Map.Internal.findWithDefault x (Mk_NDModule m) e
+    end.
+
+Definition mapModuleEnv {a} {b} : (a -> b) -> ModuleEnv a -> ModuleEnv b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, Mk_ModuleEnv e =>
+        Mk_ModuleEnv (Data.Map.Internal.mapWithKey (fun arg_2__ arg_3__ =>
+                                                      match arg_2__, arg_3__ with
+                                                      | _, v => f v
+                                                      end) e)
+    end.
+
+Definition mkModuleEnv {a} : list (Module * a)%type -> ModuleEnv a :=
+  fun xs =>
+    Mk_ModuleEnv (Data.Map.Internal.fromList (let cont_0__ arg_1__ :=
+                                                let 'pair k v := arg_1__ in
+                                                cons (pair (Mk_NDModule k) v) nil in
+                                              Coq.Lists.List.flat_map cont_0__ xs)).
+
+Definition emptyModuleEnv {a} : ModuleEnv a :=
+  Mk_ModuleEnv Data.Map.Internal.empty.
+
+Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
+  fun '(Mk_ModuleEnv e) =>
+    Data.OldList.sort (GHC.Base.map unNDModule (Data.Map.Internal.keys e)).
+
+Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
+  fun '(Mk_ModuleEnv e) =>
+    Data.OldList.sortBy (Data.Ord.comparing Data.Tuple.fst) (let cont_1__ arg_2__ :=
+                                                               let 'pair (Mk_NDModule m) v := arg_2__ in
+                                                               cons (pair m v) nil in
+                                                             Coq.Lists.List.flat_map cont_1__ (Data.Map.Internal.toList
+                                                                                      e)).
+
+Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
+  fun e => GHC.Base.map Data.Tuple.snd (moduleEnvToList e).
+
+Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
+  fun m x => Mk_ModuleEnv (Data.Map.Internal.singleton (Mk_NDModule m) x).
+
+Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
+  fun '(Mk_ModuleEnv e) => Data.Map.Internal.null e.
+
+Definition mkModuleSet : list Module -> ModuleSet :=
+  Data.Set.Internal.fromList GHC.Base.∘ GHC.Prim.coerce.
+
+Definition extendModuleSet : ModuleSet -> Module -> ModuleSet :=
+  fun s m => Data.Set.Internal.insert (Mk_NDModule m) s.
+
+Definition extendModuleSetList : ModuleSet -> list Module -> ModuleSet :=
+  fun s ms =>
+    Data.Foldable.foldl' (GHC.Prim.coerce GHC.Base.∘
+                          GHC.Base.flip Data.Set.Internal.insert) s ms.
+
+Definition emptyModuleSet : ModuleSet :=
+  Data.Set.Internal.empty.
+
+Definition moduleSetElts : ModuleSet -> list Module :=
+  Data.OldList.sort GHC.Base.∘
+  (GHC.Prim.coerce GHC.Base.∘ Data.Set.Internal.toList).
+
+Definition elemModuleSet : Module -> ModuleSet -> bool :=
+  Data.Set.Internal.member GHC.Base.∘ GHC.Prim.coerce.
+
+Definition intersectModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
+  GHC.Prim.coerce Data.Set.Internal.intersection.
+
+Definition minusModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
+  GHC.Prim.coerce Data.Set.Internal.difference.
+
+Definition delModuleSet : ModuleSet -> Module -> ModuleSet :=
+  GHC.Prim.coerce (GHC.Base.flip Data.Set.Internal.delete).
+
+Definition unionModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
+  GHC.Prim.coerce Data.Set.Internal.union.
+
+Definition unitModuleSet : Module -> ModuleSet :=
+  GHC.Prim.coerce Data.Set.Internal.singleton.
 
 (* External variables:
      Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option

@@ -186,43 +186,6 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
 
 (* Converted value declarations: *)
 
-Definition returnA {a} {b} `{Arrow a} : a b b :=
-  arr Control.Category.id.
-
-Definition op_zlzlzc__ {a} {c} {d} {b} `{Arrow a}
-   : a c d -> (b -> c) -> a b d :=
-  fun a f => a Control.Category.<<< arr f.
-
-Notation "'_<<^_'" := (op_zlzlzc__).
-
-Infix "<<^" := (_<<^_) (at level 99).
-
-Definition op_zgzgzc__ {a} {b} {c} {d} `{Arrow a}
-   : a b c -> (c -> d) -> a b d :=
-  fun a f => a Control.Category.>>> arr f.
-
-Notation "'_>>^_'" := (op_zgzgzc__).
-
-Infix ">>^" := (_>>^_) (at level 99).
-
-Definition op_zczlzl__ {a} {c} {d} {b} `{Arrow a}
-   : (c -> d) -> a b c -> a b d :=
-  fun f a => arr f Control.Category.<<< a.
-
-Notation "'_^<<_'" := (op_zczlzl__).
-
-Infix "^<<" := (_^<<_) (at level 99).
-
-Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a}
-   : (b -> c) -> a c d -> a b d :=
-  fun f a => arr f Control.Category.>>> a.
-
-Notation "'_^>>_'" := (op_zczgzg__).
-
-Infix "^>>" := (_^>>_) (at level 99).
-
-(* Skipping definition `Control.Arrow.leftApp' *)
-
 Local Definition Arrow__arrow_arr
    : forall {b} {c}, (b -> c) -> GHC.Prim.arrow b c :=
   fun {b} {c} => fun f => f.
@@ -265,11 +228,11 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow :=
            op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
            second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
 
-(* Skipping instance `Control.Arrow.Arrow__Kleisli' of class
-   `Control.Arrow.Arrow' *)
-
 (* Skipping instance `Control.Arrow.Category__Kleisli' of class
    `Control.Category.Category' *)
+
+(* Skipping instance `Control.Arrow.Arrow__Kleisli' of class
+   `Control.Arrow.Arrow' *)
 
 (* Skipping instance `Control.Arrow.ArrowZero__Kleisli' of class
    `Control.Arrow.ArrowZero' *)
@@ -277,14 +240,11 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow :=
 (* Skipping instance `Control.Arrow.ArrowPlus__Kleisli' of class
    `Control.Arrow.ArrowPlus' *)
 
-(* Skipping instance `Control.Arrow.ArrowChoice__Kleisli' of class
-   `Control.Arrow.ArrowChoice' *)
-
 (* Skipping instance `Control.Arrow.ArrowChoice__arrow' of class
    `Control.Arrow.ArrowChoice' *)
 
-(* Skipping instance `Control.Arrow.ArrowApply__Kleisli' of class
-   `Control.Arrow.ArrowApply' *)
+(* Skipping instance `Control.Arrow.ArrowChoice__Kleisli' of class
+   `Control.Arrow.ArrowChoice' *)
 
 Local Definition ArrowApply__arrow_app
    : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
@@ -293,17 +253,8 @@ Local Definition ArrowApply__arrow_app
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow :=
   fun _ k__ => k__ {| app__ := fun {b} {c} => ArrowApply__arrow_app |}.
 
-(* Skipping all instances of class `GHC.Base.MonadPlus', including
-   `Control.Arrow.MonadPlus__ArrowMonad' *)
-
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Arrow.Alternative__ArrowMonad' *)
-
-(* Skipping instance `Control.Arrow.Monad__ArrowMonad' of class
-   `GHC.Base.Monad' *)
-
-(* Skipping instance `Control.Arrow.Applicative__ArrowMonad' of class
-   `GHC.Base.Applicative' *)
+(* Skipping instance `Control.Arrow.ArrowApply__Kleisli' of class
+   `Control.Arrow.ArrowApply' *)
 
 Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
    : forall {a} {b}, (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad inst_a) b :=
@@ -323,11 +274,60 @@ Program Instance Functor__ArrowMonad {a} `{Arrow a}
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ |}.
 
-(* Skipping instance `Control.Arrow.ArrowLoop__Kleisli' of class
-   `Control.Arrow.ArrowLoop' *)
+(* Skipping instance `Control.Arrow.Applicative__ArrowMonad' of class
+   `GHC.Base.Applicative' *)
+
+(* Skipping instance `Control.Arrow.Monad__ArrowMonad' of class
+   `GHC.Base.Monad' *)
+
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Arrow.Alternative__ArrowMonad' *)
+
+(* Skipping all instances of class `GHC.Base.MonadPlus', including
+   `Control.Arrow.MonadPlus__ArrowMonad' *)
 
 (* Skipping instance `Control.Arrow.ArrowLoop__arrow' of class
    `Control.Arrow.ArrowLoop' *)
+
+(* Skipping instance `Control.Arrow.ArrowLoop__Kleisli' of class
+   `Control.Arrow.ArrowLoop' *)
+
+Definition returnA {a} {b} `{Arrow a} : a b b :=
+  arr Control.Category.id.
+
+Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a}
+   : (b -> c) -> a c d -> a b d :=
+  fun f a => arr f Control.Category.>>> a.
+
+Notation "'_^>>_'" := (op_zczgzg__).
+
+Infix "^>>" := (_^>>_) (at level 99).
+
+Definition op_zgzgzc__ {a} {b} {c} {d} `{Arrow a}
+   : a b c -> (c -> d) -> a b d :=
+  fun a f => a Control.Category.>>> arr f.
+
+Notation "'_>>^_'" := (op_zgzgzc__).
+
+Infix ">>^" := (_>>^_) (at level 99).
+
+Definition op_zlzlzc__ {a} {c} {d} {b} `{Arrow a}
+   : a c d -> (b -> c) -> a b d :=
+  fun a f => a Control.Category.<<< arr f.
+
+Notation "'_<<^_'" := (op_zlzlzc__).
+
+Infix "<<^" := (_<<^_) (at level 99).
+
+Definition op_zczlzl__ {a} {c} {d} {b} `{Arrow a}
+   : (c -> d) -> a b c -> a b d :=
+  fun f a => arr f Control.Category.<<< a.
+
+Notation "'_^<<_'" := (op_zczlzl__).
+
+Infix "^<<" := (_^<<_) (at level 99).
+
+(* Skipping definition `Control.Arrow.leftApp' *)
 
 Module Notations.
 Notation "'_Control.Arrow.&&&_'" := (op_zazaza__).
@@ -340,14 +340,14 @@ Notation "'_Control.Arrow.+++_'" := (op_zpzpzp__).
 Infix "Control.Arrow.+++" := (_+++_) (at level 99).
 Notation "'_Control.Arrow.<+>_'" := (op_zlzpzg__).
 Infix "Control.Arrow.<+>" := (_<+>_) (at level 99).
-Notation "'_Control.Arrow.<<^_'" := (op_zlzlzc__).
-Infix "Control.Arrow.<<^" := (_<<^_) (at level 99).
-Notation "'_Control.Arrow.>>^_'" := (op_zgzgzc__).
-Infix "Control.Arrow.>>^" := (_>>^_) (at level 99).
-Notation "'_Control.Arrow.^<<_'" := (op_zczlzl__).
-Infix "Control.Arrow.^<<" := (_^<<_) (at level 99).
 Notation "'_Control.Arrow.^>>_'" := (op_zczgzg__).
 Infix "Control.Arrow.^>>" := (_^>>_) (at level 99).
+Notation "'_Control.Arrow.>>^_'" := (op_zgzgzc__).
+Infix "Control.Arrow.>>^" := (_>>^_) (at level 99).
+Notation "'_Control.Arrow.<<^_'" := (op_zlzlzc__).
+Infix "Control.Arrow.<<^" := (_<<^_) (at level 99).
+Notation "'_Control.Arrow.^<<_'" := (op_zczlzl__).
+Infix "Control.Arrow.^<<" := (_^<<_) (at level 99).
 End Notations.
 
 (* External variables:

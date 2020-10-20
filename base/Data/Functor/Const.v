@@ -192,53 +192,11 @@ Program Instance Ord__Const {a} {b} `{GHC.Base.Ord a}
 (* Skipping all instances of class `Foreign.Storable.Storable', including
    `Data.Functor.Const.Storable__Const' *)
 
-Local Definition Applicative__Const_liftA2 {inst_m} `{GHC.Base.Monoid inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) -> (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | _, Mk_Const x, Mk_Const y => Mk_Const (GHC.Base.mappend x y)
-      end.
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.Functor.Const.Read__Const' *)
 
-Local Definition Applicative__Const_op_zlztzg__ {inst_m} `{GHC.Base.Monoid
-  inst_m}
-   : forall {a} {b}, Const inst_m (a -> b) -> Const inst_m a -> Const inst_m b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.mappend.
-
-Local Definition Functor__Const_fmap {inst_m}
-   : forall {a} {b}, (a -> b) -> (Const inst_m) a -> (Const inst_m) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | _, Mk_Const v => Mk_Const v
-      end.
-
-Local Definition Functor__Const_op_zlzd__ {inst_m}
-   : forall {a} {b}, a -> (Const inst_m) b -> (Const inst_m) a :=
-  fun {a} {b} => Functor__Const_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__Const {m} : GHC.Base.Functor (Const m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Const_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Const_op_zlzd__ |}.
-
-Local Definition Applicative__Const_op_ztzg__ {inst_m} `{GHC.Base.Monoid inst_m}
-   : forall {a} {b}, (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Const_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Const_pure {inst_m} `{GHC.Base.Monoid inst_m}
-   : forall {a}, a -> (Const inst_m) a :=
-  fun {a} => fun arg_0__ => Mk_Const GHC.Base.mempty.
-
-Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
-   : GHC.Base.Applicative (Const m) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Const_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Const_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Const_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Const_pure |}.
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.Functor.Const.Show__Const' *)
 
 Local Definition Foldable__Const_foldMap {inst_m}
    : forall {m} {a},
@@ -322,11 +280,53 @@ Program Instance Foldable__Const {m} : Data.Foldable.Foldable (Const m) :=
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Const_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__Const_toList |}.
 
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Data.Functor.Const.Show__Const' *)
+Local Definition Functor__Const_fmap {inst_m}
+   : forall {a} {b}, (a -> b) -> (Const inst_m) a -> (Const inst_m) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | _, Mk_Const v => Mk_Const v
+      end.
 
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Data.Functor.Const.Read__Const' *)
+Local Definition Functor__Const_op_zlzd__ {inst_m}
+   : forall {a} {b}, a -> (Const inst_m) b -> (Const inst_m) a :=
+  fun {a} {b} => Functor__Const_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Const {m} : GHC.Base.Functor (Const m) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Const_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Const_op_zlzd__ |}.
+
+Local Definition Applicative__Const_liftA2 {inst_m} `{GHC.Base.Monoid inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | _, Mk_Const x, Mk_Const y => Mk_Const (GHC.Base.mappend x y)
+      end.
+
+Local Definition Applicative__Const_op_zlztzg__ {inst_m} `{GHC.Base.Monoid
+  inst_m}
+   : forall {a} {b}, Const inst_m (a -> b) -> Const inst_m a -> Const inst_m b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.mappend.
+
+Local Definition Applicative__Const_op_ztzg__ {inst_m} `{GHC.Base.Monoid inst_m}
+   : forall {a} {b}, (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Const_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Const_pure {inst_m} `{GHC.Base.Monoid inst_m}
+   : forall {a}, a -> (Const inst_m) a :=
+  fun {a} => fun arg_0__ => Mk_Const GHC.Base.mempty.
+
+Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
+   : GHC.Base.Applicative (Const m) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Const_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Const_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Const_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Const_pure |}.
 
 (* External variables:
      bool comparison false list true Coq.Program.Basics.compose

@@ -22,9 +22,6 @@ Import GHC.Base.Notations.
 
 (* Converted value declarations: *)
 
-Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
-  fun x => tt GHC.Base.<$ x.
-
 Definition op_zlzdzg__ {f} {a} {b} `{GHC.Base.Functor f}
    : (a -> b) -> f a -> f b :=
   GHC.Base.fmap.
@@ -47,6 +44,9 @@ Definition op_zdzg__ {f} {a} {b} `{GHC.Base.Functor f} : f a -> b -> f b :=
 Notation "'_$>_'" := (op_zdzg__).
 
 Infix "$>" := (_$>_) (at level 99).
+
+Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
+  fun x => tt GHC.Base.<$ x.
 
 Module Notations.
 Notation "'_Data.Functor.<$>_'" := (op_zlzdzg__).

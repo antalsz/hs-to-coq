@@ -52,9 +52,6 @@ Definition flSelector {a} (arg_0__ : FieldLbl a) :=
 
 (* Converted value declarations: *)
 
-Axiom mkFieldLabelOccs : FieldLabelString ->
-                         OccName.OccName -> bool -> FieldLbl OccName.OccName.
-
 (* Skipping all instances of class `Data.Data.Data', including
    `FieldLabel.Data__FieldLbl' *)
 
@@ -75,11 +72,14 @@ Instance Traversable__FieldLbl : Data.Traversable.Traversable FieldLbl.
 Proof.
 Admitted.
 
+(* Skipping all instances of class `Outputable.Outputable', including
+   `FieldLabel.Outputable__FieldLbl' *)
+
 (* Skipping all instances of class `Binary.Binary', including
    `FieldLabel.Binary__FieldLbl' *)
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `FieldLabel.Outputable__FieldLbl' *)
+Axiom mkFieldLabelOccs : FieldLabelString ->
+                         OccName.OccName -> bool -> FieldLbl OccName.OccName.
 
 (* External variables:
      bool Data.Foldable.Foldable Data.Traversable.Traversable FastString.FastString

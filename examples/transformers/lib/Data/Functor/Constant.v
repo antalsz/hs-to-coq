@@ -119,146 +119,74 @@ Program Instance Ord__Constant {a} {b} `{GHC.Base.Ord a}
            GHC.Base.max__ := Ord__Constant_max ;
            GHC.Base.min__ := Ord__Constant_min |}.
 
-Local Definition Bitraversable__Constant_bitraverse
-   : forall {f} {a} {c} {b} {d},
-     forall `{GHC.Base.Applicative f},
-     (a -> f c) -> (b -> f d) -> Constant a b -> f (Constant c d) :=
-  fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, _, Mk_Constant a => Mk_Constant Data.Functor.<$> f a
-      end.
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.Functor.Constant.Read__Constant' *)
 
-Local Definition Bifoldable__Constant_bifoldMap
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> Constant a b -> m :=
-  fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, _, Mk_Constant a => f a
-      end.
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.Functor.Constant.Show__Constant' *)
 
-Local Definition Bifoldable__Constant_bifold
-   : forall {m}, forall `{GHC.Base.Monoid m}, Constant m m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    Bifoldable__Constant_bifoldMap GHC.Base.id GHC.Base.id.
-
-Local Definition Bifoldable__Constant_bifoldl
-   : forall {c} {a} {b},
-     (c -> a -> c) -> (c -> b -> c) -> c -> Constant a b -> c :=
-  fun {c} {a} {b} =>
-    fun f g z t =>
-      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
-                                      (Bifoldable__Constant_bifoldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
-                                                                       (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
-                                                                        GHC.Base.flip f))
-                                       (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
-                                        (Data.SemigroupInternal.Mk_Endo GHC.Base.∘ GHC.Base.flip g)) t)) z.
-
-Local Definition Bifoldable__Constant_bifoldr
-   : forall {a} {c} {b},
-     (a -> c -> c) -> (b -> c -> c) -> c -> Constant a b -> c :=
-  fun {a} {c} {b} =>
-    fun f g z t =>
-      Data.SemigroupInternal.appEndo (Bifoldable__Constant_bifoldMap
-                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f)
-                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
-
-Program Instance Bifoldable__Constant : Data.Bifoldable.Bifoldable Constant :=
-  fun _ k__ =>
-    k__ {| Data.Bifoldable.bifold__ := fun {m} `{GHC.Base.Monoid m} =>
-             Bifoldable__Constant_bifold ;
-           Data.Bifoldable.bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-             Bifoldable__Constant_bifoldMap ;
-           Data.Bifoldable.bifoldl__ := fun {c} {a} {b} => Bifoldable__Constant_bifoldl ;
-           Data.Bifoldable.bifoldr__ := fun {a} {c} {b} => Bifoldable__Constant_bifoldr |}.
-
-Local Definition Bifunctor__Constant_first
-   : forall {a} {b} {c}, (a -> b) -> Constant a c -> Constant b c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_Constant x => Mk_Constant (f x)
-      end.
-
-Local Definition Bifunctor__Constant_second
-   : forall {b} {c} {a}, (b -> c) -> Constant a b -> Constant a c :=
-  fun {b} {c} {a} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | _, Mk_Constant x => Mk_Constant x
-      end.
-
-Local Definition Bifunctor__Constant_bimap
+Local Definition Eq2__Constant_liftEq2
    : forall {a} {b} {c} {d},
-     (a -> b) -> (c -> d) -> Constant a c -> Constant b d :=
+     (a -> b -> bool) -> (c -> d -> bool) -> Constant a c -> Constant b d -> bool :=
   fun {a} {b} {c} {d} =>
-    fun f g => Bifunctor__Constant_first f GHC.Base.∘ Bifunctor__Constant_second g.
-
-Program Instance Bifunctor__Constant : Data.Bifunctor.Bifunctor Constant :=
-  fun _ k__ =>
-    k__ {| Data.Bifunctor.bimap__ := fun {a} {b} {c} {d} =>
-             Bifunctor__Constant_bimap ;
-           Data.Bifunctor.first__ := fun {a} {b} {c} => Bifunctor__Constant_first ;
-           Data.Bifunctor.second__ := fun {b} {c} {a} => Bifunctor__Constant_second |}.
-
-Program Instance Bitraversable__Constant
-   : Data.Bitraversable.Bitraversable Constant :=
-  fun _ k__ =>
-    k__ {| Data.Bitraversable.bitraverse__ := fun {f}
-           {a}
-           {c}
-           {b}
-           {d}
-           `{GHC.Base.Applicative f} =>
-             Bitraversable__Constant_bitraverse |}.
-
-Local Definition Semigroup__Constant_op_zlzlzgzg__ {inst_a} {inst_b}
-  `{(GHC.Base.Semigroup inst_a)}
-   : (Constant inst_a inst_b) ->
-     (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Constant x, Mk_Constant y => Mk_Constant (x GHC.Base.<<>> y)
-    end.
-
-Program Instance Semigroup__Constant {a} {b} `{(GHC.Base.Semigroup a)}
-   : GHC.Base.Semigroup (Constant a b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Constant_op_zlzlzgzg__ |}.
-
-Local Definition Monoid__Constant_mappend {inst_a} {inst_b} `{(GHC.Base.Monoid
-   inst_a)}
-   : (Constant inst_a inst_b) ->
-     (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
-  _GHC.Base.<<>>_.
-
-Local Definition Monoid__Constant_mempty {inst_a} {inst_b} `{(GHC.Base.Monoid
-   inst_a)}
-   : (Constant inst_a inst_b) :=
-  Mk_Constant GHC.Base.mempty.
-
-Local Definition Monoid__Constant_mconcat {inst_a} {inst_b} `{(GHC.Base.Monoid
-   inst_a)}
-   : list (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
-  GHC.Base.foldr Monoid__Constant_mappend Monoid__Constant_mempty.
-
-Program Instance Monoid__Constant {a} {b} `{(GHC.Base.Monoid a)}
-   : GHC.Base.Monoid (Constant a b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.mappend__ := Monoid__Constant_mappend ;
-           GHC.Base.mconcat__ := Monoid__Constant_mconcat ;
-           GHC.Base.mempty__ := Monoid__Constant_mempty |}.
-
-Local Definition Applicative__Constant_op_zlztzg__ {inst_a} `{(GHC.Base.Monoid
-   inst_a)}
-   : forall {a} {b},
-     (Constant inst_a) (a -> b) -> (Constant inst_a) a -> (Constant inst_a) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Mk_Constant x, Mk_Constant y => Mk_Constant (GHC.Base.mappend x y)
+    fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+      match arg_0__, arg_1__, arg_2__, arg_3__ with
+      | eq, _, Mk_Constant x, Mk_Constant y => eq x y
       end.
+
+Program Instance Eq2__Constant : Data.Functor.Classes.Eq2 Constant :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
+             Eq2__Constant_liftEq2 |}.
+
+Local Definition Ord2__Constant_liftCompare2
+   : forall {a} {b} {c} {d},
+     (a -> b -> comparison) ->
+     (c -> d -> comparison) -> Constant a c -> Constant b d -> comparison :=
+  fun {a} {b} {c} {d} =>
+    fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+      match arg_0__, arg_1__, arg_2__, arg_3__ with
+      | comp, _, Mk_Constant x, Mk_Constant y => comp x y
+      end.
+
+Program Instance Ord2__Constant : Data.Functor.Classes.Ord2 Constant :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
+             Ord2__Constant_liftCompare2 |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read2', including
+   `Data.Functor.Constant.Read2__Constant' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show2', including
+   `Data.Functor.Constant.Show2__Constant' *)
+
+Local Definition Eq1__Constant_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
+   : forall {a} {b},
+     (a -> b -> bool) -> (Constant inst_a) a -> (Constant inst_a) b -> bool :=
+  fun {a} {b} => Data.Functor.Classes.liftEq2 _GHC.Base.==_.
+
+Program Instance Eq1__Constant {a} `{(GHC.Base.Eq_ a)}
+   : Data.Functor.Classes.Eq1 (Constant a) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Constant_liftEq |}.
+
+Local Definition Ord1__Constant_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
+   : forall {a} {b},
+     (a -> b -> comparison) ->
+     (Constant inst_a) a -> (Constant inst_a) b -> comparison :=
+  fun {a} {b} => Data.Functor.Classes.liftCompare2 GHC.Base.compare.
+
+Program Instance Ord1__Constant {a} `{(GHC.Base.Ord a)}
+   : Data.Functor.Classes.Ord1 (Constant a) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Constant_liftCompare |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read1', including
+   `Data.Functor.Constant.Read1__Constant' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show1', including
+   `Data.Functor.Constant.Show1__Constant' *)
 
 Local Definition Functor__Constant_fmap {inst_a}
    : forall {a} {b}, (a -> b) -> (Constant inst_a) a -> (Constant inst_a) b :=
@@ -276,62 +204,6 @@ Program Instance Functor__Constant {a} : GHC.Base.Functor (Constant a) :=
   fun _ k__ =>
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Constant_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Constant_op_zlzd__ |}.
-
-Local Definition Applicative__Constant_liftA2 {inst_a} `{(GHC.Base.Monoid
-   inst_a)}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (Constant inst_a) a -> (Constant inst_a) b -> (Constant inst_a) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__Constant_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Constant_op_ztzg__ {inst_a} `{(GHC.Base.Monoid
-   inst_a)}
-   : forall {a} {b},
-     (Constant inst_a) a -> (Constant inst_a) b -> (Constant inst_a) b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Constant_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Constant_pure {inst_a} `{(GHC.Base.Monoid inst_a)}
-   : forall {a}, a -> (Constant inst_a) a :=
-  fun {a} => fun arg_0__ => Mk_Constant GHC.Base.mempty.
-
-Program Instance Applicative__Constant {a} `{(GHC.Base.Monoid a)}
-   : GHC.Base.Applicative (Constant a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Constant_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Constant_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Constant_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Constant_pure |}.
-
-Local Definition Traversable__Constant_traverse {inst_a}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> (Constant inst_a) a -> f ((Constant inst_a) b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | _, Mk_Constant x => GHC.Base.pure (Mk_Constant x)
-      end.
-
-Local Definition Traversable__Constant_mapM {inst_a}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (Constant inst_a) a -> m ((Constant inst_a) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Constant_traverse.
-
-Local Definition Traversable__Constant_sequenceA {inst_a}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     (Constant inst_a) (f a) -> f ((Constant inst_a) a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    Traversable__Constant_traverse GHC.Base.id.
-
-Local Definition Traversable__Constant_sequence {inst_a}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m},
-     (Constant inst_a) (m a) -> m ((Constant inst_a) a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Constant_sequenceA.
 
 Local Definition Foldable__Constant_foldMap {inst_a}
    : forall {m} {a},
@@ -418,6 +290,35 @@ Program Instance Foldable__Constant {a} : Data.Foldable.Foldable (Constant a) :=
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Constant_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__Constant_toList |}.
 
+Local Definition Traversable__Constant_traverse {inst_a}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (Constant inst_a) a -> f ((Constant inst_a) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | _, Mk_Constant x => GHC.Base.pure (Mk_Constant x)
+      end.
+
+Local Definition Traversable__Constant_mapM {inst_a}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (Constant inst_a) a -> m ((Constant inst_a) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Constant_traverse.
+
+Local Definition Traversable__Constant_sequenceA {inst_a}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     (Constant inst_a) (f a) -> f ((Constant inst_a) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__Constant_traverse GHC.Base.id.
+
+Local Definition Traversable__Constant_sequence {inst_a}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m},
+     (Constant inst_a) (m a) -> m ((Constant inst_a) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Constant_sequenceA.
+
 Program Instance Traversable__Constant {a}
    : Data.Traversable.Traversable (Constant a) :=
   fun _ k__ =>
@@ -430,74 +331,173 @@ Program Instance Traversable__Constant {a}
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__Constant_traverse |}.
 
-(* Skipping all instances of class `Data.Functor.Classes.Show1', including
-   `Data.Functor.Constant.Show1__Constant' *)
+Local Definition Semigroup__Constant_op_zlzlzgzg__ {inst_a} {inst_b}
+  `{(GHC.Base.Semigroup inst_a)}
+   : (Constant inst_a inst_b) ->
+     (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Constant x, Mk_Constant y => Mk_Constant (x GHC.Base.<<>> y)
+    end.
 
-(* Skipping all instances of class `Data.Functor.Classes.Read1', including
-   `Data.Functor.Constant.Read1__Constant' *)
+Program Instance Semigroup__Constant {a} {b} `{(GHC.Base.Semigroup a)}
+   : GHC.Base.Semigroup (Constant a b) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Constant_op_zlzlzgzg__ |}.
 
-Local Definition Ord2__Constant_liftCompare2
-   : forall {a} {b} {c} {d},
-     (a -> b -> comparison) ->
-     (c -> d -> comparison) -> Constant a c -> Constant b d -> comparison :=
-  fun {a} {b} {c} {d} =>
-    fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-      match arg_0__, arg_1__, arg_2__, arg_3__ with
-      | comp, _, Mk_Constant x, Mk_Constant y => comp x y
+Local Definition Applicative__Constant_op_zlztzg__ {inst_a} `{(GHC.Base.Monoid
+   inst_a)}
+   : forall {a} {b},
+     (Constant inst_a) (a -> b) -> (Constant inst_a) a -> (Constant inst_a) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Constant x, Mk_Constant y => Mk_Constant (GHC.Base.mappend x y)
       end.
 
-Local Definition Eq2__Constant_liftEq2
-   : forall {a} {b} {c} {d},
-     (a -> b -> bool) -> (c -> d -> bool) -> Constant a c -> Constant b d -> bool :=
-  fun {a} {b} {c} {d} =>
-    fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-      match arg_0__, arg_1__, arg_2__, arg_3__ with
-      | eq, _, Mk_Constant x, Mk_Constant y => eq x y
+Local Definition Applicative__Constant_liftA2 {inst_a} `{(GHC.Base.Monoid
+   inst_a)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Constant inst_a) a -> (Constant inst_a) b -> (Constant inst_a) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Constant_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__Constant_op_ztzg__ {inst_a} `{(GHC.Base.Monoid
+   inst_a)}
+   : forall {a} {b},
+     (Constant inst_a) a -> (Constant inst_a) b -> (Constant inst_a) b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Constant_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Constant_pure {inst_a} `{(GHC.Base.Monoid inst_a)}
+   : forall {a}, a -> (Constant inst_a) a :=
+  fun {a} => fun arg_0__ => Mk_Constant GHC.Base.mempty.
+
+Program Instance Applicative__Constant {a} `{(GHC.Base.Monoid a)}
+   : GHC.Base.Applicative (Constant a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Constant_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Constant_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Constant_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Constant_pure |}.
+
+Local Definition Monoid__Constant_mappend {inst_a} {inst_b} `{(GHC.Base.Monoid
+   inst_a)}
+   : (Constant inst_a inst_b) ->
+     (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Constant_mempty {inst_a} {inst_b} `{(GHC.Base.Monoid
+   inst_a)}
+   : (Constant inst_a inst_b) :=
+  Mk_Constant GHC.Base.mempty.
+
+Local Definition Monoid__Constant_mconcat {inst_a} {inst_b} `{(GHC.Base.Monoid
+   inst_a)}
+   : list (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
+  GHC.Base.foldr Monoid__Constant_mappend Monoid__Constant_mempty.
+
+Program Instance Monoid__Constant {a} {b} `{(GHC.Base.Monoid a)}
+   : GHC.Base.Monoid (Constant a b) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Constant_mappend ;
+           GHC.Base.mconcat__ := Monoid__Constant_mconcat ;
+           GHC.Base.mempty__ := Monoid__Constant_mempty |}.
+
+Local Definition Bifunctor__Constant_first
+   : forall {a} {b} {c}, (a -> b) -> Constant a c -> Constant b c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_Constant x => Mk_Constant (f x)
       end.
 
-Program Instance Eq2__Constant : Data.Functor.Classes.Eq2 Constant :=
+Local Definition Bifunctor__Constant_second
+   : forall {b} {c} {a}, (b -> c) -> Constant a b -> Constant a c :=
+  fun {b} {c} {a} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | _, Mk_Constant x => Mk_Constant x
+      end.
+
+Local Definition Bifunctor__Constant_bimap
+   : forall {a} {b} {c} {d},
+     (a -> b) -> (c -> d) -> Constant a c -> Constant b d :=
+  fun {a} {b} {c} {d} =>
+    fun f g => Bifunctor__Constant_first f GHC.Base.∘ Bifunctor__Constant_second g.
+
+Program Instance Bifunctor__Constant : Data.Bifunctor.Bifunctor Constant :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
-             Eq2__Constant_liftEq2 |}.
+    k__ {| Data.Bifunctor.bimap__ := fun {a} {b} {c} {d} =>
+             Bifunctor__Constant_bimap ;
+           Data.Bifunctor.first__ := fun {a} {b} {c} => Bifunctor__Constant_first ;
+           Data.Bifunctor.second__ := fun {b} {c} {a} => Bifunctor__Constant_second |}.
 
-Program Instance Ord2__Constant : Data.Functor.Classes.Ord2 Constant :=
+Local Definition Bifoldable__Constant_bifoldMap
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> Constant a b -> m :=
+  fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, _, Mk_Constant a => f a
+      end.
+
+Local Definition Bifoldable__Constant_bifold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Constant m m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    Bifoldable__Constant_bifoldMap GHC.Base.id GHC.Base.id.
+
+Local Definition Bifoldable__Constant_bifoldl
+   : forall {c} {a} {b},
+     (c -> a -> c) -> (c -> b -> c) -> c -> Constant a b -> c :=
+  fun {c} {a} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Bifoldable__Constant_bifoldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                       (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                        GHC.Base.flip f))
+                                       (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                        (Data.SemigroupInternal.Mk_Endo GHC.Base.∘ GHC.Base.flip g)) t)) z.
+
+Local Definition Bifoldable__Constant_bifoldr
+   : forall {a} {c} {b},
+     (a -> c -> c) -> (b -> c -> c) -> c -> Constant a b -> c :=
+  fun {a} {c} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Bifoldable__Constant_bifoldMap
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f)
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
+
+Program Instance Bifoldable__Constant : Data.Bifoldable.Bifoldable Constant :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
-             Ord2__Constant_liftCompare2 |}.
+    k__ {| Data.Bifoldable.bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__Constant_bifold ;
+           Data.Bifoldable.bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__Constant_bifoldMap ;
+           Data.Bifoldable.bifoldl__ := fun {c} {a} {b} => Bifoldable__Constant_bifoldl ;
+           Data.Bifoldable.bifoldr__ := fun {a} {c} {b} => Bifoldable__Constant_bifoldr |}.
 
-Local Definition Ord1__Constant_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
-   : forall {a} {b},
-     (a -> b -> comparison) ->
-     (Constant inst_a) a -> (Constant inst_a) b -> comparison :=
-  fun {a} {b} => Data.Functor.Classes.liftCompare2 GHC.Base.compare.
+Local Definition Bitraversable__Constant_bitraverse
+   : forall {f} {a} {c} {b} {d},
+     forall `{GHC.Base.Applicative f},
+     (a -> f c) -> (b -> f d) -> Constant a b -> f (Constant c d) :=
+  fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, _, Mk_Constant a => Mk_Constant Data.Functor.<$> f a
+      end.
 
-Local Definition Eq1__Constant_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
-   : forall {a} {b},
-     (a -> b -> bool) -> (Constant inst_a) a -> (Constant inst_a) b -> bool :=
-  fun {a} {b} => Data.Functor.Classes.liftEq2 _GHC.Base.==_.
-
-Program Instance Eq1__Constant {a} `{(GHC.Base.Eq_ a)}
-   : Data.Functor.Classes.Eq1 (Constant a) :=
+Program Instance Bitraversable__Constant
+   : Data.Bitraversable.Bitraversable Constant :=
   fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Constant_liftEq |}.
-
-Program Instance Ord1__Constant {a} `{(GHC.Base.Ord a)}
-   : Data.Functor.Classes.Ord1 (Constant a) :=
-  fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-             Ord1__Constant_liftCompare |}.
-
-(* Skipping all instances of class `Data.Functor.Classes.Show2', including
-   `Data.Functor.Constant.Show2__Constant' *)
-
-(* Skipping all instances of class `Data.Functor.Classes.Read2', including
-   `Data.Functor.Constant.Read2__Constant' *)
-
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Data.Functor.Constant.Show__Constant' *)
-
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Data.Functor.Constant.Read__Constant' *)
+    k__ {| Data.Bitraversable.bitraverse__ := fun {f}
+           {a}
+           {c}
+           {b}
+           {d}
+           `{GHC.Base.Applicative f} =>
+             Bitraversable__Constant_bitraverse |}.
 
 (* External variables:
      Type bool comparison list true Coq.Program.Basics.compose

@@ -24,3 +24,4 @@ redefine Local Definition UniqSet.Monoid__UniqSet_mempty {inst_a} : UniqSet inst
   Mk_UniqSet GHC.Base.mempty.
 
 order Unpeel_UniqSet UniqSet.partitionUniqSet
+order Unpeel_UniqSet UniqSet.Monoid__UniqSet_mappend

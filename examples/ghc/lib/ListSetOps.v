@@ -33,6 +33,8 @@ Definition Assoc a b :=
 
 (* Converted value declarations: *)
 
+(* Skipping definition `ListSetOps.getNth' *)
+
 Definition unionLists {a} `{GHC.Base.Eq_ a} : list a -> list a -> list a :=
   fun xs ys =>
     Panic.warnPprTrace (orb (Util.lengthExceeds xs #100) (Util.lengthExceeds ys
@@ -60,6 +62,44 @@ Definition minusList {a} `{GHC.Base.Ord a} : list a -> list a -> list a :=
         end
     end.
 
+Fixpoint assocDefaultUsing {a} {b} (arg_0__ : (a -> a -> bool)) (arg_1__ : b)
+                           (arg_2__ : Assoc a b) (arg_3__ : a) : b
+           := match arg_0__, arg_1__, arg_2__, arg_3__ with
+              | _, deflt, nil, _ => deflt
+              | eq, deflt, cons (pair k v) rest, key =>
+                  if eq k key : bool then v else
+                  assocDefaultUsing eq deflt rest key
+              end.
+
+Definition assoc {a} {b} `{GHC.Base.Eq_ a} `{GHC.Err.Default b}
+   : GHC.Base.String -> Assoc a b -> a -> b :=
+  fun crash_msg list key =>
+    assocDefaultUsing _GHC.Base.==_ (Panic.panic (Coq.Init.Datatypes.app
+                                                  (GHC.Base.hs_string__ "Failed in assoc: ") crash_msg)) list key.
+
+Definition assocDefault {a} {b} `{(GHC.Base.Eq_ a)}
+   : b -> Assoc a b -> a -> b :=
+  fun deflt list key => assocDefaultUsing _GHC.Base.==_ deflt list key.
+
+Definition assocUsing {a} {b} `{GHC.Err.Default b}
+   : (a -> a -> bool) -> GHC.Base.String -> Assoc a b -> a -> b :=
+  fun eq crash_msg list key =>
+    assocDefaultUsing eq (Panic.panic (Coq.Init.Datatypes.app (GHC.Base.hs_string__
+                                                               "Failed in assoc: ") crash_msg)) list key.
+
+Definition assocMaybe {a} {b} `{(GHC.Base.Eq_ a)}
+   : Assoc a b -> a -> option b :=
+  fun alist key =>
+    let fix lookup arg_0__
+              := match arg_0__ with
+                 | nil => None
+                 | cons (pair tv ty) rest =>
+                     if key GHC.Base.== tv : bool
+                     then Some ty
+                     else lookup rest
+                 end in
+    lookup alist.
+
 Definition hasNoDups {a} `{(GHC.Base.Eq_ a)} : list a -> bool :=
   fun xs =>
     let is_elem := Util.isIn (GHC.Base.hs_string__ "hasNoDups") in
@@ -72,10 +112,6 @@ Definition hasNoDups {a} `{(GHC.Base.Eq_ a)} : list a -> bool :=
                      else f (cons x seen_so_far) xs
                  end in
     f nil xs.
-
-(* Skipping definition `ListSetOps.getNth' *)
-
-(* Skipping definition `ListSetOps.findDupsEq' *)
 
 Axiom equivClasses : forall {a},
                      (a -> a -> comparison) -> list a -> list (GHC.Base.NonEmpty a).
@@ -101,43 +137,7 @@ Definition removeDups {a}
         pair xs' dups
     end.
 
-Definition assocMaybe {a} {b} `{(GHC.Base.Eq_ a)}
-   : Assoc a b -> a -> option b :=
-  fun alist key =>
-    let fix lookup arg_0__
-              := match arg_0__ with
-                 | nil => None
-                 | cons (pair tv ty) rest =>
-                     if key GHC.Base.== tv : bool
-                     then Some ty
-                     else lookup rest
-                 end in
-    lookup alist.
-
-Fixpoint assocDefaultUsing {a} {b} (arg_0__ : (a -> a -> bool)) (arg_1__ : b)
-                           (arg_2__ : Assoc a b) (arg_3__ : a) : b
-           := match arg_0__, arg_1__, arg_2__, arg_3__ with
-              | _, deflt, nil, _ => deflt
-              | eq, deflt, cons (pair k v) rest, key =>
-                  if eq k key : bool then v else
-                  assocDefaultUsing eq deflt rest key
-              end.
-
-Definition assocUsing {a} {b} `{GHC.Err.Default b}
-   : (a -> a -> bool) -> GHC.Base.String -> Assoc a b -> a -> b :=
-  fun eq crash_msg list key =>
-    assocDefaultUsing eq (Panic.panic (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                               "Failed in assoc: ") crash_msg)) list key.
-
-Definition assocDefault {a} {b} `{(GHC.Base.Eq_ a)}
-   : b -> Assoc a b -> a -> b :=
-  fun deflt list key => assocDefaultUsing _GHC.Base.==_ deflt list key.
-
-Definition assoc {a} {b} `{GHC.Base.Eq_ a} `{GHC.Err.Default b}
-   : GHC.Base.String -> Assoc a b -> a -> b :=
-  fun crash_msg list key =>
-    assocDefaultUsing _GHC.Base.==_ (Panic.panic (Coq.Init.Datatypes.app
-                                                  (GHC.Base.hs_string__ "Failed in assoc: ") crash_msg)) list key.
+(* Skipping definition `ListSetOps.findDupsEq' *)
 
 (* External variables:
      None Some bool comparison cons false list nil op_zt__ option orb pair true

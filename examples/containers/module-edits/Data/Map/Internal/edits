@@ -24,6 +24,7 @@ order Data.Map.Internal.Functor__WhenMatched  Data.Map.Internal.Applicative__Whe
 
 order Data.Map.Internal.Functor__Map Data.Map.Internal.mapWhenMissing
 order Data.Map.Internal.Functor__Map Data.Map.Internal.lmapWhenMissing
+order Data.Map.Internal.Functor__Map Data.Map.Internal.Foldable__Map Data.Map.Internal.Traversable__Map
 
 # TODOs
 skip Data.Map.Internal.Eq1__Map

@@ -61,46 +61,18 @@ Instance Default__CSEnv : GHC.Err.Default CSEnv := {| GHC.Err.default := CS Core
 
 (* Converted value declarations: *)
 
-Definition noCSE : Core.InId -> bool :=
-  fun id =>
-    orb (andb (negb (BasicTypes.isAlwaysActive (Id.idInlineActivation id))) (negb
-               (BasicTypes.noUserInlineSpec (BasicTypes.inlinePragmaSpec (Id.idInlinePragma
-                                                                          id))))) (orb (BasicTypes.isAnyInlinePragma
-                                                                                        (Id.idInlinePragma id))
-                                                                                       (Id.isJoinId id)).
+Definition addBinder : CSEnv -> Core.Var -> (CSEnv * Core.Var)%type :=
+  fun cse v =>
+    let 'pair sub' v' := CoreSubst.substBndr (cs_subst cse) v in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) v'.
 
-Definition lookupSubst : CSEnv -> Core.Id -> Core.OutExpr :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | CS sub _ _, x =>
-        CoreSubst.lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "CSE.lookupSubst"))
-        sub x
-    end.
-
-Definition lookupCSRecEnv
-   : CSEnv -> Core.OutId -> Core.OutExpr -> option Core.OutExpr :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | CS _ _ csmap, bndr, expr => TrieMap.lookupCoreMap csmap (Core.Lam bndr expr)
-    end.
-
-Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
-    end.
-
-Definition extendCSSubst : CSEnv -> Core.Id -> Core.CoreExpr -> CSEnv :=
-  fun cse x rhs =>
-    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
-    CS (CoreSubst.extendSubst (cs_subst cse) x rhs) cs_map_1__ cs_rec_map_2__.
-
-Definition extendCSRecEnv
-   : CSEnv -> Core.OutId -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
-  fun cse bndr expr triv_expr =>
-    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
-    CS cs_subst_0__ cs_map_1__ (TrieMap.extendCoreMap (cs_rec_map cse) (Core.Lam
-                                                                        bndr expr) triv_expr).
+Definition addBinders
+   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
+  fun cse vs =>
+    let 'pair sub' vs' := CoreSubst.substBndrs (cs_subst cse) vs in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
 
 Definition extendCSEnv : CSEnv -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
   fun cse expr triv_expr =>
@@ -109,8 +81,38 @@ Definition extendCSEnv : CSEnv -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
     CS cs_subst_0__ (TrieMap.extendCoreMap (cs_map cse) sexpr triv_expr)
        cs_rec_map_2__.
 
-Definition emptyCSEnv : CSEnv :=
-  CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap.
+Definition extendCSSubst : CSEnv -> Core.Id -> Core.CoreExpr -> CSEnv :=
+  fun cse x rhs =>
+    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
+    CS (CoreSubst.extendSubst (cs_subst cse) x rhs) cs_map_1__ cs_rec_map_2__.
+
+Definition noCSE : Core.InId -> bool :=
+  fun id =>
+    orb (andb (negb (BasicTypes.isAlwaysActive (Id.idInlineActivation id))) (negb
+               (BasicTypes.noUserInlineSpec (BasicTypes.inlinePragmaSpec (Id.idInlinePragma
+                                                                          id))))) (orb (BasicTypes.isAnyInlinePragma
+                                                                                        (Id.idInlinePragma id))
+                                                                                       (Id.isJoinId id)).
+
+Definition addBinding
+   : CSEnv ->
+     Core.InVar -> Core.OutId -> Core.OutExpr -> (CSEnv * Core.OutId)%type :=
+  fun env in_id out_id rhs' =>
+    let use_subst := match rhs' with | Core.Mk_Var _ => true | _ => false end in
+    let zapped_id := Id.zapIdUsageInfo out_id in
+    let id_expr' := Core.varToCoreExpr out_id in
+    if negb (Core.isId in_id) : bool
+    then pair (extendCSSubst env in_id rhs') out_id else
+    if noCSE in_id : bool then pair env out_id else
+    if use_subst : bool then pair (extendCSSubst env in_id rhs') out_id else
+    pair (extendCSEnv env rhs' id_expr') zapped_id.
+
+Definition addRecBinders
+   : CSEnv -> list Core.Id -> (CSEnv * list Core.Id)%type :=
+  fun cse vs =>
+    let 'pair sub' vs' := CoreSubst.substRecBndrs (cs_subst cse) vs in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
 
 Definition csEnvSubst : CSEnv -> CoreSubst.Subst :=
   cs_subst.
@@ -134,38 +136,33 @@ Definition combineAlts : CSEnv -> list Core.InAlt -> list Core.InAlt :=
     | _, _ => j_2__
     end.
 
-Definition addRecBinders
-   : CSEnv -> list Core.Id -> (CSEnv * list Core.Id)%type :=
-  fun cse vs =>
-    let 'pair sub' vs' := CoreSubst.substRecBndrs (cs_subst cse) vs in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
+Definition extendCSRecEnv
+   : CSEnv -> Core.OutId -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
+  fun cse bndr expr triv_expr =>
+    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
+    CS cs_subst_0__ cs_map_1__ (TrieMap.extendCoreMap (cs_rec_map cse) (Core.Lam
+                                                                        bndr expr) triv_expr).
 
-Definition addBinding
-   : CSEnv ->
-     Core.InVar -> Core.OutId -> Core.OutExpr -> (CSEnv * Core.OutId)%type :=
-  fun env in_id out_id rhs' =>
-    let use_subst := match rhs' with | Core.Mk_Var _ => true | _ => false end in
-    let zapped_id := Id.zapIdUsageInfo out_id in
-    let id_expr' := Core.varToCoreExpr out_id in
-    if negb (Core.isId in_id) : bool
-    then pair (extendCSSubst env in_id rhs') out_id else
-    if noCSE in_id : bool then pair env out_id else
-    if use_subst : bool then pair (extendCSSubst env in_id rhs') out_id else
-    pair (extendCSEnv env rhs' id_expr') zapped_id.
+Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
+    end.
 
-Definition addBinders
-   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
-  fun cse vs =>
-    let 'pair sub' vs' := CoreSubst.substBndrs (cs_subst cse) vs in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
+Definition lookupCSRecEnv
+   : CSEnv -> Core.OutId -> Core.OutExpr -> option Core.OutExpr :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | CS _ _ csmap, bndr, expr => TrieMap.lookupCoreMap csmap (Core.Lam bndr expr)
+    end.
 
-Definition addBinder : CSEnv -> Core.Var -> (CSEnv * Core.Var)%type :=
-  fun cse v =>
-    let 'pair sub' v' := CoreSubst.substBndr (cs_subst cse) v in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) v'.
+Definition lookupSubst : CSEnv -> Core.Id -> Core.OutExpr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | CS sub _ _, x =>
+        CoreSubst.lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "CSE.lookupSubst"))
+        sub x
+    end.
 
 Definition cseBind
    : BasicTypes.TopLevelFlag ->
@@ -299,6 +296,9 @@ Definition cseBind
                              | _, _, _ => GHC.Err.patternFailure
                              end
                          end for cseBind.
+
+Definition emptyCSEnv : CSEnv :=
+  CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap.
 
 Definition cseProgram : Core.CoreProgram -> Core.CoreProgram :=
   fun binds =>
@@ -436,14 +436,6 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                              end
                          end for cseExpr.
 
-Definition cseOneExpr : Core.InExpr -> Core.OutExpr :=
-  fun e =>
-    let env :=
-      let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := emptyCSEnv in
-      CS (CoreSubst.mkEmptySubst (Core.mkInScopeSet (CoreFVs.exprFreeVars e)))
-         cs_map_1__ cs_rec_map_2__ in
-    cseExpr env e.
-
 Definition tryForCSE : CSEnv -> Core.InExpr -> Core.OutExpr :=
   fun env expr =>
     let expr' := cseExpr env expr in
@@ -453,6 +445,37 @@ Definition tryForCSE : CSEnv -> Core.InExpr -> Core.OutExpr :=
     | Some e => e
     | _ => expr'
     end.
+
+Definition cse_bind
+   : BasicTypes.TopLevelFlag ->
+     CSEnv ->
+     (Core.InId * Core.InExpr)%type ->
+     Core.OutId -> (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | toplevel, env, pair in_id in_rhs, out_id =>
+        let out_rhs := tryForCSE env in_rhs in
+        let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
+        if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
+                 in_rhs) : bool
+        then pair env' (pair out_id in_rhs) else
+        match Id.isJoinId_maybe in_id with
+        | Some arity =>
+            NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body =>
+                                                        let 'pair env' params' := addBinders env params in
+                                                        let out_body := tryForCSE env' in_body in
+                                                        pair env (pair out_id (Core.mkLams params' out_body)))
+        | _ => pair env' (pair out_id' out_rhs)
+        end
+    end.
+
+Definition cseOneExpr : Core.InExpr -> Core.OutExpr :=
+  fun e =>
+    let env :=
+      let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := emptyCSEnv in
+      CS (CoreSubst.mkEmptySubst (Core.mkInScopeSet (CoreFVs.exprFreeVars e)))
+         cs_map_1__ cs_rec_map_2__ in
+    cseExpr env e.
 
 Definition cseCase
    : CSEnv ->
@@ -482,29 +505,6 @@ Definition cseCase
         end in
     let ty' := CoreSubst.substTy (csEnvSubst env) ty in
     Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)).
-
-Definition cse_bind
-   : BasicTypes.TopLevelFlag ->
-     CSEnv ->
-     (Core.InId * Core.InExpr)%type ->
-     Core.OutId -> (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | toplevel, env, pair in_id in_rhs, out_id =>
-        let out_rhs := tryForCSE env in_rhs in
-        let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
-        if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
-                 in_rhs) : bool
-        then pair env' (pair out_id in_rhs) else
-        match Id.isJoinId_maybe in_id with
-        | Some arity =>
-            NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body =>
-                                                        let 'pair env' params' := addBinders env params in
-                                                        let out_body := tryForCSE env' in_body in
-                                                        pair env (pair out_id (Core.mkLams params' out_body)))
-        | _ => pair env' (pair out_id' out_rhs)
-        end
-    end.
 
 (* External variables:
      Some andb bool cons false list negb nil op_zt__ option orb pair true

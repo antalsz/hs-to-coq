@@ -440,512 +440,6 @@ Instance Default__InlinePragma : GHC.Err.Default InlinePragma :=
 
 (* Converted value declarations: *)
 
-Definition zapOccTailCallInfo : OccInfo -> OccInfo :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IAmDead => IAmDead
-    | occ =>
-        match occ with
-        | ManyOccs occ_tail_1__ => ManyOccs NoTailCallInfo
-        | IAmDead => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-        | OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ occ_tail_5__ =>
-            OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ NoTailCallInfo
-        | IAmALoopBreaker occ_rules_only_6__ occ_tail_7__ =>
-            IAmALoopBreaker occ_rules_only_6__ NoTailCallInfo
-        end
-    end.
-
-Definition worstOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | NoOneShotInfo, _ => NoOneShotInfo
-    | OneShotLam, os => os
-    end.
-
-Definition weakLoopBreaker : OccInfo :=
-  IAmALoopBreaker true NoTailCallInfo.
-
-Definition unSwap {a} {b} : SwapFlag -> (a -> a -> b) -> a -> a -> b :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | NotSwapped, f, a, b => f a b
-    | IsSwapped, f, a, b => f b a
-    end.
-
-Definition tupleSortBoxity : TupleSort -> Boxity :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | BoxedTuple => Boxed
-    | UnboxedTuple => Unboxed
-    | ConstraintTuple => Boxed
-    end.
-
-(* Skipping definition `BasicTypes.tupleParens' *)
-
-Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
-  fun arg_0__ =>
-    let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #0 : bool then Infinity else
-    let 'n := arg_0__ in
-    Int n.
-
-Definition tailCallInfo : OccInfo -> TailCallInfo :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IAmDead => NoTailCallInfo
-    | other => occ_tail other
-    end.
-
-Definition sumParens : GHC.Base.String -> GHC.Base.String :=
-  fun p => GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc p) Panic.someSDoc.
-
-Definition successIf : bool -> SuccessFlag :=
-  fun arg_0__ => match arg_0__ with | true => Succeeded | false => Failed end.
-
-Definition succeeded : SuccessFlag -> bool :=
-  fun arg_0__ => match arg_0__ with | Succeeded => true | Failed => false end.
-
-Definition strongLoopBreaker : OccInfo :=
-  IAmALoopBreaker false NoTailCallInfo.
-
-Definition setOverlapModeMaybe
-   : OverlapFlag -> option OverlapMode -> OverlapFlag :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, None => f
-    | f, Some m =>
-        let 'Mk_OverlapFlag overlapMode_2__ isSafeOverlap_3__ := f in
-        Mk_OverlapFlag m isSafeOverlap_3__
-    end.
-
-Definition setInlinePragmaRuleMatchInfo
-   : InlinePragma -> RuleMatchInfo -> InlinePragma :=
-  fun prag info =>
-    let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
-       inl_rule_4__ := prag in
-    Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__ info.
-
-Definition setInlinePragmaActivation
-   : InlinePragma -> Activation -> InlinePragma :=
-  fun prag activation =>
-    let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
-       inl_rule_4__ := prag in
-    Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ activation inl_rule_4__.
-
-Definition seqOccInfo : OccInfo -> unit :=
-  fun occ => GHC.Prim.seq occ tt.
-
-Definition pprWithSourceText
-   : SourceText -> GHC.Base.String -> GHC.Base.String :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | NoSourceText, d => d
-    | Mk_SourceText src, _ => Datatypes.id src
-    end.
-
-Definition pprWarningTxtForMsg : WarningTxt -> GHC.Base.String :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_WarningTxt _ ws => Panic.someSDoc
-    | DeprecatedTxt _ ds =>
-        GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "Deprecated:"))
-                         Panic.someSDoc
-    end.
-
-Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | AlwaysTailCalled ar => GHC.Base.mappend Panic.someSDoc Panic.someSDoc
-    | NoTailCallInfo => Panic.someSDoc
-    end.
-
-(* Skipping definition `BasicTypes.pprSafeOverlap' *)
-
-(* Skipping definition `BasicTypes.pprRuleName' *)
-
-(* Skipping definition `BasicTypes.pprOneShotInfo' *)
-
-(* Skipping definition `BasicTypes.pprAlternative' *)
-
-Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | cons l nil => Panic.someSDoc
-    | ws =>
-        GHC.Base.mappend (GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "["))
-                                           Panic.someSDoc) (Datatypes.id (GHC.Base.hs_string__ "]"))
-    end.
-
-Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Infinity, _ => Infinity
-    | _, Infinity => Infinity
-    | Int a, Int b => Int (a GHC.Num.+ b)
-    end.
-
-Definition pickLR {a} : LeftOrRight -> (a * a)%type -> a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | CLeft, pair l _ => l
-    | CRight, pair _ r => r
-    end.
-
-Definition oneBranch : OneBranch :=
-  true.
-
-Definition notOneBranch : OneBranch :=
-  false.
-
-Definition notInsideLam : InsideLam :=
-  false.
-
-Definition noUserInlineSpec : InlineSpec -> bool :=
-  fun arg_0__ => match arg_0__ with | NoUserInline => true | _ => false end.
-
-Definition noOneShotInfo : OneShotInfo :=
-  NoOneShotInfo.
-
-Definition noOccInfo : OccInfo :=
-  ManyOccs NoTailCallInfo.
-
-Definition zapFragileOcc : OccInfo -> OccInfo :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | OneOcc _ _ _ _ => noOccInfo
-    | occ => zapOccTailCallInfo occ
-    end.
-
-(* Skipping definition `BasicTypes.negateIntegralLit' *)
-
-(* Skipping definition `BasicTypes.negateFractionalLit' *)
-
-Definition negateFixity : Fixity :=
-  Mk_Fixity NoSourceText #6 InfixL.
-
-Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Infinity, _ => Infinity
-    | _, Infinity => Infinity
-    | Int a, Int b => Int (a GHC.Num.* b)
-    end.
-
-(* Skipping definition `BasicTypes.mkIntegralLit' *)
-
-Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
-  Int.
-
-(* Skipping definition `BasicTypes.mkFractionalLit' *)
-
-Definition minPrecedence : GHC.Num.Int :=
-  #0.
-
-(* Skipping definition `BasicTypes.maybeParen' *)
-
-Definition maxPrecedence : GHC.Num.Int :=
-  #9.
-
-Definition isWeakLoopBreaker : OccInfo -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IAmALoopBreaker _ _ => true
-    | _ => false
-    end.
-
-Definition isTopLevel : TopLevelFlag -> bool :=
-  fun arg_0__ => match arg_0__ with | TopLevel => true | NotTopLevel => false end.
-
-Definition isSwapped : SwapFlag -> bool :=
-  fun arg_0__ => match arg_0__ with | IsSwapped => true | NotSwapped => false end.
-
-Definition isStrongLoopBreaker : OccInfo -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IAmALoopBreaker false _ => true
-    | _ => false
-    end.
-
-Definition isRec : RecFlag -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Recursive => true
-    | NonRecursive => false
-    end.
-
-Definition isOneShotInfo : OneShotInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | OneShotLam => true | _ => false end.
-
-Definition isOneOcc : OccInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | OneOcc _ _ _ _ => true | _ => false end.
-
-Definition isNotTopLevel : TopLevelFlag -> bool :=
-  fun arg_0__ => match arg_0__ with | NotTopLevel => true | TopLevel => false end.
-
-Definition isNonRec : RecFlag -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Recursive => false
-    | NonRecursive => true
-    end.
-
-Definition isNeverActive : Activation -> bool :=
-  fun arg_0__ => match arg_0__ with | NeverActive => true | _ => false end.
-
-Definition isManyOccs : OccInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | ManyOccs _ => true | _ => false end.
-
-Definition isInlinePragma : InlinePragma -> bool :=
-  fun prag => match inl_inline prag with | Inline => true | _ => false end.
-
-Definition isInlinablePragma : InlinePragma -> bool :=
-  fun prag => match inl_inline prag with | Inlinable => true | _ => false end.
-
-Definition isGenerated : Origin -> bool :=
-  fun arg_0__ => match arg_0__ with | Generated => true | FromSource => false end.
-
-Definition isFunLike : RuleMatchInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | FunLike => true | _ => false end.
-
-Definition pprInline' : bool -> InlinePragma -> GHC.Base.String :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | emptyInline, Mk_InlinePragma _ inline mb_arity activation info =>
-        let pp_info :=
-          if isFunLike info : bool then Panic.someSDoc else
-          Panic.someSDoc in
-        let pp_sat :=
-          match mb_arity with
-          | Some ar =>
-              GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "sat-args="))
-                               Panic.someSDoc
-          | _ => Panic.someSDoc
-          end in
-        let pp_act :=
-          fun arg_4__ arg_5__ =>
-            match arg_4__, arg_5__ with
-            | Inline, AlwaysActive => Panic.someSDoc
-            | NoInline, NeverActive => Panic.someSDoc
-            | _, act => Panic.someSDoc
-            end in
-        let pp_inl :=
-          fun x => if emptyInline : bool then Panic.someSDoc else Panic.someSDoc in
-        GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (pp_inl inline) (pp_act
-                                                              inline activation)) pp_sat) pp_info
-    end.
-
-Definition pprInline : InlinePragma -> GHC.Base.String :=
-  pprInline' true.
-
-Definition pprInlineDebug : InlinePragma -> GHC.Base.String :=
-  pprInline' false.
-
-Definition isEarlyActive : Activation -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | AlwaysActive => true
-    | ActiveBefore _ _ => true
-    | _ => false
-    end.
-
-Definition isDeadOcc : OccInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | IAmDead => true | _ => false end.
-
-Definition isConLike : RuleMatchInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | ConLike => true | _ => false end.
-
-Definition isBoxed : Boxity -> bool :=
-  fun arg_0__ => match arg_0__ with | Boxed => true | Unboxed => false end.
-
-Definition isAnyInlinePragma : InlinePragma -> bool :=
-  fun prag =>
-    match inl_inline prag with
-    | Inline => true
-    | Inlinable => true
-    | _ => false
-    end.
-
-Definition isAlwaysTailCalled : OccInfo -> bool :=
-  fun occ =>
-    match tailCallInfo occ with
-    | AlwaysTailCalled _ => true
-    | NoTailCallInfo => false
-    end.
-
-Definition isAlwaysActive : Activation -> bool :=
-  fun arg_0__ => match arg_0__ with | AlwaysActive => true | _ => false end.
-
-Definition isDefaultInlinePragma : InlinePragma -> bool :=
-  fun '(Mk_InlinePragma _ inline _ activation match_info) =>
-    andb (noUserInlineSpec inline) (andb (isAlwaysActive activation) (isFunLike
-                                          match_info)).
-
-Definition isActiveIn : PhaseNum -> Activation -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, NeverActive => false
-    | _, AlwaysActive => true
-    | p, ActiveAfter _ n => p GHC.Base.<= n
-    | p, ActiveBefore _ n => p GHC.Base.> n
-    end.
-
-Definition isActive : CompilerPhase -> Activation -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InitialPhase, AlwaysActive => true
-    | InitialPhase, ActiveBefore _ _ => true
-    | InitialPhase, _ => false
-    | Phase p, act => isActiveIn p act
-    end.
-
-(* Skipping definition `BasicTypes.integralFractionalLit' *)
-
-Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, Infinity => false
-    | n, Int m => n GHC.Base.> m
-    end.
-
-Definition insideLam : InsideLam :=
-  true.
-
-Definition inlinePragmaSpec : InlinePragma -> InlineSpec :=
-  inl_inline.
-
-Definition inlinePragmaSat : InlinePragma -> option Arity :=
-  inl_sat.
-
-Definition inlinePragmaRuleMatchInfo : InlinePragma -> RuleMatchInfo :=
-  fun '(Mk_InlinePragma _ _ _ _ info) => info.
-
-Definition inlinePragmaActivation : InlinePragma -> Activation :=
-  fun '(Mk_InlinePragma _ _ _ activation _) => activation.
-
-Definition initialVersion : Version :=
-  #1.
-
-Definition infinity : IntWithInf :=
-  Infinity.
-
-Definition hasOverlappingFlag : OverlapMode -> bool :=
-  fun mode =>
-    match mode with
-    | Overlapping _ => true
-    | Overlaps _ => true
-    | Incoherent _ => true
-    | _ => false
-    end.
-
-Definition hasOverlappableFlag : OverlapMode -> bool :=
-  fun mode =>
-    match mode with
-    | Overlappable _ => true
-    | Overlaps _ => true
-    | Incoherent _ => true
-    | _ => false
-    end.
-
-Definition hasNoOneShotInfo : OneShotInfo -> bool :=
-  fun arg_0__ => match arg_0__ with | NoOneShotInfo => true | _ => false end.
-
-Definition hasIncoherentFlag : OverlapMode -> bool :=
-  fun mode => match mode with | Incoherent _ => true | _ => false end.
-
-Definition funTyFixity : Fixity :=
-  Mk_Fixity NoSourceText #0 InfixR.
-
-Definition flipSwap : SwapFlag -> SwapFlag :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IsSwapped => NotSwapped
-    | NotSwapped => IsSwapped
-    end.
-
-Definition failed : SuccessFlag -> bool :=
-  fun arg_0__ => match arg_0__ with | Succeeded => false | Failed => true end.
-
-Definition fIRST_TAG : ConTag :=
-  #1.
-
-Definition defaultInlinePragma : InlinePragma :=
-  Mk_InlinePragma (Mk_SourceText (GHC.Base.hs_string__ "{-# INLINE")) NoUserInline
-                  None AlwaysActive FunLike.
-
-Definition dfunInlinePragma : InlinePragma :=
-  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
-     inl_rule_4__ := defaultInlinePragma in
-  Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ AlwaysActive ConLike.
-
-Definition neverInlinePragma : InlinePragma :=
-  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
-     inl_rule_4__ := defaultInlinePragma in
-  Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ NeverActive inl_rule_4__.
-
-(* Skipping definition `BasicTypes.defaultFixity' *)
-
-Definition competesWith : Activation -> Activation -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | NeverActive, _ => false
-    | _, NeverActive => false
-    | AlwaysActive, _ => true
-    | ActiveBefore _ _, AlwaysActive => true
-    | ActiveBefore _ _, ActiveBefore _ _ => true
-    | ActiveBefore _ a, ActiveAfter _ b => a GHC.Base.< b
-    | ActiveAfter _ _, AlwaysActive => false
-    | ActiveAfter _ _, ActiveBefore _ _ => false
-    | ActiveAfter _ a, ActiveAfter _ b => a GHC.Base.>= b
-    end.
-
-Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Fixity _ prec1 dir1, Mk_Fixity _ prec2 dir2 =>
-        let error_please := pair true false in
-        let left_ := pair false false in
-        let right_ := pair false true in
-        match GHC.Base.compare prec1 prec2 with
-        | Gt => left_
-        | Lt => right_
-        | Eq =>
-            match pair dir1 dir2 with
-            | pair InfixR InfixR => right_
-            | pair InfixL InfixL => left_
-            | _ => error_please
-            end
-        end
-    end.
-
-Definition bumpVersion : Version -> Version :=
-  fun v => v GHC.Num.+ #1.
-
-Definition boxityTupleSort : Boxity -> TupleSort :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Boxed => BoxedTuple
-    | Unboxed => UnboxedTuple
-    end.
-
-Definition boolToRecFlag : bool -> RecFlag :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | true => Recursive
-    | false => NonRecursive
-    end.
-
-Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | NoOneShotInfo, os => os
-    | OneShotLam, _ => OneShotLam
-    end.
-
-Definition alwaysInlinePragma : InlinePragma :=
-  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
-     inl_rule_4__ := defaultInlinePragma in
-  Mk_InlinePragma inl_src_0__ Inline inl_sat_2__ inl_act_3__ inl_rule_4__.
-
 Local Definition Eq___LeftOrRight_op_zeze__
    : LeftOrRight -> LeftOrRight -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1479,6 +973,30 @@ Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf :=
    `BasicTypes.Outputable__FunctionOrData' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__StringLiteral' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__WarningTxt' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__Fixity' *)
+
+Local Definition Eq___Fixity_op_zeze__ : Fixity -> Fixity -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Fixity _ p1 dir1, Mk_Fixity _ p2 dir2 =>
+        andb (p1 GHC.Base.== p2) (dir1 GHC.Base.== dir2)
+    end.
+
+Local Definition Eq___Fixity_op_zsze__ : Fixity -> Fixity -> bool :=
+  fun x y => negb (Eq___Fixity_op_zeze__ x y).
+
+Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
+
+(* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__FixityDirection' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
@@ -1499,9 +1017,15 @@ Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__DerivStrategy' *)
 
-(* Skipping instance `BasicTypes.Ord__TyPrec' of class `GHC.Base.Ord' *)
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__OverlapFlag' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__OverlapMode' *)
 
 (* Skipping instance `BasicTypes.Eq___TyPrec' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `BasicTypes.Ord__TyPrec' of class `GHC.Base.Ord' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__TailCallInfo' *)
@@ -1519,36 +1043,6 @@ Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf :=
    `BasicTypes.Outputable__SourceText' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__OverlapMode' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__OverlapFlag' *)
-
-Local Definition Eq___Fixity_op_zeze__ : Fixity -> Fixity -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Fixity _ p1 dir1, Mk_Fixity _ p2 dir2 =>
-        andb (p1 GHC.Base.== p2) (dir1 GHC.Base.== dir2)
-    end.
-
-Local Definition Eq___Fixity_op_zsze__ : Fixity -> Fixity -> bool :=
-  fun x y => negb (Eq___Fixity_op_zeze__ x y).
-
-Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__Fixity' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__StringLiteral' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__WarningTxt' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__CompilerPhase' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
@@ -1563,8 +1057,18 @@ Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__InlinePragma' *)
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__IntegralLit' *)
+Local Definition Eq___IntegralLit_op_zeze__
+   : IntegralLit -> IntegralLit -> bool :=
+  Data.Function.on _GHC.Base.==_ il_value.
+
+Local Definition Eq___IntegralLit_op_zsze__
+   : IntegralLit -> IntegralLit -> bool :=
+  fun x y => negb (Eq___IntegralLit_op_zeze__ x y).
+
+Program Instance Eq___IntegralLit : GHC.Base.Eq_ IntegralLit :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IntegralLit_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IntegralLit_op_zsze__ |}.
 
 Local Definition Ord__IntegralLit_compare
    : IntegralLit -> IntegralLit -> comparison :=
@@ -1594,19 +1098,6 @@ Local Definition Ord__IntegralLit_min
    : IntegralLit -> IntegralLit -> IntegralLit :=
   fun x y => if Ord__IntegralLit_op_zlze__ x y : bool then x else y.
 
-Local Definition Eq___IntegralLit_op_zeze__
-   : IntegralLit -> IntegralLit -> bool :=
-  Data.Function.on _GHC.Base.==_ il_value.
-
-Local Definition Eq___IntegralLit_op_zsze__
-   : IntegralLit -> IntegralLit -> bool :=
-  fun x y => negb (Eq___IntegralLit_op_zeze__ x y).
-
-Program Instance Eq___IntegralLit : GHC.Base.Eq_ IntegralLit :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___IntegralLit_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___IntegralLit_op_zsze__ |}.
-
 Program Instance Ord__IntegralLit : GHC.Base.Ord IntegralLit :=
   fun _ k__ =>
     k__ {| GHC.Base.op_zl____ := Ord__IntegralLit_op_zl__ ;
@@ -1618,7 +1109,7 @@ Program Instance Ord__IntegralLit : GHC.Base.Ord IntegralLit :=
            GHC.Base.min__ := Ord__IntegralLit_min |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__FractionalLit' *)
+   `BasicTypes.Outputable__IntegralLit' *)
 
 Local Definition Eq___FractionalLit_op_zeze__
    : FractionalLit -> FractionalLit -> bool :=
@@ -1671,11 +1162,8 @@ Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit :=
            GHC.Base.max__ := Ord__FractionalLit_max ;
            GHC.Base.min__ := Ord__FractionalLit_min |}.
 
-(* Skipping all instances of class `GHC.Num.Num', including
-   `BasicTypes.Num__IntWithInf' *)
-
 (* Skipping all instances of class `Outputable.Outputable', including
-   `BasicTypes.Outputable__IntWithInf' *)
+   `BasicTypes.Outputable__FractionalLit' *)
 
 Local Definition Ord__IntWithInf_compare
    : IntWithInf -> IntWithInf -> comparison :=
@@ -1714,6 +1202,518 @@ Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf :=
            GHC.Base.compare__ := Ord__IntWithInf_compare ;
            GHC.Base.max__ := Ord__IntWithInf_max ;
            GHC.Base.min__ := Ord__IntWithInf_min |}.
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BasicTypes.Outputable__IntWithInf' *)
+
+(* Skipping all instances of class `GHC.Num.Num', including
+   `BasicTypes.Num__IntWithInf' *)
+
+Definition pickLR {a} : LeftOrRight -> (a * a)%type -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | CLeft, pair l _ => l
+    | CRight, pair _ r => r
+    end.
+
+Definition fIRST_TAG : ConTag :=
+  #1.
+
+Definition noOneShotInfo : OneShotInfo :=
+  NoOneShotInfo.
+
+Definition isOneShotInfo : OneShotInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | OneShotLam => true | _ => false end.
+
+Definition hasNoOneShotInfo : OneShotInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | NoOneShotInfo => true | _ => false end.
+
+Definition worstOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NoOneShotInfo, _ => NoOneShotInfo
+    | OneShotLam, os => os
+    end.
+
+Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NoOneShotInfo, os => os
+    | OneShotLam, _ => OneShotLam
+    end.
+
+(* Skipping definition `BasicTypes.pprOneShotInfo' *)
+
+Definition flipSwap : SwapFlag -> SwapFlag :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IsSwapped => NotSwapped
+    | NotSwapped => IsSwapped
+    end.
+
+Definition isSwapped : SwapFlag -> bool :=
+  fun arg_0__ => match arg_0__ with | IsSwapped => true | NotSwapped => false end.
+
+Definition unSwap {a} {b} : SwapFlag -> (a -> a -> b) -> a -> a -> b :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | NotSwapped, f, a, b => f a b
+    | IsSwapped, f, a, b => f b a
+    end.
+
+Definition bumpVersion : Version -> Version :=
+  fun v => v GHC.Num.+ #1.
+
+Definition initialVersion : Version :=
+  #1.
+
+Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | cons l nil => Panic.someSDoc
+    | ws =>
+        GHC.Base.mappend (GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "["))
+                                           Panic.someSDoc) (Datatypes.id (GHC.Base.hs_string__ "]"))
+    end.
+
+Definition pprWarningTxtForMsg : WarningTxt -> GHC.Base.String :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_WarningTxt _ ws => Panic.someSDoc
+    | DeprecatedTxt _ ds =>
+        GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "Deprecated:"))
+                         Panic.someSDoc
+    end.
+
+(* Skipping definition `BasicTypes.pprRuleName' *)
+
+Definition maxPrecedence : GHC.Num.Int :=
+  #9.
+
+Definition minPrecedence : GHC.Num.Int :=
+  #0.
+
+(* Skipping definition `BasicTypes.defaultFixity' *)
+
+Definition negateFixity : Fixity :=
+  Mk_Fixity NoSourceText #6 InfixL.
+
+Definition funTyFixity : Fixity :=
+  Mk_Fixity NoSourceText #0 InfixR.
+
+Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Fixity _ prec1 dir1, Mk_Fixity _ prec2 dir2 =>
+        let error_please := pair true false in
+        let left_ := pair false false in
+        let right_ := pair false true in
+        match GHC.Base.compare prec1 prec2 with
+        | Gt => left_
+        | Lt => right_
+        | Eq =>
+            match pair dir1 dir2 with
+            | pair InfixR InfixR => right_
+            | pair InfixL InfixL => left_
+            | _ => error_please
+            end
+        end
+    end.
+
+Definition isNotTopLevel : TopLevelFlag -> bool :=
+  fun arg_0__ => match arg_0__ with | NotTopLevel => true | TopLevel => false end.
+
+Definition isTopLevel : TopLevelFlag -> bool :=
+  fun arg_0__ => match arg_0__ with | TopLevel => true | NotTopLevel => false end.
+
+Definition isBoxed : Boxity -> bool :=
+  fun arg_0__ => match arg_0__ with | Boxed => true | Unboxed => false end.
+
+Definition isRec : RecFlag -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Recursive => true
+    | NonRecursive => false
+    end.
+
+Definition isNonRec : RecFlag -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Recursive => false
+    | NonRecursive => true
+    end.
+
+Definition boolToRecFlag : bool -> RecFlag :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | true => Recursive
+    | false => NonRecursive
+    end.
+
+Definition isGenerated : Origin -> bool :=
+  fun arg_0__ => match arg_0__ with | Generated => true | FromSource => false end.
+
+Definition setOverlapModeMaybe
+   : OverlapFlag -> option OverlapMode -> OverlapFlag :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, None => f
+    | f, Some m =>
+        let 'Mk_OverlapFlag overlapMode_2__ isSafeOverlap_3__ := f in
+        Mk_OverlapFlag m isSafeOverlap_3__
+    end.
+
+Definition hasIncoherentFlag : OverlapMode -> bool :=
+  fun mode => match mode with | Incoherent _ => true | _ => false end.
+
+Definition hasOverlappableFlag : OverlapMode -> bool :=
+  fun mode =>
+    match mode with
+    | Overlappable _ => true
+    | Overlaps _ => true
+    | Incoherent _ => true
+    | _ => false
+    end.
+
+Definition hasOverlappingFlag : OverlapMode -> bool :=
+  fun mode =>
+    match mode with
+    | Overlapping _ => true
+    | Overlaps _ => true
+    | Incoherent _ => true
+    | _ => false
+    end.
+
+(* Skipping definition `BasicTypes.pprSafeOverlap' *)
+
+(* Skipping definition `BasicTypes.maybeParen' *)
+
+Definition tupleSortBoxity : TupleSort -> Boxity :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | BoxedTuple => Boxed
+    | UnboxedTuple => Unboxed
+    | ConstraintTuple => Boxed
+    end.
+
+Definition boxityTupleSort : Boxity -> TupleSort :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Boxed => BoxedTuple
+    | Unboxed => UnboxedTuple
+    end.
+
+(* Skipping definition `BasicTypes.tupleParens' *)
+
+Definition sumParens : GHC.Base.String -> GHC.Base.String :=
+  fun p => GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc p) Panic.someSDoc.
+
+(* Skipping definition `BasicTypes.pprAlternative' *)
+
+Definition noOccInfo : OccInfo :=
+  ManyOccs NoTailCallInfo.
+
+Definition isManyOccs : OccInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | ManyOccs _ => true | _ => false end.
+
+Definition seqOccInfo : OccInfo -> unit :=
+  fun occ => GHC.Prim.seq occ tt.
+
+Definition insideLam : InsideLam :=
+  true.
+
+Definition notInsideLam : InsideLam :=
+  false.
+
+Definition oneBranch : OneBranch :=
+  true.
+
+Definition notOneBranch : OneBranch :=
+  false.
+
+Definition tailCallInfo : OccInfo -> TailCallInfo :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IAmDead => NoTailCallInfo
+    | other => occ_tail other
+    end.
+
+Definition zapOccTailCallInfo : OccInfo -> OccInfo :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IAmDead => IAmDead
+    | occ =>
+        match occ with
+        | ManyOccs occ_tail_1__ => ManyOccs NoTailCallInfo
+        | IAmDead => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+        | OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ occ_tail_5__ =>
+            OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ NoTailCallInfo
+        | IAmALoopBreaker occ_rules_only_6__ occ_tail_7__ =>
+            IAmALoopBreaker occ_rules_only_6__ NoTailCallInfo
+        end
+    end.
+
+Definition isAlwaysTailCalled : OccInfo -> bool :=
+  fun occ =>
+    match tailCallInfo occ with
+    | AlwaysTailCalled _ => true
+    | NoTailCallInfo => false
+    end.
+
+Definition strongLoopBreaker : OccInfo :=
+  IAmALoopBreaker false NoTailCallInfo.
+
+Definition weakLoopBreaker : OccInfo :=
+  IAmALoopBreaker true NoTailCallInfo.
+
+Definition isWeakLoopBreaker : OccInfo -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IAmALoopBreaker _ _ => true
+    | _ => false
+    end.
+
+Definition isStrongLoopBreaker : OccInfo -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IAmALoopBreaker false _ => true
+    | _ => false
+    end.
+
+Definition isDeadOcc : OccInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | IAmDead => true | _ => false end.
+
+Definition isOneOcc : OccInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | OneOcc _ _ _ _ => true | _ => false end.
+
+Definition zapFragileOcc : OccInfo -> OccInfo :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | OneOcc _ _ _ _ => noOccInfo
+    | occ => zapOccTailCallInfo occ
+    end.
+
+Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | AlwaysTailCalled ar => GHC.Base.mappend Panic.someSDoc Panic.someSDoc
+    | NoTailCallInfo => Panic.someSDoc
+    end.
+
+Definition successIf : bool -> SuccessFlag :=
+  fun arg_0__ => match arg_0__ with | true => Succeeded | false => Failed end.
+
+Definition succeeded : SuccessFlag -> bool :=
+  fun arg_0__ => match arg_0__ with | Succeeded => true | Failed => false end.
+
+Definition failed : SuccessFlag -> bool :=
+  fun arg_0__ => match arg_0__ with | Succeeded => false | Failed => true end.
+
+Definition pprWithSourceText
+   : SourceText -> GHC.Base.String -> GHC.Base.String :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NoSourceText, d => d
+    | Mk_SourceText src, _ => Datatypes.id src
+    end.
+
+Definition isConLike : RuleMatchInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | ConLike => true | _ => false end.
+
+Definition isFunLike : RuleMatchInfo -> bool :=
+  fun arg_0__ => match arg_0__ with | FunLike => true | _ => false end.
+
+Definition noUserInlineSpec : InlineSpec -> bool :=
+  fun arg_0__ => match arg_0__ with | NoUserInline => true | _ => false end.
+
+Definition defaultInlinePragma : InlinePragma :=
+  Mk_InlinePragma (Mk_SourceText (GHC.Base.hs_string__ "{-# INLINE")) NoUserInline
+                  None AlwaysActive FunLike.
+
+Definition alwaysInlinePragma : InlinePragma :=
+  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+     inl_rule_4__ := defaultInlinePragma in
+  Mk_InlinePragma inl_src_0__ Inline inl_sat_2__ inl_act_3__ inl_rule_4__.
+
+Definition neverInlinePragma : InlinePragma :=
+  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+     inl_rule_4__ := defaultInlinePragma in
+  Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ NeverActive inl_rule_4__.
+
+Definition inlinePragmaSpec : InlinePragma -> InlineSpec :=
+  inl_inline.
+
+Definition dfunInlinePragma : InlinePragma :=
+  let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+     inl_rule_4__ := defaultInlinePragma in
+  Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ AlwaysActive ConLike.
+
+Definition isAlwaysActive : Activation -> bool :=
+  fun arg_0__ => match arg_0__ with | AlwaysActive => true | _ => false end.
+
+Definition isDefaultInlinePragma : InlinePragma -> bool :=
+  fun '(Mk_InlinePragma _ inline _ activation match_info) =>
+    andb (noUserInlineSpec inline) (andb (isAlwaysActive activation) (isFunLike
+                                          match_info)).
+
+Definition isInlinePragma : InlinePragma -> bool :=
+  fun prag => match inl_inline prag with | Inline => true | _ => false end.
+
+Definition isInlinablePragma : InlinePragma -> bool :=
+  fun prag => match inl_inline prag with | Inlinable => true | _ => false end.
+
+Definition isAnyInlinePragma : InlinePragma -> bool :=
+  fun prag =>
+    match inl_inline prag with
+    | Inline => true
+    | Inlinable => true
+    | _ => false
+    end.
+
+Definition inlinePragmaSat : InlinePragma -> option Arity :=
+  inl_sat.
+
+Definition inlinePragmaActivation : InlinePragma -> Activation :=
+  fun '(Mk_InlinePragma _ _ _ activation _) => activation.
+
+Definition inlinePragmaRuleMatchInfo : InlinePragma -> RuleMatchInfo :=
+  fun '(Mk_InlinePragma _ _ _ _ info) => info.
+
+Definition setInlinePragmaActivation
+   : InlinePragma -> Activation -> InlinePragma :=
+  fun prag activation =>
+    let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+       inl_rule_4__ := prag in
+    Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ activation inl_rule_4__.
+
+Definition setInlinePragmaRuleMatchInfo
+   : InlinePragma -> RuleMatchInfo -> InlinePragma :=
+  fun prag info =>
+    let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+       inl_rule_4__ := prag in
+    Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__ info.
+
+Definition pprInline' : bool -> InlinePragma -> GHC.Base.String :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | emptyInline, Mk_InlinePragma _ inline mb_arity activation info =>
+        let pp_info :=
+          if isFunLike info : bool then Panic.someSDoc else
+          Panic.someSDoc in
+        let pp_sat :=
+          match mb_arity with
+          | Some ar =>
+              GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "sat-args="))
+                               Panic.someSDoc
+          | _ => Panic.someSDoc
+          end in
+        let pp_act :=
+          fun arg_4__ arg_5__ =>
+            match arg_4__, arg_5__ with
+            | Inline, AlwaysActive => Panic.someSDoc
+            | NoInline, NeverActive => Panic.someSDoc
+            | _, act => Panic.someSDoc
+            end in
+        let pp_inl :=
+          fun x => if emptyInline : bool then Panic.someSDoc else Panic.someSDoc in
+        GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (pp_inl inline) (pp_act
+                                                              inline activation)) pp_sat) pp_info
+    end.
+
+Definition pprInline : InlinePragma -> GHC.Base.String :=
+  pprInline' true.
+
+Definition pprInlineDebug : InlinePragma -> GHC.Base.String :=
+  pprInline' false.
+
+Definition isActiveIn : PhaseNum -> Activation -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, NeverActive => false
+    | _, AlwaysActive => true
+    | p, ActiveAfter _ n => p GHC.Base.<= n
+    | p, ActiveBefore _ n => p GHC.Base.> n
+    end.
+
+Definition isActive : CompilerPhase -> Activation -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InitialPhase, AlwaysActive => true
+    | InitialPhase, ActiveBefore _ _ => true
+    | InitialPhase, _ => false
+    | Phase p, act => isActiveIn p act
+    end.
+
+Definition competesWith : Activation -> Activation -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NeverActive, _ => false
+    | _, NeverActive => false
+    | AlwaysActive, _ => true
+    | ActiveBefore _ _, AlwaysActive => true
+    | ActiveBefore _ _, ActiveBefore _ _ => true
+    | ActiveBefore _ a, ActiveAfter _ b => a GHC.Base.< b
+    | ActiveAfter _ _, AlwaysActive => false
+    | ActiveAfter _ _, ActiveBefore _ _ => false
+    | ActiveAfter _ a, ActiveAfter _ b => a GHC.Base.>= b
+    end.
+
+Definition isNeverActive : Activation -> bool :=
+  fun arg_0__ => match arg_0__ with | NeverActive => true | _ => false end.
+
+Definition isEarlyActive : Activation -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | AlwaysActive => true
+    | ActiveBefore _ _ => true
+    | _ => false
+    end.
+
+(* Skipping definition `BasicTypes.mkIntegralLit' *)
+
+(* Skipping definition `BasicTypes.negateIntegralLit' *)
+
+(* Skipping definition `BasicTypes.mkFractionalLit' *)
+
+(* Skipping definition `BasicTypes.negateFractionalLit' *)
+
+(* Skipping definition `BasicTypes.integralFractionalLit' *)
+
+Definition infinity : IntWithInf :=
+  Infinity.
+
+Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Infinity => false
+    | n, Int m => n GHC.Base.> m
+    end.
+
+Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Infinity, _ => Infinity
+    | _, Infinity => Infinity
+    | Int a, Int b => Int (a GHC.Num.+ b)
+    end.
+
+Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Infinity, _ => Infinity
+    | _, Infinity => Infinity
+    | Int a, Int b => Int (a GHC.Num.* b)
+    end.
+
+Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
+  fun arg_0__ =>
+    let 'num_1__ := arg_0__ in
+    if num_1__ GHC.Base.== #0 : bool then Infinity else
+    let 'n := arg_0__ in
+    Int n.
+
+Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
+  Int.
 
 (* External variables:
      Eq Gt Lt None Some andb bool comparison cons false list nat negb op_zt__ option

@@ -236,123 +236,17 @@ Definition unCoreM {a} (arg_0__ : CoreM a) :=
 
 (* Converted value declarations: *)
 
-Axiom zeroSimplCount : DynFlags.DynFlags -> SimplCount.
-
-Axiom write : CoreWriter -> CoreM unit.
-
-Axiom warnMsg : GHC.Base.String -> CoreM unit.
-
-Axiom tickToTag : Tick -> nat.
-
-Axiom tickString : Tick -> GHC.Base.String.
-
-(* Skipping definition `CoreMonad.thNameToGhcName' *)
-
-Axiom simplCountN : SimplCount -> nat.
-
-Axiom runWhen : bool -> CoreToDo -> CoreToDo.
-
-Axiom runMaybe : forall {a}, option a -> (a -> CoreToDo) -> CoreToDo.
-
-(* Skipping definition `CoreMonad.runCoreM' *)
-
-Axiom reinitializeGlobals : CoreM unit.
-
-Axiom read : forall {a}, (CoreReader -> a) -> CoreM a.
-
-Axiom putMsgS : GHC.Base.String -> CoreM unit.
-
-Axiom putMsg : GHC.Base.String -> CoreM unit.
-
-Axiom pprTickGroup : list (Tick * nat)%type -> GHC.Base.String.
-
-Axiom pprTickCts : Tick -> GHC.Base.String.
-
-Axiom pprTickCounts : Data.Map.Internal.Map Tick nat -> GHC.Base.String.
-
-Axiom pprSimplCount : SimplCount -> GHC.Base.String.
-
-Axiom pprPassDetails : CoreToDo -> GHC.Base.String.
-
-Axiom pprFloatOutSwitches : FloatOutSwitches -> GHC.Base.String.
-
-Axiom plusWriter : CoreWriter -> CoreWriter -> CoreWriter.
-
-Axiom plusSimplCount : SimplCount -> SimplCount -> SimplCount.
-
-Axiom nop : forall {a},
-            CoreState -> a -> CoreIOEnv (a * CoreState * CoreWriter)%type.
-
-(* Skipping definition `CoreMonad.msg' *)
-
-Axiom modifyS : (CoreState -> CoreState) -> CoreM unit.
-
-(* Skipping definition `CoreMonad.liftIOWithCount' *)
-
-Axiom liftIOEnv : forall {a}, CoreIOEnv a -> CoreM a.
-
-Axiom isZeroSimplCount : SimplCount -> bool.
-
-Axiom hasDetailedCounts : SimplCount -> bool.
-
-Axiom getVisibleOrphanMods : CoreM Module.ModuleSet.
-
-Axiom getVerboseSimplStats : (bool -> GHC.Base.String) -> GHC.Base.String.
-
-Axiom getSrcSpanM : CoreM SrcLoc.SrcSpan.
-
-Axiom getS : forall {a}, (CoreState -> a) -> CoreM a.
-
-Axiom getRuleBase : CoreM Core.RuleBase.
-
-(* Skipping definition `CoreMonad.getPrintUnqualified' *)
-
-(* Skipping definition `CoreMonad.getPackageFamInstEnv' *)
-
-(* Skipping definition `CoreMonad.getOrigNameCache' *)
-
-(* Skipping definition `CoreMonad.getHscEnv' *)
-
-(* Skipping definition `CoreMonad.getFirstAnnotations' *)
-
-(* Skipping definition `CoreMonad.getAnnotations' *)
-
-Axiom fatalErrorMsgS : GHC.Base.String -> CoreM unit.
-
-Axiom fatalErrorMsg : GHC.Base.String -> CoreM unit.
-
-Axiom errorMsgS : GHC.Base.String -> CoreM unit.
-
-Axiom errorMsg : GHC.Base.String -> CoreM unit.
-
-Axiom emptyWriter : DynFlags.DynFlags -> CoreWriter.
-
-Axiom dumpIfSet_dyn : DynFlags.DumpFlag ->
-                      GHC.Base.String -> GHC.Base.String -> CoreM unit.
-
-Axiom doSimplTick : DynFlags.DynFlags -> Tick -> SimplCount -> SimplCount.
-
-Axiom doFreeSimplTick : Tick -> SimplCount -> SimplCount.
-
-Axiom debugTraceMsgS : GHC.Base.String -> CoreM unit.
-
-Axiom debugTraceMsg : GHC.Base.String -> CoreM unit.
-
-Axiom cmpTick : Tick -> Tick -> comparison.
-
-Axiom cmpEqTick : Tick -> Tick -> comparison.
-
-(* Skipping definition `CoreMonad.bindsOnlyPass' *)
-
-Axiom addTick : TickCounts -> Tick -> TickCounts.
-
-Axiom addSimplCount : SimplCount -> CoreM unit.
+(* Skipping all instances of class `Outputable.Outputable', including
+   `CoreMonad.Outputable__CoreToDo' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `CoreMonad.Outputable__SimplMode' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `CoreMonad.Outputable__FloatOutSwitches' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `CoreMonad.Outputable__Tick' *)
 
 Instance Eq___Tick : GHC.Base.Eq_ Tick.
 Proof.
@@ -361,23 +255,6 @@ Admitted.
 Instance Ord__Tick : GHC.Base.Ord Tick.
 Proof.
 Admitted.
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `CoreMonad.Outputable__Tick' *)
-
-(* Skipping all instances of class `HscTypes.MonadThings', including
-   `CoreMonad.MonadThings__CoreM' *)
-
-Instance HasModule__CoreM : Module.HasModule CoreM.
-Proof.
-Admitted.
-
-Instance HasDynFlags__CoreM : DynFlags.HasDynFlags CoreM.
-Proof.
-Admitted.
-
-(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
-   `CoreMonad.MonadIO__CoreM' *)
 
 Instance Functor__CoreM : GHC.Base.Functor CoreM.
 Proof.
@@ -391,18 +268,141 @@ Instance Monad__CoreM : GHC.Base.Monad CoreM.
 Proof.
 Admitted.
 
-Instance MonadUnique__CoreM : UniqSupply.MonadUnique CoreM.
-Proof.
-Admitted.
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `CoreMonad.Alternative__CoreM' *)
 
 (* Skipping all instances of class `GHC.Base.MonadPlus', including
    `CoreMonad.MonadPlus__CoreM' *)
 
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `CoreMonad.Alternative__CoreM' *)
+Instance MonadUnique__CoreM : UniqSupply.MonadUnique CoreM.
+Proof.
+Admitted.
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `CoreMonad.Outputable__CoreToDo' *)
+(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
+   `CoreMonad.MonadIO__CoreM' *)
+
+Instance HasDynFlags__CoreM : DynFlags.HasDynFlags CoreM.
+Proof.
+Admitted.
+
+Instance HasModule__CoreM : Module.HasModule CoreM.
+Proof.
+Admitted.
+
+(* Skipping all instances of class `HscTypes.MonadThings', including
+   `CoreMonad.MonadThings__CoreM' *)
+
+Axiom pprPassDetails : CoreToDo -> GHC.Base.String.
+
+Axiom pprFloatOutSwitches : FloatOutSwitches -> GHC.Base.String.
+
+Axiom runWhen : bool -> CoreToDo -> CoreToDo.
+
+Axiom runMaybe : forall {a}, option a -> (a -> CoreToDo) -> CoreToDo.
+
+(* Skipping definition `CoreMonad.bindsOnlyPass' *)
+
+Axiom getVerboseSimplStats : (bool -> GHC.Base.String) -> GHC.Base.String.
+
+Axiom simplCountN : SimplCount -> nat.
+
+Axiom zeroSimplCount : DynFlags.DynFlags -> SimplCount.
+
+Axiom isZeroSimplCount : SimplCount -> bool.
+
+Axiom hasDetailedCounts : SimplCount -> bool.
+
+Axiom doFreeSimplTick : Tick -> SimplCount -> SimplCount.
+
+Axiom doSimplTick : DynFlags.DynFlags -> Tick -> SimplCount -> SimplCount.
+
+Axiom addTick : TickCounts -> Tick -> TickCounts.
+
+Axiom plusSimplCount : SimplCount -> SimplCount -> SimplCount.
+
+Axiom pprSimplCount : SimplCount -> GHC.Base.String.
+
+Axiom pprTickCounts : Data.Map.Internal.Map Tick nat -> GHC.Base.String.
+
+Axiom pprTickGroup : list (Tick * nat)%type -> GHC.Base.String.
+
+Axiom tickToTag : Tick -> nat.
+
+Axiom tickString : Tick -> GHC.Base.String.
+
+Axiom pprTickCts : Tick -> GHC.Base.String.
+
+Axiom cmpTick : Tick -> Tick -> comparison.
+
+Axiom cmpEqTick : Tick -> Tick -> comparison.
+
+Axiom emptyWriter : DynFlags.DynFlags -> CoreWriter.
+
+Axiom plusWriter : CoreWriter -> CoreWriter -> CoreWriter.
+
+(* Skipping definition `CoreMonad.runCoreM' *)
+
+Axiom nop : forall {a},
+            CoreState -> a -> CoreIOEnv (a * CoreState * CoreWriter)%type.
+
+Axiom read : forall {a}, (CoreReader -> a) -> CoreM a.
+
+Axiom getS : forall {a}, (CoreState -> a) -> CoreM a.
+
+Axiom modifyS : (CoreState -> CoreState) -> CoreM unit.
+
+Axiom write : CoreWriter -> CoreM unit.
+
+Axiom liftIOEnv : forall {a}, CoreIOEnv a -> CoreM a.
+
+(* Skipping definition `CoreMonad.liftIOWithCount' *)
+
+(* Skipping definition `CoreMonad.getHscEnv' *)
+
+Axiom getRuleBase : CoreM Core.RuleBase.
+
+Axiom getVisibleOrphanMods : CoreM Module.ModuleSet.
+
+(* Skipping definition `CoreMonad.getPrintUnqualified' *)
+
+Axiom getSrcSpanM : CoreM SrcLoc.SrcSpan.
+
+Axiom addSimplCount : SimplCount -> CoreM unit.
+
+(* Skipping definition `CoreMonad.getOrigNameCache' *)
+
+(* Skipping definition `CoreMonad.getPackageFamInstEnv' *)
+
+Axiom reinitializeGlobals : CoreM unit.
+
+(* Skipping definition `CoreMonad.getAnnotations' *)
+
+(* Skipping definition `CoreMonad.getFirstAnnotations' *)
+
+(* Skipping definition `CoreMonad.msg' *)
+
+Axiom putMsgS : GHC.Base.String -> CoreM unit.
+
+Axiom putMsg : GHC.Base.String -> CoreM unit.
+
+Axiom errorMsgS : GHC.Base.String -> CoreM unit.
+
+Axiom errorMsg : GHC.Base.String -> CoreM unit.
+
+Axiom warnMsg : GHC.Base.String -> CoreM unit.
+
+Axiom fatalErrorMsgS : GHC.Base.String -> CoreM unit.
+
+Axiom fatalErrorMsg : GHC.Base.String -> CoreM unit.
+
+Axiom debugTraceMsgS : GHC.Base.String -> CoreM unit.
+
+Axiom debugTraceMsg : GHC.Base.String -> CoreM unit.
+
+Axiom dumpIfSet_dyn : DynFlags.DumpFlag ->
+                      GHC.Base.String -> GHC.Base.String -> CoreM unit.
+
+(* Skipping definition `CoreMonad.thNameToGhcName' *)
 
 (* External variables:
      Type bool comparison list nat op_zt__ option unit BasicTypes.CompilerPhase

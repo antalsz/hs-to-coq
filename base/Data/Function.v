@@ -16,17 +16,17 @@ Require Coq.Program.Wf.
 
 (* Converted value declarations: *)
 
+(* Skipping definition `Data.Function.fix_' *)
+
+Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
+  fun lop_ziztzi__ f => fun x y => lop_ziztzi__ (f x) (f y).
+
 Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun x f => f x.
 
 Notation "'_&_'" := (op_za__).
 
 Infix "&" := (_&_) (at level 99).
-
-Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
-  fun lop_ziztzi__ f => fun x y => lop_ziztzi__ (f x) (f y).
-
-(* Skipping definition `Data.Function.fix_' *)
 
 Module Notations.
 Notation "'_Data.Function.&_'" := (op_za__).

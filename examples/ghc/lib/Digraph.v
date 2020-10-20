@@ -53,97 +53,97 @@ Definition node_payload {key} {payload} (arg_0__ : Node key payload) :=
 
 (* Converted value declarations: *)
 
-Axiom verticesG : forall {node}, Graph node -> list node.
-
-(* Skipping definition `Digraph.vertexReady' *)
-
-(* Skipping definition `Digraph.vertexGroupsS' *)
-
-(* Skipping definition `Digraph.vertexGroupsG' *)
-
-(* Skipping definition `Digraph.vertexGroups' *)
-
-Axiom transposeG : forall {node}, Graph node -> Graph node.
-
-Axiom topologicalSortG : forall {node}, Graph node -> list node.
-
-(* Skipping definition `Digraph.stronglyConnCompG' *)
-
-(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniqR' *)
-
-(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniq' *)
-
-(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrdR' *)
-
-(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrd' *)
-
-Axiom reduceNodesIntoVerticesUniq : forall {key} {payload},
-                                    forall `{Unique.Uniquable key}, ReduceFn key payload.
-
-Axiom reduceNodesIntoVerticesOrd : forall {key} {payload},
-                                   forall `{GHC.Base.Ord key}, ReduceFn key payload.
-
-(* Skipping definition `Digraph.reduceNodesIntoVertices' *)
-
-Axiom reachablesG : forall {node}, Graph node -> list node -> list node.
-
-Axiom reachableG : forall {node}, Graph node -> node -> list node.
-
-(* Skipping definition `Digraph.reachable' *)
-
-(* Skipping definition `Digraph.preorderF' *)
-
-Axiom outdegreeG : forall {node}, Graph node -> node -> option nat.
-
-(* Skipping definition `Digraph.noOutEdges' *)
-
-(* Skipping definition `Digraph.mkEmpty' *)
-
-Axiom indegreeG : forall {node}, Graph node -> node -> option nat.
-
-(* Skipping definition `Digraph.include' *)
-
-Axiom hasVertexG : forall {node}, Graph node -> node -> bool.
-
-Axiom graphFromEdgedVerticesUniq : forall {key} {payload},
-                                   forall `{Unique.Uniquable key},
-                                   list (Node key payload) -> Graph (Node key payload).
-
-Axiom graphFromEdgedVerticesOrd : forall {key} {payload},
-                                  forall `{GHC.Base.Ord key}, list (Node key payload) -> Graph (Node key payload).
-
-Axiom graphFromEdgedVertices : forall {key} {payload},
-                               ReduceFn key payload -> list (Node key payload) -> Graph (Node key payload).
-
-(* Skipping definition `Digraph.graphEmpty' *)
-
-Axiom findCycle : forall {payload} {key},
-                  forall `{GHC.Base.Ord key}, list (Node key payload) -> option (list payload).
-
-Axiom emptyGraph : forall {a}, Graph a.
-
-Axiom emptyG : forall {node}, Graph node -> bool.
-
-Axiom edgesG : forall {node}, Graph node -> list (Edge node).
-
-Axiom dfsTopSortG : forall {node}, Graph node -> list (list node).
-
-(* Skipping definition `Digraph.degreeG' *)
-
-(* Skipping definition `Digraph.decodeSccs' *)
-
-(* Skipping definition `Digraph.contains' *)
-
-Axiom componentsG : forall {node}, Graph node -> list (list node).
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Digraph.Outputable__Edge' *)
-
 (* Skipping all instances of class `Outputable.Outputable', including
    `Digraph.Outputable__Node' *)
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Digraph.Outputable__Graph' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Digraph.Outputable__Edge' *)
+
+Axiom emptyGraph : forall {a}, Graph a.
+
+Axiom graphFromEdgedVertices : forall {key} {payload},
+                               ReduceFn key payload -> list (Node key payload) -> Graph (Node key payload).
+
+Axiom graphFromEdgedVerticesOrd : forall {key} {payload},
+                                  forall `{GHC.Base.Ord key}, list (Node key payload) -> Graph (Node key payload).
+
+Axiom graphFromEdgedVerticesUniq : forall {key} {payload},
+                                   forall `{Unique.Uniquable key},
+                                   list (Node key payload) -> Graph (Node key payload).
+
+(* Skipping definition `Digraph.reduceNodesIntoVertices' *)
+
+Axiom reduceNodesIntoVerticesOrd : forall {key} {payload},
+                                   forall `{GHC.Base.Ord key}, ReduceFn key payload.
+
+Axiom reduceNodesIntoVerticesUniq : forall {key} {payload},
+                                    forall `{Unique.Uniquable key}, ReduceFn key payload.
+
+Axiom findCycle : forall {payload} {key},
+                  forall `{GHC.Base.Ord key}, list (Node key payload) -> option (list payload).
+
+(* Skipping definition `Digraph.stronglyConnCompG' *)
+
+(* Skipping definition `Digraph.decodeSccs' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrd' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniq' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesOrdR' *)
+
+(* Skipping definition `Digraph.stronglyConnCompFromEdgedVerticesUniqR' *)
+
+Axiom topologicalSortG : forall {node}, Graph node -> list node.
+
+Axiom dfsTopSortG : forall {node}, Graph node -> list (list node).
+
+Axiom reachableG : forall {node}, Graph node -> node -> list node.
+
+Axiom reachablesG : forall {node}, Graph node -> list node -> list node.
+
+Axiom hasVertexG : forall {node}, Graph node -> node -> bool.
+
+Axiom verticesG : forall {node}, Graph node -> list node.
+
+Axiom edgesG : forall {node}, Graph node -> list (Edge node).
+
+Axiom transposeG : forall {node}, Graph node -> Graph node.
+
+Axiom outdegreeG : forall {node}, Graph node -> node -> option nat.
+
+Axiom indegreeG : forall {node}, Graph node -> node -> option nat.
+
+(* Skipping definition `Digraph.degreeG' *)
+
+(* Skipping definition `Digraph.vertexGroupsG' *)
+
+Axiom emptyG : forall {node}, Graph node -> bool.
+
+Axiom componentsG : forall {node}, Graph node -> list (list node).
+
+(* Skipping definition `Digraph.graphEmpty' *)
+
+(* Skipping definition `Digraph.preorderF' *)
+
+(* Skipping definition `Digraph.reachable' *)
+
+(* Skipping definition `Digraph.mkEmpty' *)
+
+(* Skipping definition `Digraph.contains' *)
+
+(* Skipping definition `Digraph.include' *)
+
+(* Skipping definition `Digraph.vertexGroups' *)
+
+(* Skipping definition `Digraph.noOutEdges' *)
+
+(* Skipping definition `Digraph.vertexGroupsS' *)
+
+(* Skipping definition `Digraph.vertexReady' *)
 
 (* External variables:
      Type bool list nat op_zt__ option GHC.Base.Ord Unique.Uniquable

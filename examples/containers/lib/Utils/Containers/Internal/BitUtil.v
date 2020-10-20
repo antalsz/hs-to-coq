@@ -34,12 +34,12 @@ Definition bitcount : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> Coq.Numb
 
 (* No value declarations to convert. *)
 
-(* Skipping definition `Utils.Containers.Internal.BitUtil.wordSize' *)
+(* Skipping definition `Utils.Containers.Internal.BitUtil.bitcount' *)
+
+(* Skipping definition `Utils.Containers.Internal.BitUtil.highestBitMask' *)
 
 (* Skipping definition `Utils.Containers.Internal.BitUtil.shiftRL' *)
 
 (* Skipping definition `Utils.Containers.Internal.BitUtil.shiftLL' *)
 
-(* Skipping definition `Utils.Containers.Internal.BitUtil.highestBitMask' *)
-
-(* Skipping definition `Utils.Containers.Internal.BitUtil.bitcount' *)
+(* Skipping definition `Utils.Containers.Internal.BitUtil.wordSize' *)

@@ -19,73 +19,57 @@ Require GHC.Base.
 
 (* Converted value declarations: *)
 
-Axiom zipWithAndUnzipM : forall {m} {a} {b} {c} {d},
-                         forall `{GHC.Base.Monad m},
-                         (a -> b -> m (c * d)%type) -> list a -> list b -> m (list c * list d)%type.
+(* Skipping definition `MonadUtils.liftIO1' *)
 
-Axiom zipWith4M : forall {m} {a} {b} {c} {d} {e},
-                  forall `{GHC.Base.Monad m},
-                  (a -> b -> c -> d -> m e) -> list a -> list b -> list c -> list d -> m (list e).
+(* Skipping definition `MonadUtils.liftIO2' *)
 
-Axiom zipWith3M_ : forall {m} {a} {b} {c} {d},
-                   forall `{GHC.Base.Monad m},
-                   (a -> b -> c -> m d) -> list a -> list b -> list c -> m unit.
+(* Skipping definition `MonadUtils.liftIO3' *)
+
+(* Skipping definition `MonadUtils.liftIO4' *)
 
 Axiom zipWith3M : forall {m} {a} {b} {c} {d},
                   forall `{GHC.Base.Monad m},
                   (a -> b -> c -> m d) -> list a -> list b -> list c -> m (list d).
 
-Axiom whenM : forall {m},
-              forall `{GHC.Base.Monad m}, m bool -> m unit -> m unit.
+Axiom zipWith3M_ : forall {m} {a} {b} {c} {d},
+                   forall `{GHC.Base.Monad m},
+                   (a -> b -> c -> m d) -> list a -> list b -> list c -> m unit.
 
-(* Skipping definition `MonadUtils.unlessM' *)
+Axiom zipWith4M : forall {m} {a} {b} {c} {d} {e},
+                  forall `{GHC.Base.Monad m},
+                  (a -> b -> c -> d -> m e) -> list a -> list b -> list c -> list d -> m (list e).
 
-Axiom orM : forall {m}, forall `{GHC.Base.Monad m}, m bool -> m bool -> m bool.
+Axiom zipWithAndUnzipM : forall {m} {a} {b} {c} {d},
+                         forall `{GHC.Base.Monad m},
+                         (a -> b -> m (c * d)%type) -> list a -> list b -> m (list c * list d)%type.
 
-Axiom maybeMapM : forall {m} {a} {b},
-                  forall `{GHC.Base.Monad m}, (a -> m b) -> (option a -> m (option b)).
-
-Axiom mapSndM : forall {m} {b} {c} {a},
-                forall `{GHC.Base.Monad m},
-                (b -> m c) -> list (a * b)%type -> m (list (a * c)%type).
-
-Axiom mapMaybeM : forall {m} {a} {b},
-                  forall `{(GHC.Base.Monad m)}, (a -> m (option b)) -> list a -> m (list b).
-
-Axiom mapAndUnzip5M : forall {m} {a} {b} {c} {d} {e} {f},
+Axiom mapAndUnzip3M : forall {m} {a} {b} {c} {d},
                       forall `{GHC.Base.Monad m},
-                      (a -> m (b * c * d * e * f)%type) ->
-                      list a -> m (list b * list c * list d * list e * list f)%type.
+                      (a -> m (b * c * d)%type) -> list a -> m (list b * list c * list d)%type.
 
 Axiom mapAndUnzip4M : forall {m} {a} {b} {c} {d} {e},
                       forall `{GHC.Base.Monad m},
                       (a -> m (b * c * d * e)%type) ->
                       list a -> m (list b * list c * list d * list e)%type.
 
-Axiom mapAndUnzip3M : forall {m} {a} {b} {c} {d},
+Axiom mapAndUnzip5M : forall {m} {a} {b} {c} {d} {e} {f},
                       forall `{GHC.Base.Monad m},
-                      (a -> m (b * c * d)%type) -> list a -> m (list b * list c * list d)%type.
+                      (a -> m (b * c * d * e * f)%type) ->
+                      list a -> m (list b * list c * list d * list e * list f)%type.
 
 Axiom mapAccumLM : forall {m} {acc} {x} {y},
                    forall `{GHC.Base.Monad m},
                    (acc -> x -> m (acc * y)%type) -> acc -> list x -> m (acc * list y)%type.
 
-(* Skipping definition `MonadUtils.liftIO4' *)
+Axiom mapSndM : forall {m} {b} {c} {a},
+                forall `{GHC.Base.Monad m},
+                (b -> m c) -> list (a * b)%type -> m (list (a * c)%type).
 
-(* Skipping definition `MonadUtils.liftIO3' *)
+Axiom concatMapM : forall {m} {a} {b},
+                   forall `{GHC.Base.Monad m}, (a -> m (list b)) -> list a -> m (list b).
 
-(* Skipping definition `MonadUtils.liftIO2' *)
-
-(* Skipping definition `MonadUtils.liftIO1' *)
-
-Axiom foldrM : forall {m} {b} {a},
-               forall `{(GHC.Base.Monad m)}, (b -> a -> m a) -> a -> list b -> m a.
-
-Axiom foldlM_ : forall {m} {a} {b},
-                forall `{(GHC.Base.Monad m)}, (a -> b -> m a) -> a -> list b -> m unit.
-
-Axiom foldlM : forall {m} {a} {b},
-               forall `{(GHC.Base.Monad m)}, (a -> b -> m a) -> a -> list b -> m a.
+Axiom mapMaybeM : forall {m} {a} {b},
+                  forall `{(GHC.Base.Monad m)}, (a -> m (option b)) -> list a -> m (list b).
 
 Axiom fmapMaybeM : forall {m} {a} {b},
                    forall `{(GHC.Base.Monad m)}, (a -> m b) -> option a -> m (option b).
@@ -95,14 +79,30 @@ Axiom fmapEitherM : forall {m} {a} {b} {c} {d},
                     (a -> m b) ->
                     (c -> m d) -> Data.Either.Either a c -> m (Data.Either.Either b d).
 
-Axiom concatMapM : forall {m} {a} {b},
-                   forall `{GHC.Base.Monad m}, (a -> m (list b)) -> list a -> m (list b).
-
 Axiom anyM : forall {m} {a},
              forall `{GHC.Base.Monad m}, (a -> m bool) -> list a -> m bool.
 
 Axiom allM : forall {m} {a},
              forall `{GHC.Base.Monad m}, (a -> m bool) -> list a -> m bool.
+
+Axiom orM : forall {m}, forall `{GHC.Base.Monad m}, m bool -> m bool -> m bool.
+
+Axiom foldlM : forall {m} {a} {b},
+               forall `{(GHC.Base.Monad m)}, (a -> b -> m a) -> a -> list b -> m a.
+
+Axiom foldlM_ : forall {m} {a} {b},
+                forall `{(GHC.Base.Monad m)}, (a -> b -> m a) -> a -> list b -> m unit.
+
+Axiom foldrM : forall {m} {b} {a},
+               forall `{(GHC.Base.Monad m)}, (b -> a -> m a) -> a -> list b -> m a.
+
+Axiom maybeMapM : forall {m} {a} {b},
+                  forall `{GHC.Base.Monad m}, (a -> m b) -> (option a -> m (option b)).
+
+Axiom whenM : forall {m},
+              forall `{GHC.Base.Monad m}, m bool -> m unit -> m unit.
+
+(* Skipping definition `MonadUtils.unlessM' *)
 
 (* External variables:
      bool list op_zt__ option unit Data.Either.Either GHC.Base.Monad

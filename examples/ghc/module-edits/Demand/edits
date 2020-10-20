@@ -99,13 +99,8 @@ redefine Definition Core.seqStrictSig : StrictSig -> unit := fun x => tt.
 # order edits
 #
 
-order Core.Eq___JointDmd_op_zeze__ Core.Eq___JointDmd_op_zsze__ Core.Eq___JointDmd Core.Eq___DmdType_op_zeze__ Core.Eq___StrictSig_op_zeze__ Core.Eq___StrictSig_op_zsze__
-order Core.Eq___DmdType Core.Eq___StrictSig_op_zeze__
+order Core.Eq___Termination Core.Eq___CPRResult Core.Eq___DmdType_op_zeze__
+order Core.Eq___Count Core.Eq___Use_op_zeze__ Core.Eq___Use Core.Eq___UseDmd_op_zeze__ Core.Eq___UseDmd Core.Eq___DmdType_op_zeze__
+order Core.Eq___ExnStr Core.Eq___Str_op_zeze__ Core.Eq___Str Core.Eq___StrDmd_op_zeze__ Core.Eq___StrDmd Core.Eq___JointDmd Core.Eq___DmdType_op_zeze__ Core.Eq___DmdType Core.Eq___StrictSig_op_zeze__
 
-order Core.Eq___Count Core.Eq___Use_op_zeze__ Core.Eq___Use Core.Eq___UseDmd_op_zeze__ Core.Eq___UseDmd Core.mkUProd
-
-order Core.resTypeArgDmd Core.topRes Core.dmdTypeDepth Core.ensureArgs
-order Core.useTop Core.splitUseProdDmd
-
-order Core.Eq___ExnStr Core.Eq___Str_op_zeze__
-order Core.Eq___Str Core.Eq___StrDmd_op_zeze__
+order Core.Eq___TyCon Core.Ord__AltCon_compare

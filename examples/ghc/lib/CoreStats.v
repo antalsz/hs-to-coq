@@ -53,13 +53,8 @@ Definition cs_vb (arg_0__ : CoreStats) :=
 
 (* Converted value declarations: *)
 
-Definition zeroCS : CoreStats :=
-  CS 0 0 0 0 0.
-
-Axiom tyStats : AxiomatizedTypes.Type_ -> CoreStats.
-
-Definition tickSize : Tickish Id -> nat :=
-  fun arg_0__ => match arg_0__ with | ProfNote _ _ _ => 1 | _ => 1 end.
+(* Skipping all instances of class `Outputable.Outputable', including
+   `CoreStats.Outputable__CoreStats' *)
 
 Definition plusCS : CoreStats -> CoreStats -> CoreStats :=
   fun arg_0__ arg_1__ =>
@@ -68,17 +63,25 @@ Definition plusCS : CoreStats -> CoreStats -> CoreStats :=
         CS (p1 + p2) (q1 + q2) (r1 + r2) (v1 + v2) (j1 + j2)
     end.
 
-Definition sumCS {a} : (a -> CoreStats) -> list a -> CoreStats :=
-  fun f => foldl' (fun s a => plusCS s (f a)) zeroCS.
+Definition zeroCS : CoreStats :=
+  CS 0 0 0 0 0.
 
 Definition oneTM : CoreStats :=
   let 'CS cs_tm_0__ cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__ := zeroCS in
   CS 1 cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__.
 
-Axiom coStats : AxiomatizedTypes.Coercion -> CoreStats.
+Definition sumCS {a} : (a -> CoreStats) -> list a -> CoreStats :=
+  fun f => foldl' (fun s a => plusCS s (f a)) zeroCS.
+
+Axiom tyStats : AxiomatizedTypes.Type_ -> CoreStats.
+
+Definition altBndrStats : list Var -> CoreStats :=
+  fun vs => plusCS oneTM (sumCS (tyStats ∘ varType) vs).
 
 Definition bndrStats : Var -> CoreStats :=
   fun v => plusCS oneTM (tyStats (varType v)).
+
+Axiom coStats : AxiomatizedTypes.Coercion -> CoreStats.
 
 Definition letBndrStats : BasicTypes.TopLevelFlag -> Var -> CoreStats :=
   fun top_lvl v =>
@@ -90,72 +93,6 @@ Definition letBndrStats : BasicTypes.TopLevelFlag -> Var -> CoreStats :=
                  CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ 1) ty_stats else
     plusCS (let 'CS cs_tm_8__ cs_ty_9__ cs_co_10__ cs_vb_11__ cs_jb_12__ := oneTM in
             CS cs_tm_8__ cs_ty_9__ cs_co_10__ 1 cs_jb_12__) ty_stats.
-
-Definition bndrSize : Var -> nat :=
-  fun arg_0__ => 1.
-
-Definition bndrsSize : list Var -> nat :=
-  sum ∘ map bndrSize.
-
-Definition exprSize : CoreExpr -> nat :=
-  fix exprSize (arg_0__ : CoreExpr) : nat
-        := let altSize (arg_0__ : CoreAlt) : nat :=
-             let 'pair (pair _ bs) e := arg_0__ in
-             bndrsSize bs + exprSize e in
-           match arg_0__ with
-           | Mk_Var _ => 1
-           | Lit _ => 1
-           | App f a => exprSize f + exprSize a
-           | Lam b e => bndrSize b + exprSize e
-           | Let b e => bindSize b + exprSize e
-           | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
-           | Cast e _ => 1 + exprSize e
-           | Mk_Type _ => 1
-           | Mk_Coercion _ => 1
-           end with bindSize (arg_0__ : CoreBind) : nat
-                      := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
-                           let 'pair b e := arg_0__ in
-                           bndrSize b + exprSize e in
-                         match arg_0__ with
-                         | NonRec b e => bndrSize b + exprSize e
-                         | Rec prs => sum (map pairSize prs)
-                         end for exprSize.
-
-Definition pairSize : (Var * CoreExpr)%type -> nat :=
-  fun '(pair b e) => bndrSize b + exprSize e.
-
-Definition bindSize : CoreBind -> nat :=
-  fix exprSize (arg_0__ : CoreExpr) : nat
-        := let altSize (arg_0__ : CoreAlt) : nat :=
-             let 'pair (pair _ bs) e := arg_0__ in
-             bndrsSize bs + exprSize e in
-           match arg_0__ with
-           | Mk_Var _ => 1
-           | Lit _ => 1
-           | App f a => exprSize f + exprSize a
-           | Lam b e => bndrSize b + exprSize e
-           | Let b e => bindSize b + exprSize e
-           | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
-           | Cast e _ => 1 + exprSize e
-           | Mk_Type _ => 1
-           | Mk_Coercion _ => 1
-           end with bindSize (arg_0__ : CoreBind) : nat
-                      := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
-                           let 'pair b e := arg_0__ in
-                           bndrSize b + exprSize e in
-                         match arg_0__ with
-                         | NonRec b e => bndrSize b + exprSize e
-                         | Rec prs => sum (map pairSize prs)
-                         end for bindSize.
-
-Definition coreBindsSize : list CoreBind -> nat :=
-  fun bs => sum (map bindSize bs).
-
-Definition altSize : CoreAlt -> nat :=
-  fun '(pair (pair _ bs) e) => bndrsSize bs + exprSize e.
-
-Definition altBndrStats : list Var -> CoreStats :=
-  fun vs => plusCS oneTM (sumCS (tyStats ∘ varType) vs).
 
 Definition bindStats : BasicTypes.TopLevelFlag -> CoreBind -> CoreStats :=
   fix exprStats (arg_0__ : CoreExpr) : CoreStats
@@ -212,15 +149,78 @@ Definition exprStats : CoreExpr -> CoreStats :=
                          | top_lvl, Rec prs => sumCS (fun '(pair v r) => bindingStats top_lvl v r) prs
                          end for exprStats.
 
-Definition altStats : CoreAlt -> CoreStats :=
-  fun '(pair (pair _ bs) r) => plusCS (altBndrStats bs) (exprStats r).
-
 Definition bindingStats
    : BasicTypes.TopLevelFlag -> Var -> CoreExpr -> CoreStats :=
   fun top_lvl v r => plusCS (letBndrStats top_lvl v) (exprStats r).
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `CoreStats.Outputable__CoreStats' *)
+Definition altStats : CoreAlt -> CoreStats :=
+  fun '(pair (pair _ bs) r) => plusCS (altBndrStats bs) (exprStats r).
+
+Definition bndrSize : Var -> nat :=
+  fun arg_0__ => 1.
+
+Definition bndrsSize : list Var -> nat :=
+  sum ∘ map bndrSize.
+
+Definition bindSize : CoreBind -> nat :=
+  fix exprSize (arg_0__ : CoreExpr) : nat
+        := let altSize (arg_0__ : CoreAlt) : nat :=
+             let 'pair (pair _ bs) e := arg_0__ in
+             bndrsSize bs + exprSize e in
+           match arg_0__ with
+           | Mk_Var _ => 1
+           | Lit _ => 1
+           | App f a => exprSize f + exprSize a
+           | Lam b e => bndrSize b + exprSize e
+           | Let b e => bindSize b + exprSize e
+           | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
+           | Cast e _ => 1 + exprSize e
+           | Mk_Type _ => 1
+           | Mk_Coercion _ => 1
+           end with bindSize (arg_0__ : CoreBind) : nat
+                      := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
+                           let 'pair b e := arg_0__ in
+                           bndrSize b + exprSize e in
+                         match arg_0__ with
+                         | NonRec b e => bndrSize b + exprSize e
+                         | Rec prs => sum (map pairSize prs)
+                         end for bindSize.
+
+Definition coreBindsSize : list CoreBind -> nat :=
+  fun bs => sum (map bindSize bs).
+
+Definition exprSize : CoreExpr -> nat :=
+  fix exprSize (arg_0__ : CoreExpr) : nat
+        := let altSize (arg_0__ : CoreAlt) : nat :=
+             let 'pair (pair _ bs) e := arg_0__ in
+             bndrsSize bs + exprSize e in
+           match arg_0__ with
+           | Mk_Var _ => 1
+           | Lit _ => 1
+           | App f a => exprSize f + exprSize a
+           | Lam b e => bndrSize b + exprSize e
+           | Let b e => bindSize b + exprSize e
+           | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
+           | Cast e _ => 1 + exprSize e
+           | Mk_Type _ => 1
+           | Mk_Coercion _ => 1
+           end with bindSize (arg_0__ : CoreBind) : nat
+                      := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
+                           let 'pair b e := arg_0__ in
+                           bndrSize b + exprSize e in
+                         match arg_0__ with
+                         | NonRec b e => bndrSize b + exprSize e
+                         | Rec prs => sum (map pairSize prs)
+                         end for exprSize.
+
+Definition tickSize : Tickish Id -> nat :=
+  fun arg_0__ => match arg_0__ with | ProfNote _ _ _ => 1 | _ => 1 end.
+
+Definition pairSize : (Var * CoreExpr)%type -> nat :=
+  fun '(pair b e) => bndrSize b + exprSize e.
+
+Definition altSize : CoreAlt -> nat :=
+  fun '(pair (pair _ bs) e) => bndrsSize bs + exprSize e.
 
 (* External variables:
      App Case Cast CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Coercion Mk_Type

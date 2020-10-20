@@ -183,28 +183,6 @@ Instance instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_  {f}
 
 (* Converted value declarations: *)
 
-(* Skipping definition `Data.SemigroupInternal.stimesMonoid' *)
-
-(* Skipping definition `Data.SemigroupInternal.stimesMaybe' *)
-
-(* Skipping definition `Data.SemigroupInternal.stimesList' *)
-
-Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
-  `{GHC.Base.Monoid a}
-   : b -> a -> a :=
-  fun n x =>
-    match GHC.Base.compare n #0 with
-    | Lt =>
-        GHC.Err.errorWithoutStackTrace (GHC.Base.hs_string__
-                                        "stimesIdempotentMonoid: negative multiplier")
-    | Eq => GHC.Base.mempty
-    | Gt => x
-    end.
-
-(* Skipping definition `Data.SemigroupInternal.stimesIdempotent' *)
-
-(* Skipping definition `Data.SemigroupInternal.stimesDefault' *)
-
 Instance Unpeel_Dual a : GHC.Prim.Unpeel (Dual a) a :=
   GHC.Prim.Build_Unpeel _ _ getDual Mk_Dual.
 
@@ -742,59 +720,6 @@ Program Instance Monad__Alt {f} `{GHC.Base.Monad f}
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Data.SemigroupInternal.Alternative__Alt' *)
 
-Local Definition Monad__Dual_op_zgzgze__
-   : forall {a} {b}, Dual a -> (a -> Dual b) -> Dual b :=
-  fun {a} {b} => fun m k => k (getDual m).
-
-Local Definition Monad__Dual_op_zgzg__
-   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
-  fun {a} {b} => fun m k => Monad__Dual_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Applicative__Dual_op_zlztzg__
-   : forall {a} {b}, Dual (a -> b) -> Dual a -> Dual b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Dual_fmap
-   : forall {a} {b}, (a -> b) -> Dual a -> Dual b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Dual_op_zlzd__
-   : forall {a} {b}, a -> Dual b -> Dual a :=
-  fun {a} {b} => Functor__Dual_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__Dual : GHC.Base.Functor Dual :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Dual_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Dual_op_zlzd__ |}.
-
-Local Definition Applicative__Dual_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Dual a -> Dual b -> Dual c :=
-  fun {a} {b} {c} => fun f x => Applicative__Dual_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Dual_op_ztzg__
-   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Dual_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Dual_pure : forall {a}, a -> Dual a :=
-  fun {a} => Mk_Dual.
-
-Program Instance Applicative__Dual : GHC.Base.Applicative Dual :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Dual_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Dual_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Dual_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Dual_pure |}.
-
-Local Definition Monad__Dual_return_ : forall {a}, a -> Dual a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__Dual : GHC.Base.Monad Dual :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Dual_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Dual_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__Dual_return_ |}.
-
 Local Definition Semigroup__Dual_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
   inst_a}
    : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
@@ -826,6 +751,59 @@ Program Instance Monoid__Dual {a} `{GHC.Base.Monoid a}
     k__ {| GHC.Base.mappend__ := Monoid__Dual_mappend ;
            GHC.Base.mconcat__ := Monoid__Dual_mconcat ;
            GHC.Base.mempty__ := Monoid__Dual_mempty |}.
+
+Local Definition Functor__Dual_fmap
+   : forall {a} {b}, (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Functor__Dual_op_zlzd__
+   : forall {a} {b}, a -> Dual b -> Dual a :=
+  fun {a} {b} => Functor__Dual_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Dual : GHC.Base.Functor Dual :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Dual_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Dual_op_zlzd__ |}.
+
+Local Definition Applicative__Dual_op_zlztzg__
+   : forall {a} {b}, Dual (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Dual_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Dual a -> Dual b -> Dual c :=
+  fun {a} {b} {c} => fun f x => Applicative__Dual_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__Dual_op_ztzg__
+   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Dual_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Dual_pure : forall {a}, a -> Dual a :=
+  fun {a} => Mk_Dual.
+
+Program Instance Applicative__Dual : GHC.Base.Applicative Dual :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Dual_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Dual_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Dual_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Dual_pure |}.
+
+Local Definition Monad__Dual_op_zgzgze__
+   : forall {a} {b}, Dual a -> (a -> Dual b) -> Dual b :=
+  fun {a} {b} => fun m k => k (getDual m).
+
+Local Definition Monad__Dual_op_zgzg__
+   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
+  fun {a} {b} => fun m k => Monad__Dual_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__Dual_return_ : forall {a}, a -> Dual a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__Dual : GHC.Base.Monad Dual :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Dual_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Dual_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__Dual_return_ |}.
 
 Instance Unpeel_Endo a : GHC.Prim.Unpeel (Endo a) (a -> a) :=
   GHC.Prim.Build_Unpeel _ _ appEndo Mk_Endo.
@@ -897,58 +875,6 @@ Program Instance Monoid__Any : GHC.Base.Monoid Any :=
            GHC.Base.mconcat__ := Monoid__Any_mconcat ;
            GHC.Base.mempty__ := Monoid__Any_mempty |}.
 
-Local Definition Monad__Sum_op_zgzgze__
-   : forall {a} {b}, Sum a -> (a -> Sum b) -> Sum b :=
-  fun {a} {b} => fun m k => k (getSum m).
-
-Local Definition Monad__Sum_op_zgzg__
-   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
-  fun {a} {b} => fun m k => Monad__Sum_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Applicative__Sum_op_zlztzg__
-   : forall {a} {b}, Sum (a -> b) -> Sum a -> Sum b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Sum_fmap
-   : forall {a} {b}, (a -> b) -> Sum a -> Sum b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Sum_op_zlzd__ : forall {a} {b}, a -> Sum b -> Sum a :=
-  fun {a} {b} => Functor__Sum_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__Sum : GHC.Base.Functor Sum :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ |}.
-
-Local Definition Applicative__Sum_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Sum a -> Sum b -> Sum c :=
-  fun {a} {b} {c} => fun f x => Applicative__Sum_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Sum_op_ztzg__
-   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Sum_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Sum_pure : forall {a}, a -> Sum a :=
-  fun {a} => Mk_Sum.
-
-Program Instance Applicative__Sum : GHC.Base.Applicative Sum :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Sum_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Sum_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Sum_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Sum_pure |}.
-
-Local Definition Monad__Sum_return_ : forall {a}, a -> Sum a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__Sum : GHC.Base.Monad Sum :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Sum_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Sum_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__Sum_return_ |}.
-
 Local Definition Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
    : Sum inst_a -> Sum inst_a -> Sum inst_a :=
   GHC.Prim.coerce _GHC.Num.+_.
@@ -975,59 +901,57 @@ Program Instance Monoid__Sum {a} `{GHC.Num.Num a} : GHC.Base.Monoid (Sum a) :=
            GHC.Base.mconcat__ := Monoid__Sum_mconcat ;
            GHC.Base.mempty__ := Monoid__Sum_mempty |}.
 
-Local Definition Monad__Product_op_zgzgze__
-   : forall {a} {b}, Product a -> (a -> Product b) -> Product b :=
-  fun {a} {b} => fun m k => k (getProduct m).
-
-Local Definition Monad__Product_op_zgzg__
-   : forall {a} {b}, Product a -> Product b -> Product b :=
-  fun {a} {b} => fun m k => Monad__Product_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Applicative__Product_op_zlztzg__
-   : forall {a} {b}, Product (a -> b) -> Product a -> Product b :=
+Local Definition Functor__Sum_fmap
+   : forall {a} {b}, (a -> b) -> Sum a -> Sum b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition Functor__Product_fmap
-   : forall {a} {b}, (a -> b) -> Product a -> Product b :=
-  fun {a} {b} => GHC.Prim.coerce.
+Local Definition Functor__Sum_op_zlzd__ : forall {a} {b}, a -> Sum b -> Sum a :=
+  fun {a} {b} => Functor__Sum_fmap GHC.Base.∘ GHC.Base.const.
 
-Local Definition Functor__Product_op_zlzd__
-   : forall {a} {b}, a -> Product b -> Product a :=
-  fun {a} {b} => Functor__Product_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__Product : GHC.Base.Functor Product :=
+Program Instance Functor__Sum : GHC.Base.Functor Sum :=
   fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ |}.
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ |}.
 
-Local Definition Applicative__Product_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Product a -> Product b -> Product c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__Product_op_zlztzg__ (GHC.Base.fmap f x).
+Local Definition Applicative__Sum_op_zlztzg__
+   : forall {a} {b}, Sum (a -> b) -> Sum a -> Sum b :=
+  fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition Applicative__Product_op_ztzg__
-   : forall {a} {b}, Product a -> Product b -> Product b :=
+Local Definition Applicative__Sum_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Sum a -> Sum b -> Sum c :=
+  fun {a} {b} {c} => fun f x => Applicative__Sum_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__Sum_op_ztzg__
+   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
   fun {a} {b} =>
-    fun a1 a2 => Applicative__Product_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+    fun a1 a2 => Applicative__Sum_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
-Local Definition Applicative__Product_pure : forall {a}, a -> Product a :=
-  fun {a} => Mk_Product.
+Local Definition Applicative__Sum_pure : forall {a}, a -> Sum a :=
+  fun {a} => Mk_Sum.
 
-Program Instance Applicative__Product : GHC.Base.Applicative Product :=
+Program Instance Applicative__Sum : GHC.Base.Applicative Sum :=
   fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Sum_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Sum_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Sum_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Sum_pure |}.
 
-Local Definition Monad__Product_return_ : forall {a}, a -> Product a :=
+Local Definition Monad__Sum_op_zgzgze__
+   : forall {a} {b}, Sum a -> (a -> Sum b) -> Sum b :=
+  fun {a} {b} => fun m k => k (getSum m).
+
+Local Definition Monad__Sum_op_zgzg__
+   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
+  fun {a} {b} => fun m k => Monad__Sum_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__Sum_return_ : forall {a}, a -> Sum a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance Monad__Product : GHC.Base.Monad Product :=
+Program Instance Monad__Sum : GHC.Base.Monad Sum :=
   fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Product_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Sum_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Sum_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__Sum_return_ |}.
 
 Local Definition Semigroup__Product_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
    : Product inst_a -> Product inst_a -> Product inst_a :=
@@ -1057,11 +981,87 @@ Program Instance Monoid__Product {a} `{GHC.Num.Num a}
            GHC.Base.mconcat__ := Monoid__Product_mconcat ;
            GHC.Base.mempty__ := Monoid__Product_mempty |}.
 
-(* Skipping instance `Data.SemigroupInternal.Monoid__Alt' of class
-   `GHC.Base.Monoid' *)
+Local Definition Functor__Product_fmap
+   : forall {a} {b}, (a -> b) -> Product a -> Product b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Functor__Product_op_zlzd__
+   : forall {a} {b}, a -> Product b -> Product a :=
+  fun {a} {b} => Functor__Product_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Product : GHC.Base.Functor Product :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ |}.
+
+Local Definition Applicative__Product_op_zlztzg__
+   : forall {a} {b}, Product (a -> b) -> Product a -> Product b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Product_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Product a -> Product b -> Product c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Product_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__Product_op_ztzg__
+   : forall {a} {b}, Product a -> Product b -> Product b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Product_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Product_pure : forall {a}, a -> Product a :=
+  fun {a} => Mk_Product.
+
+Program Instance Applicative__Product : GHC.Base.Applicative Product :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
+
+Local Definition Monad__Product_op_zgzgze__
+   : forall {a} {b}, Product a -> (a -> Product b) -> Product b :=
+  fun {a} {b} => fun m k => k (getProduct m).
+
+Local Definition Monad__Product_op_zgzg__
+   : forall {a} {b}, Product a -> Product b -> Product b :=
+  fun {a} {b} => fun m k => Monad__Product_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__Product_return_ : forall {a}, a -> Product a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__Product : GHC.Base.Monad Product :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Product_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
 
 (* Skipping instance `Data.SemigroupInternal.Semigroup__Alt' of class
    `GHC.Base.Semigroup' *)
+
+(* Skipping instance `Data.SemigroupInternal.Monoid__Alt' of class
+   `GHC.Base.Monoid' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesIdempotent' *)
+
+Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
+  `{GHC.Base.Monoid a}
+   : b -> a -> a :=
+  fun n x =>
+    match GHC.Base.compare n #0 with
+    | Lt =>
+        GHC.Err.errorWithoutStackTrace (GHC.Base.hs_string__
+                                        "stimesIdempotentMonoid: negative multiplier")
+    | Eq => GHC.Base.mempty
+    | Gt => x
+    end.
+
+(* Skipping definition `Data.SemigroupInternal.stimesMonoid' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesDefault' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesMaybe' *)
+
+(* Skipping definition `Data.SemigroupInternal.stimesList' *)
 
 (* External variables:
      Eq Gt Lt Type andb bool comparison false list orb true

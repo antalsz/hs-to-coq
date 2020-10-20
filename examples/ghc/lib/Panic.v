@@ -32,51 +32,51 @@ Inductive GhcException : Type
 
 (* Converted value declarations: *)
 
-(* Skipping definition `Panic.withSignalHandlers' *)
+(* Skipping all instances of class `GHC.Exception.Exception', including
+   `Panic.Exception__GhcException' *)
 
-(* Skipping definition `Panic.tryMost' *)
-
-(* Skipping definition `Panic.throwGhcExceptionIO' *)
-
-Axiom throwGhcException : forall {a} `{GHC.Err.Default a}, GhcException -> a.
-
-Axiom sorryDoc : forall {a} `{GHC.Err.Default a},
-                 GHC.Base.String -> GHC.Base.String -> a.
-
-Axiom sorry : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
-
-(* Skipping definition `Panic.signalHandlersRefCount' *)
-
-(* Skipping definition `Panic.showGhcException' *)
-
-(* Skipping definition `Panic.showException' *)
-
-Axiom short_usage : GHC.Base.String.
-
-(* Skipping definition `Panic.safeShowException' *)
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Panic.Show__GhcException' *)
 
 Axiom progName : GHC.Base.String.
 
-Axiom pgmErrorDoc : forall {a} `{GHC.Err.Default a},
-                    GHC.Base.String -> GHC.Base.String -> a.
+Axiom short_usage : GHC.Base.String.
+
+(* Skipping definition `Panic.showException' *)
+
+(* Skipping definition `Panic.safeShowException' *)
+
+(* Skipping definition `Panic.showGhcException' *)
+
+Axiom throwGhcException : forall {a} `{GHC.Err.Default a}, GhcException -> a.
+
+(* Skipping definition `Panic.throwGhcExceptionIO' *)
+
+(* Skipping definition `Panic.handleGhcException' *)
+
+Axiom panic : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
+
+Axiom sorry : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
 
 Axiom pgmError : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
 
 Axiom panicDoc : forall {a} `{GHC.Err.Default a},
                  GHC.Base.String -> GHC.Base.String -> a.
 
-Axiom panic : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> a.
+Axiom sorryDoc : forall {a} `{GHC.Err.Default a},
+                 GHC.Base.String -> GHC.Base.String -> a.
 
-(* Skipping definition `Panic.handleGhcException' *)
+Axiom pgmErrorDoc : forall {a} `{GHC.Err.Default a},
+                    GHC.Base.String -> GHC.Base.String -> a.
 
 Axiom assertPanic : forall {a} `{GHC.Err.Default a},
                     GHC.Base.String -> GHC.Num.Int -> a.
 
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Panic.Show__GhcException' *)
+(* Skipping definition `Panic.tryMost' *)
 
-(* Skipping all instances of class `GHC.Exception.Exception', including
-   `Panic.Exception__GhcException' *)
+(* Skipping definition `Panic.signalHandlersRefCount' *)
+
+(* Skipping definition `Panic.withSignalHandlers' *)
 
 Axiom panicStr : forall {a} `{GHC.Err.Default a},
                  GHC.Base.String -> GHC.Base.String -> a.

@@ -31,58 +31,6 @@ Arguments Failed {_} {_} _.
 
 (* Converted value declarations: *)
 
-Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
-   : option a -> (a -> m unit) -> m unit :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Some x, f => f x
-    | None, _ => GHC.Base.return_ tt
-    end.
-
-(* Skipping definition `Maybes.tryMaybeT' *)
-
-Definition orElse {a} : option a -> a -> a :=
-  GHC.Base.flip Data.Maybe.fromMaybe.
-
-Definition liftMaybeT {m} {a} `{GHC.Base.Monad m}
-   : m a -> Control.Monad.Trans.Maybe.MaybeT m a :=
-  fun act => Control.Monad.Trans.Maybe.Mk_MaybeT (GHC.Base.liftM Some act).
-
-Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
-  fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
-
-(* Skipping definition `Maybes.firstJusts' *)
-
-(* Skipping definition `Maybes.firstJust' *)
-
-Definition failME {err} {val} : err -> MaybeErr err val :=
-  fun e => Failed e.
-
-Definition expectJust {a} `{GHC.Err.Default a}
-   : GHC.Base.String -> option a -> a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, Some x => x
-    | err, None =>
-        GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "expectJust ") err)
-    end.
-
-Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
-   : forall {a} {b},
-     (MaybeErr inst_err) a ->
-     (a -> (MaybeErr inst_err) b) -> (MaybeErr inst_err) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Succeeded v, k => k v
-      | Failed e, _ => Failed e
-      end.
-
-Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
-   : forall {a} {b},
-     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
-  fun {a} {b} => fun m k => Monad__MaybeErr_op_zgzgze__ m (fun arg_0__ => k).
-
 Local Definition Functor__MaybeErr_fmap {inst_err}
    : forall {a} {b}, (a -> b) -> MaybeErr inst_err a -> MaybeErr inst_err b :=
   fun {a} {b} =>
@@ -140,6 +88,22 @@ Program Instance Applicative__MaybeErr {err}
            GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
            GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
 
+Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
+   : forall {a} {b},
+     (MaybeErr inst_err) a ->
+     (a -> (MaybeErr inst_err) b) -> (MaybeErr inst_err) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Succeeded v, k => k v
+      | Failed e, _ => Failed e
+      end.
+
+Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
+   : forall {a} {b},
+     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
+  fun {a} {b} => fun m k => Monad__MaybeErr_op_zgzgze__ m (fun arg_0__ => k).
+
 Local Definition Monad__MaybeErr_return_ {inst_err}
    : forall {a}, a -> (MaybeErr inst_err) a :=
   fun {a} => GHC.Base.pure.
@@ -149,6 +113,42 @@ Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
     k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeErr_op_zgzg__ ;
            GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeErr_op_zgzgze__ ;
            GHC.Base.return___ := fun {a} => Monad__MaybeErr_return_ |}.
+
+(* Skipping definition `Maybes.firstJust' *)
+
+(* Skipping definition `Maybes.firstJusts' *)
+
+Definition expectJust {a} `{GHC.Err.Default a}
+   : GHC.Base.String -> option a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Some x => x
+    | err, None =>
+        GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "expectJust ") err)
+    end.
+
+Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
+   : option a -> (a -> m unit) -> m unit :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Some x, f => f x
+    | None, _ => GHC.Base.return_ tt
+    end.
+
+Definition orElse {a} : option a -> a -> a :=
+  GHC.Base.flip Data.Maybe.fromMaybe.
+
+Definition liftMaybeT {m} {a} `{GHC.Base.Monad m}
+   : m a -> Control.Monad.Trans.Maybe.MaybeT m a :=
+  fun act => Control.Monad.Trans.Maybe.Mk_MaybeT (GHC.Base.liftM Some act).
+
+(* Skipping definition `Maybes.tryMaybeT' *)
+
+Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
+  fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
+
+Definition failME {err} {val} : err -> MaybeErr err val :=
+  fun e => Failed e.
 
 (* External variables:
      None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT

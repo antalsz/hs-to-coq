@@ -60,12 +60,27 @@ Instance Default_FloatInBind : GHC.Err.Default FloatInBind :=
 
 (* Converted value declarations: *)
 
-Fixpoint wrapFloats (arg_0__ : FloatInBinds) (arg_1__ : Core.CoreExpr)
-           : Core.CoreExpr
-           := match arg_0__, arg_1__ with
-              | nil, e => e
-              | cons (FB _ _ fl) bs, e => wrapFloats bs (MkCore.wrapFloat fl e)
-              end.
+(* Skipping definition `FloatIn.floatInwards' *)
+
+Axiom fiExpr : DynFlags.DynFlags ->
+               FloatInBinds -> CoreFVs.CoreExprWithFVs -> Core.CoreExpr.
+
+Definition fiRhs
+   : DynFlags.DynFlags ->
+     FloatInBinds -> Core.CoreBndr -> CoreFVs.CoreExprWithFVs -> Core.CoreExpr :=
+  fun dflags to_drop bndr rhs =>
+    match Id.isJoinId_maybe bndr with
+    | Some join_arity =>
+        let 'pair bndrs body := Core.collectNAnnBndrs join_arity rhs in
+        Core.mkLams bndrs (fiExpr dflags to_drop body)
+    | _ => fiExpr dflags to_drop rhs
+    end.
+
+Definition fbFVs : FloatInBind -> Core.DVarSet :=
+  fun '(FB _ fvs _) => fvs.
+
+Definition floatedBindsFVs : FloatInBinds -> FreeVarSet :=
+  fun binds => Core.mapUnionDVarSet fbFVs binds.
 
 Definition noFloatIntoLam : list Core.Var -> bool :=
   fun bndrs =>
@@ -91,6 +106,13 @@ Definition noFloatIntoRhs
     if Id.isJoinId bndr : bool then BasicTypes.isRec is_rec else
     noFloatIntoArg rhs (Id.idType bndr).
 
+Definition floatIsCase : MkCore.FloatBind -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | MkCore.FloatCase _ _ _ _ => true
+    | MkCore.FloatLet _ => false
+    end.
+
 Definition floatIsDupable : DynFlags.DynFlags -> MkCore.FloatBind -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -98,13 +120,6 @@ Definition floatIsDupable : DynFlags.DynFlags -> MkCore.FloatBind -> bool :=
     | dflags, MkCore.FloatLet (Core.Rec prs) =>
         Data.Foldable.all (CoreUtils.exprIsDupable dflags GHC.Base.∘ Data.Tuple.snd) prs
     | dflags, MkCore.FloatLet (Core.NonRec _ r) => CoreUtils.exprIsDupable dflags r
-    end.
-
-Definition floatIsCase : MkCore.FloatBind -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | MkCore.FloatCase _ _ _ _ => true
-    | MkCore.FloatLet _ => false
     end.
 
 Definition sepBindsByDropPoint
@@ -158,28 +173,6 @@ Definition sepBindsByDropPoint
                              "ghc/compiler/simplCore/FloatIn.hs") #680)
     else go floaters (GHC.Base.map (fun fvs => pair fvs nil) (cons Core.emptyDVarSet
                                                                    drop_pts)).
-
-(* Skipping definition `FloatIn.floatInwards' *)
-
-Axiom fiExpr : DynFlags.DynFlags ->
-               FloatInBinds -> CoreFVs.CoreExprWithFVs -> Core.CoreExpr.
-
-Definition fiRhs
-   : DynFlags.DynFlags ->
-     FloatInBinds -> Core.CoreBndr -> CoreFVs.CoreExprWithFVs -> Core.CoreExpr :=
-  fun dflags to_drop bndr rhs =>
-    match Id.isJoinId_maybe bndr with
-    | Some join_arity =>
-        let 'pair bndrs body := Core.collectNAnnBndrs join_arity rhs in
-        Core.mkLams bndrs (fiExpr dflags to_drop body)
-    | _ => fiExpr dflags to_drop rhs
-    end.
-
-Definition fbFVs : FloatInBind -> Core.DVarSet :=
-  fun '(FB _ fvs _) => fvs.
-
-Definition floatedBindsFVs : FloatInBinds -> FreeVarSet :=
-  fun binds => Core.mapUnionDVarSet fbFVs binds.
 
 Definition fiBind
    : DynFlags.DynFlags ->
@@ -244,6 +237,13 @@ Definition fiBind
         | _ => GHC.Err.patternFailure
         end
     end.
+
+Fixpoint wrapFloats (arg_0__ : FloatInBinds) (arg_1__ : Core.CoreExpr)
+           : Core.CoreExpr
+           := match arg_0__, arg_1__ with
+              | nil, e => e
+              | cons (FB _ _ fl) bs, e => wrapFloats bs (MkCore.wrapFloat fl e)
+              end.
 
 (* External variables:
      Some andb bool cons false list negb nil op_zt__ orb pair true

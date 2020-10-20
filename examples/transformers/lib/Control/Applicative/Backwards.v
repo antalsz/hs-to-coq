@@ -34,40 +34,176 @@ Definition forwards {f : Type -> Type} {a : Type} (arg_0__ : Backwards f a) :=
 
 (* Converted value declarations: *)
 
-Local Definition Traversable__Backwards_traverse {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> (Backwards inst_f) a -> f ((Backwards inst_f) b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_Backwards t =>
-          GHC.Base.fmap Mk_Backwards (Data.Traversable.traverse f t)
+Local Definition Eq1__Backwards_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
+   inst_f)}
+   : forall {a} {b},
+     (a -> b -> bool) -> (Backwards inst_f) a -> (Backwards inst_f) b -> bool :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | eq, Mk_Backwards x, Mk_Backwards y => Data.Functor.Classes.liftEq eq x y
       end.
 
-Local Definition Traversable__Backwards_mapM {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (Backwards inst_f) a -> m ((Backwards inst_f) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Backwards_traverse.
+Program Instance Eq1__Backwards {f} `{(Data.Functor.Classes.Eq1 f)}
+   : Data.Functor.Classes.Eq1 (Backwards f) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
 
-Local Definition Traversable__Backwards_sequenceA {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     (Backwards inst_f) (f a) -> f ((Backwards inst_f) a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    fun '(Mk_Backwards t) =>
-      GHC.Base.fmap Mk_Backwards (Data.Traversable.sequenceA t).
+Local Definition Ord1__Backwards_liftCompare {inst_f}
+  `{(Data.Functor.Classes.Ord1 inst_f)}
+   : forall {a} {b},
+     (a -> b -> comparison) ->
+     (Backwards inst_f) a -> (Backwards inst_f) b -> comparison :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | comp, Mk_Backwards x, Mk_Backwards y =>
+          Data.Functor.Classes.liftCompare comp x y
+      end.
 
-Local Definition Traversable__Backwards_sequence {inst_f}
-  `{(Data.Traversable.Traversable inst_f)}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m},
-     (Backwards inst_f) (m a) -> m ((Backwards inst_f) a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Backwards_sequenceA.
+Program Instance Ord1__Backwards {f} `{(Data.Functor.Classes.Ord1 f)}
+   : Data.Functor.Classes.Ord1 (Backwards f) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Backwards_liftCompare |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read1', including
+   `Control.Applicative.Backwards.Read1__Backwards' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show1', including
+   `Control.Applicative.Backwards.Show1__Backwards' *)
+
+Local Definition Eq___Backwards_op_zeze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  Data.Functor.Classes.eq1.
+
+Local Definition Eq___Backwards_op_zsze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  fun x y => negb (Eq___Backwards_op_zeze__ x y).
+
+Program Instance Eq___Backwards {f} {a} `{Data.Functor.Classes.Eq1 f}
+  `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (Backwards f a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Backwards_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Backwards_op_zsze__ |}.
+
+Local Definition Ord__Backwards_compare {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> comparison :=
+  Data.Functor.Classes.compare1.
+
+Local Definition Ord__Backwards_op_zl__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  fun x y => Ord__Backwards_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__Backwards_op_zlze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  fun x y => Ord__Backwards_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__Backwards_op_zg__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  fun x y => Ord__Backwards_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Backwards_op_zgze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
+  fun x y => Ord__Backwards_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__Backwards_max {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) ->
+     (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
+  fun x y => if Ord__Backwards_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Backwards_min {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
+   : (Backwards inst_f inst_a) ->
+     (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
+  fun x y => if Ord__Backwards_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__Backwards {f} {a} `{Data.Functor.Classes.Ord1 f}
+  `{GHC.Base.Ord a}
+   : GHC.Base.Ord (Backwards f a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Backwards_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Backwards_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Backwards_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Backwards_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Backwards_compare ;
+           GHC.Base.max__ := Ord__Backwards_max ;
+           GHC.Base.min__ := Ord__Backwards_min |}.
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Control.Applicative.Backwards.Read__Backwards' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Control.Applicative.Backwards.Show__Backwards' *)
+
+Local Definition Functor__Backwards_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
+   : forall {a} {b}, (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_Backwards a => Mk_Backwards (GHC.Base.fmap f a)
+      end.
+
+Local Definition Functor__Backwards_op_zlzd__ {inst_f} `{(GHC.Base.Functor
+   inst_f)}
+   : forall {a} {b}, a -> (Backwards inst_f) b -> (Backwards inst_f) a :=
+  fun {a} {b} => Functor__Backwards_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Backwards {f} `{(GHC.Base.Functor f)}
+   : GHC.Base.Functor (Backwards f) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ |}.
+
+Local Definition Applicative__Backwards_op_zlztzg__ {inst_f}
+  `{(GHC.Base.Applicative inst_f)}
+   : forall {a} {b},
+     (Backwards inst_f) (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Backwards f, Mk_Backwards a => Mk_Backwards (a GHC.Base.<**> f)
+      end.
+
+Local Definition Applicative__Backwards_liftA2 {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Backwards_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__Backwards_op_ztzg__ {inst_f}
+  `{(GHC.Base.Applicative inst_f)}
+   : forall {a} {b},
+     (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Backwards_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Backwards_pure {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a}, a -> (Backwards inst_f) a :=
+  fun {a} => fun a => Mk_Backwards (GHC.Base.pure a).
+
+Program Instance Applicative__Backwards {f} `{(GHC.Base.Applicative f)}
+   : GHC.Base.Applicative (Backwards f) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
+
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Applicative.Backwards.Alternative__Backwards' *)
 
 Local Definition Foldable__Backwards_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -167,24 +303,40 @@ Program Instance Foldable__Backwards {f} `{(Data.Foldable.Foldable f)}
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Backwards_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__Backwards_toList |}.
 
-Local Definition Functor__Backwards_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
-   : forall {a} {b}, (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
-  fun {a} {b} =>
+Local Definition Traversable__Backwards_traverse {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (Backwards inst_f) a -> f ((Backwards inst_f) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_Backwards a => Mk_Backwards (GHC.Base.fmap f a)
+      | f, Mk_Backwards t =>
+          GHC.Base.fmap Mk_Backwards (Data.Traversable.traverse f t)
       end.
 
-Local Definition Functor__Backwards_op_zlzd__ {inst_f} `{(GHC.Base.Functor
-   inst_f)}
-   : forall {a} {b}, a -> (Backwards inst_f) b -> (Backwards inst_f) a :=
-  fun {a} {b} => Functor__Backwards_fmap GHC.Base.∘ GHC.Base.const.
+Local Definition Traversable__Backwards_mapM {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (Backwards inst_f) a -> m ((Backwards inst_f) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Backwards_traverse.
 
-Program Instance Functor__Backwards {f} `{(GHC.Base.Functor f)}
-   : GHC.Base.Functor (Backwards f) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ |}.
+Local Definition Traversable__Backwards_sequenceA {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     (Backwards inst_f) (f a) -> f ((Backwards inst_f) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    fun '(Mk_Backwards t) =>
+      GHC.Base.fmap Mk_Backwards (Data.Traversable.sequenceA t).
+
+Local Definition Traversable__Backwards_sequence {inst_f}
+  `{(Data.Traversable.Traversable inst_f)}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m},
+     (Backwards inst_f) (m a) -> m ((Backwards inst_f) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Backwards_sequenceA.
 
 Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (Backwards f) :=
@@ -197,158 +349,6 @@ Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
              Traversable__Backwards_sequenceA ;
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__Backwards_traverse |}.
-
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Applicative.Backwards.Alternative__Backwards' *)
-
-Local Definition Applicative__Backwards_op_zlztzg__ {inst_f}
-  `{(GHC.Base.Applicative inst_f)}
-   : forall {a} {b},
-     (Backwards inst_f) (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Mk_Backwards f, Mk_Backwards a => Mk_Backwards (a GHC.Base.<**> f)
-      end.
-
-Local Definition Applicative__Backwards_liftA2 {inst_f} `{(GHC.Base.Applicative
-   inst_f)}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__Backwards_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Backwards_op_ztzg__ {inst_f}
-  `{(GHC.Base.Applicative inst_f)}
-   : forall {a} {b},
-     (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Backwards_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Backwards_pure {inst_f} `{(GHC.Base.Applicative
-   inst_f)}
-   : forall {a}, a -> (Backwards inst_f) a :=
-  fun {a} => fun a => Mk_Backwards (GHC.Base.pure a).
-
-Program Instance Applicative__Backwards {f} `{(GHC.Base.Applicative f)}
-   : GHC.Base.Applicative (Backwards f) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
-
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Control.Applicative.Backwards.Show__Backwards' *)
-
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Control.Applicative.Backwards.Read__Backwards' *)
-
-Local Definition Ord1__Backwards_liftCompare {inst_f}
-  `{(Data.Functor.Classes.Ord1 inst_f)}
-   : forall {a} {b},
-     (a -> b -> comparison) ->
-     (Backwards inst_f) a -> (Backwards inst_f) b -> comparison :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_Backwards x, Mk_Backwards y =>
-          Data.Functor.Classes.liftCompare comp x y
-      end.
-
-Local Definition Eq1__Backwards_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
-   inst_f)}
-   : forall {a} {b},
-     (a -> b -> bool) -> (Backwards inst_f) a -> (Backwards inst_f) b -> bool :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_Backwards x, Mk_Backwards y => Data.Functor.Classes.liftEq eq x y
-      end.
-
-Program Instance Eq1__Backwards {f} `{(Data.Functor.Classes.Eq1 f)}
-   : Data.Functor.Classes.Eq1 (Backwards f) :=
-  fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
-
-Program Instance Ord1__Backwards {f} `{(Data.Functor.Classes.Ord1 f)}
-   : Data.Functor.Classes.Ord1 (Backwards f) :=
-  fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-             Ord1__Backwards_liftCompare |}.
-
-Local Definition Ord__Backwards_compare {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> comparison :=
-  Data.Functor.Classes.compare1.
-
-Local Definition Ord__Backwards_op_zl__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  fun x y => Ord__Backwards_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__Backwards_op_zlze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  fun x y => Ord__Backwards_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__Backwards_op_zg__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  fun x y => Ord__Backwards_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__Backwards_op_zgze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  fun x y => Ord__Backwards_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__Backwards_max {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) ->
-     (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
-  fun x y => if Ord__Backwards_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__Backwards_min {inst_f} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
-   : (Backwards inst_f inst_a) ->
-     (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
-  fun x y => if Ord__Backwards_op_zlze__ x y : bool then x else y.
-
-Local Definition Eq___Backwards_op_zeze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  Data.Functor.Classes.eq1.
-
-Local Definition Eq___Backwards_op_zsze__ {inst_f} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
-   : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  fun x y => negb (Eq___Backwards_op_zeze__ x y).
-
-Program Instance Eq___Backwards {f} {a} `{Data.Functor.Classes.Eq1 f}
-  `{GHC.Base.Eq_ a}
-   : GHC.Base.Eq_ (Backwards f a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___Backwards_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___Backwards_op_zsze__ |}.
-
-Program Instance Ord__Backwards {f} {a} `{Data.Functor.Classes.Ord1 f}
-  `{GHC.Base.Ord a}
-   : GHC.Base.Ord (Backwards f a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__Backwards_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__Backwards_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__Backwards_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__Backwards_op_zgze__ ;
-           GHC.Base.compare__ := Ord__Backwards_compare ;
-           GHC.Base.max__ := Ord__Backwards_max ;
-           GHC.Base.min__ := Ord__Backwards_min |}.
-
-(* Skipping all instances of class `Data.Functor.Classes.Show1', including
-   `Control.Applicative.Backwards.Show1__Backwards' *)
-
-(* Skipping all instances of class `Data.Functor.Classes.Read1', including
-   `Control.Applicative.Backwards.Read1__Backwards' *)
 
 (* External variables:
      Gt Lt Type bool comparison list negb Coq.Program.Basics.compose

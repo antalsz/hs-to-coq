@@ -29,6 +29,18 @@ Definition FV :=
 
 (* Converted value declarations: *)
 
+Definition fvVarListVarSet : FV -> (list Core.Var * Core.VarSet)%type :=
+  fun fv => fv (GHC.Base.const true) Core.emptyVarSet (pair nil Core.emptyVarSet).
+
+Definition fvVarList : FV -> list Core.Var :=
+  Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
+
+Definition fvVarSet : FV -> Core.VarSet :=
+  Data.Tuple.snd GHC.Base.∘ fvVarListVarSet.
+
+Definition fvDVarSet : FV -> Core.DVarSet :=
+  fvVarSet.
+
 Definition unitFV : Core.Id -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
@@ -40,9 +52,27 @@ Definition unitFV : Core.Id -> FV :=
         acc
     end.
 
+Definition emptyFV : FV :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | _, _, acc => acc
+    end.
+
 Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
     fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
+
+Definition delFV : Core.Var -> FV -> FV :=
+  fun var fv fv_cand in_scope acc =>
+    fv fv_cand (Core.extendVarSet in_scope var) acc.
+
+Definition delFVs : Core.VarSet -> FV -> FV :=
+  fun vars fv fv_cand in_scope acc =>
+    fv fv_cand (Core.unionVarSet in_scope vars) acc.
+
+Definition filterFV : InterestingVarFun -> FV -> FV :=
+  fun fv_cand2 fv fv_cand1 in_scope acc =>
+    fv (fun v => andb (fv_cand1 v) (fv_cand2 v)) in_scope acc.
 
 Fixpoint mapUnionFV {a} `(arg_0__ : (a -> FV)) `(arg_1__ : list a) arg_2__
                     arg_3__ arg_4__
@@ -52,41 +82,11 @@ Fixpoint mapUnionFV {a} `(arg_0__ : (a -> FV)) `(arg_1__ : list a) arg_2__
                   mapUnionFV f as_ fv_cand in_scope (f a fv_cand in_scope acc)
               end.
 
-Definition mkFVs : list Core.Var -> FV :=
-  fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
-
 Definition unionsFV : list FV -> FV :=
   fun fvs fv_cand in_scope acc => mapUnionFV GHC.Base.id fvs fv_cand in_scope acc.
 
-Definition fvVarListVarSet : FV -> (list Core.Var * Core.VarSet)%type :=
-  fun fv => fv (GHC.Base.const true) Core.emptyVarSet (pair nil Core.emptyVarSet).
-
-Definition fvVarSet : FV -> Core.VarSet :=
-  Data.Tuple.snd GHC.Base.∘ fvVarListVarSet.
-
-Definition fvVarList : FV -> list Core.Var :=
-  Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
-
-Definition fvDVarSet : FV -> Core.DVarSet :=
-  fvVarSet.
-
-Definition filterFV : InterestingVarFun -> FV -> FV :=
-  fun fv_cand2 fv fv_cand1 in_scope acc =>
-    fv (fun v => andb (fv_cand1 v) (fv_cand2 v)) in_scope acc.
-
-Definition emptyFV : FV :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | _, _, acc => acc
-    end.
-
-Definition delFVs : Core.VarSet -> FV -> FV :=
-  fun vars fv fv_cand in_scope acc =>
-    fv fv_cand (Core.unionVarSet in_scope vars) acc.
-
-Definition delFV : Core.Var -> FV -> FV :=
-  fun var fv fv_cand in_scope acc =>
-    fv fv_cand (Core.extendVarSet in_scope var) acc.
+Definition mkFVs : list Core.Var -> FV :=
+  fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
 (* External variables:
      andb bool cons list nil op_zt__ pair true Core.DVarSet Core.Id Core.Var

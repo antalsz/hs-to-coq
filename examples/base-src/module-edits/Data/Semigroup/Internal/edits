@@ -21,17 +21,11 @@ add Data.SemigroupInternal Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getSum Mk_Sum.
 
 order Unpeel_Any     Data.SemigroupInternal.Eq___Any_op_zeze__
-order Unpeel_Any     Data.SemigroupInternal.Eq___Any_op_zsze__
 order Unpeel_All     Data.SemigroupInternal.Eq___All_op_zeze__
-order Unpeel_All     Data.SemigroupInternal.Eq___All_op_zsze__
 order Unpeel_Alt     Data.SemigroupInternal.Eq___Alt_op_zeze__
-order Unpeel_Alt     Data.SemigroupInternal.Eq___Alt_op_zsze__
 order Unpeel_Product Data.SemigroupInternal.Eq___Product_op_zeze__
-order Unpeel_Product Data.SemigroupInternal.Eq___Product_op_zsze__
 order Unpeel_Sum     Data.SemigroupInternal.Eq___Sum_op_zeze__
-order Unpeel_Sum     Data.SemigroupInternal.Eq___Sum_op_zsze__
 order Unpeel_Dual    Data.SemigroupInternal.Eq___Dual_op_zeze__
-order Unpeel_Dual    Data.SemigroupInternal.Eq___Dual_op_zsze__
 order Unpeel_Endo    Data.SemigroupInternal.Semigroup__Endo_op_zlzlzgzg__
 
 order Data.SemigroupInternal.Eq___Any     Data.SemigroupInternal.Ord__Any

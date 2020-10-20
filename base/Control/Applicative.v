@@ -44,8 +44,6 @@ Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_0__
 
 (* Converted value declarations: *)
 
-(* Skipping definition `Control.Applicative.optional' *)
-
 (* Skipping all instances of class `GHC.Generics.Generic', including
    `Control.Applicative.Generic__WrappedMonad' *)
 
@@ -176,30 +174,6 @@ Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m}
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Applicative.Alternative__WrappedMonad' *)
 
-(* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Applicative.Alternative__WrappedArrow' *)
-
-Local Definition Applicative__WrappedArrow_liftA2 {inst_a} {inst_b}
-  `{Control.Arrow.Arrow inst_a}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (WrappedArrow inst_a inst_b) a ->
-     (WrappedArrow inst_a inst_b) b -> (WrappedArrow inst_a inst_b) c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, WrapArrow u, WrapArrow v =>
-          WrapArrow ((u Control.Arrow.&&& v) Control.Category.>>>
-                     Control.Arrow.arr (Data.Tuple.uncurry f))
-      end.
-
-Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
-  `{Control.Arrow.Arrow inst_a}
-   : forall {a} {b},
-     (WrappedArrow inst_a inst_b) (a -> b) ->
-     (WrappedArrow inst_a inst_b) a -> (WrappedArrow inst_a inst_b) b :=
-  fun {a} {b} => Applicative__WrappedArrow_liftA2 GHC.Base.id.
-
 Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
   `{Control.Arrow.Arrow inst_a}
    : forall {a} {b},
@@ -221,6 +195,27 @@ Program Instance Functor__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
   fun _ k__ =>
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedArrow_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedArrow_op_zlzd__ |}.
+
+Local Definition Applicative__WrappedArrow_liftA2 {inst_a} {inst_b}
+  `{Control.Arrow.Arrow inst_a}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (WrappedArrow inst_a inst_b) a ->
+     (WrappedArrow inst_a inst_b) b -> (WrappedArrow inst_a inst_b) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, WrapArrow u, WrapArrow v =>
+          WrapArrow ((u Control.Arrow.&&& v) Control.Category.>>>
+                     Control.Arrow.arr (Data.Tuple.uncurry f))
+      end.
+
+Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
+  `{Control.Arrow.Arrow inst_a}
+   : forall {a} {b},
+     (WrappedArrow inst_a inst_b) (a -> b) ->
+     (WrappedArrow inst_a inst_b) a -> (WrappedArrow inst_a inst_b) b :=
+  fun {a} {b} => Applicative__WrappedArrow_liftA2 GHC.Base.id.
 
 Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}
   `{Control.Arrow.Arrow inst_a}
@@ -246,10 +241,15 @@ Program Instance Applicative__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
            GHC.Base.pure__ := fun {a} => Applicative__WrappedArrow_pure |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
-   `Control.Applicative.Alternative__ZipList' *)
+   `Control.Applicative.Alternative__WrappedArrow' *)
 
 (* Skipping instance `Control.Applicative.Applicative__ZipList' of class
    `GHC.Base.Applicative' *)
+
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Applicative.Alternative__ZipList' *)
+
+(* Skipping definition `Control.Applicative.optional' *)
 
 Instance Unpeel_WrappedArrow {a} {b} {c}
    : GHC.Prim.Unpeel (WrappedArrow a b c) (a b c) :=

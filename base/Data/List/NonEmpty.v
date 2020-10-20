@@ -88,23 +88,8 @@ Definition sort {a} `{GHC.Base.Ord a} : GHC.Base.NonEmpty a -> GHC.Base.NonEmpty
 
 (* Converted value declarations: *)
 
-Definition zipWith {a} {b} {c}
-   : (a -> b -> c) ->
-     GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b -> GHC.Base.NonEmpty c :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | f, GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
-        GHC.Base.NEcons (f x y) (GHC.List.zipWith f xs ys)
-    end.
-
-Definition zip {a} {b}
-   : GHC.Base.NonEmpty a ->
-     GHC.Base.NonEmpty b -> GHC.Base.NonEmpty (a * b)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
-        GHC.Base.NEcons (pair x y) (GHC.List.zip xs ys)
-    end.
+Definition length {a} : GHC.Base.NonEmpty a -> GHC.Num.Int :=
+  fun '(GHC.Base.NEcons _ xs) => #1 GHC.Num.+ Data.Foldable.length xs.
 
 Definition xor : GHC.Base.NonEmpty bool -> bool :=
   fun '(GHC.Base.NEcons x xs) =>
@@ -116,65 +101,30 @@ Definition xor : GHC.Base.NonEmpty bool -> bool :=
         end in
     Data.Foldable.foldr xor' x xs.
 
-Definition unzip {f} {a} {b} `{GHC.Base.Functor f}
-   : f (a * b)%type -> (f a * f b)%type :=
-  fun xs =>
-    pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
+(* Skipping definition `Data.List.NonEmpty.unfold' *)
+
+Definition nonEmpty {a} : list a -> option (GHC.Base.NonEmpty a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => None
+    | cons a as_ => Some (GHC.Base.NEcons a as_)
+    end.
+
+Definition uncons {a}
+   : GHC.Base.NonEmpty a -> (a * option (GHC.Base.NonEmpty a))%type :=
+  fun '(GHC.Base.NEcons a as_) => pair a (nonEmpty as_).
 
 (* Skipping definition `Data.List.NonEmpty.unfoldr' *)
 
-(* Skipping definition `Data.List.NonEmpty.unfold' *)
-
-(* Skipping definition `Data.List.NonEmpty.transpose' *)
-
-(* Skipping definition `Data.List.NonEmpty.toList' *)
-
-Definition takeWhile {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
-  fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
-
-Definition take {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
-  fun n => GHC.List.take n GHC.Base.∘ toList.
-
-(* Skipping definition `Data.List.NonEmpty.tails' *)
+Definition head {a} : GHC.Base.NonEmpty a -> a :=
+  fun '(GHC.Base.NEcons a _) => a.
 
 Definition tail {a} : GHC.Base.NonEmpty a -> list a :=
   fun '(GHC.Base.NEcons _ as_) => as_.
 
-Definition splitAt {a}
-   : GHC.Num.Int -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
-  fun n => GHC.List.splitAt n GHC.Base.∘ toList.
+(* Skipping definition `Data.List.NonEmpty.last' *)
 
-Definition span {a}
-   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
-  fun p => GHC.List.span p GHC.Base.∘ toList.
-
-(* Skipping definition `Data.List.NonEmpty.sortBy' *)
-
-Definition sortWith {o} {a} `{GHC.Base.Ord o}
-   : (a -> o) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
-  sortBy GHC.Base.∘ Data.Ord.comparing.
-
-(* Skipping definition `Data.List.NonEmpty.sort' *)
-
-(* Skipping definition `Data.List.NonEmpty.some1' *)
-
-(* Skipping definition `Data.List.NonEmpty.scanr1' *)
-
-(* Skipping definition `Data.List.NonEmpty.scanr' *)
-
-(* Skipping definition `Data.List.NonEmpty.scanl1' *)
-
-(* Skipping definition `Data.List.NonEmpty.scanl' *)
-
-(* Skipping definition `Data.List.NonEmpty.reverse' *)
-
-(* Skipping definition `Data.List.NonEmpty.repeat' *)
-
-Definition partition {a}
-   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
-  fun p => Data.OldList.partition p GHC.Base.∘ toList.
-
-(* Skipping definition `Data.List.NonEmpty.op_znzn__' *)
+(* Skipping definition `Data.List.NonEmpty.init' *)
 
 Definition op_zlzb__ {a} : a -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
   fun arg_0__ arg_1__ =>
@@ -185,6 +135,131 @@ Definition op_zlzb__ {a} : a -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
 Notation "'_<|_'" := (op_zlzb__).
 
 Infix "<|" := (_<|_) (at level 99).
+
+Definition cons_ {a} : a -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
+  _<|_.
+
+(* Skipping definition `Data.List.NonEmpty.sort' *)
+
+(* Skipping definition `Data.List.NonEmpty.fromList' *)
+
+(* Skipping definition `Data.List.NonEmpty.toList' *)
+
+(* Skipping definition `Data.List.NonEmpty.lift' *)
+
+Definition map {a} {b}
+   : (a -> b) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, GHC.Base.NEcons a as_ => GHC.Base.NEcons (f a) (GHC.Base.fmap f as_)
+    end.
+
+(* Skipping definition `Data.List.NonEmpty.inits' *)
+
+(* Skipping definition `Data.List.NonEmpty.tails' *)
+
+(* Skipping definition `Data.List.NonEmpty.insert' *)
+
+(* Skipping definition `Data.List.NonEmpty.some1' *)
+
+(* Skipping definition `Data.List.NonEmpty.scanl' *)
+
+(* Skipping definition `Data.List.NonEmpty.scanr' *)
+
+(* Skipping definition `Data.List.NonEmpty.scanl1' *)
+
+(* Skipping definition `Data.List.NonEmpty.scanr1' *)
+
+(* Skipping definition `Data.List.NonEmpty.intersperse' *)
+
+(* Skipping definition `Data.List.NonEmpty.iterate' *)
+
+(* Skipping definition `Data.List.NonEmpty.cycle' *)
+
+(* Skipping definition `Data.List.NonEmpty.reverse' *)
+
+(* Skipping definition `Data.List.NonEmpty.repeat' *)
+
+Definition take {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
+  fun n => GHC.List.take n GHC.Base.∘ toList.
+
+Definition drop {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
+  fun n => GHC.List.drop n GHC.Base.∘ toList.
+
+Definition splitAt {a}
+   : GHC.Num.Int -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
+  fun n => GHC.List.splitAt n GHC.Base.∘ toList.
+
+Definition takeWhile {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
+  fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
+
+Definition dropWhile {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
+  fun p => GHC.List.dropWhile p GHC.Base.∘ toList.
+
+Definition span {a}
+   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
+  fun p => GHC.List.span p GHC.Base.∘ toList.
+
+Definition break {a}
+   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
+  fun p => span (negb GHC.Base.∘ p).
+
+Definition filter {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
+  fun p => GHC.List.filter p GHC.Base.∘ toList.
+
+Definition partition {a}
+   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
+  fun p => Data.OldList.partition p GHC.Base.∘ toList.
+
+(* Skipping definition `Data.List.NonEmpty.group' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupBy' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupWith' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupAllWith' *)
+
+(* Skipping definition `Data.List.NonEmpty.group1' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupBy1' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupWith1' *)
+
+(* Skipping definition `Data.List.NonEmpty.groupAllWith1' *)
+
+Definition isPrefixOf {a} `{GHC.Base.Eq_ a}
+   : list a -> GHC.Base.NonEmpty a -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | nil, _ => true
+    | cons y ys, GHC.Base.NEcons x xs =>
+        andb (y GHC.Base.== x) (Data.OldList.isPrefixOf ys xs)
+    end.
+
+(* Skipping definition `Data.List.NonEmpty.op_znzn__' *)
+
+Definition zip {a} {b}
+   : GHC.Base.NonEmpty a ->
+     GHC.Base.NonEmpty b -> GHC.Base.NonEmpty (a * b)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
+        GHC.Base.NEcons (pair x y) (GHC.List.zip xs ys)
+    end.
+
+Definition zipWith {a} {b} {c}
+   : (a -> b -> c) ->
+     GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b -> GHC.Base.NonEmpty c :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | f, GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
+        GHC.Base.NEcons (f x y) (GHC.List.zipWith f xs ys)
+    end.
+
+Definition unzip {f} {a} {b} `{GHC.Base.Functor f}
+   : f (a * b)%type -> (f a * f b)%type :=
+  fun xs =>
+    pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
 
 Definition nubBy {a}
    : (a -> a -> bool) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
@@ -199,88 +274,13 @@ Definition nub {a} `{GHC.Base.Eq_ a}
    : GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
   nubBy _GHC.Base.==_.
 
-Definition nonEmpty {a} : list a -> option (GHC.Base.NonEmpty a) :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | nil => None
-    | cons a as_ => Some (GHC.Base.NEcons a as_)
-    end.
+(* Skipping definition `Data.List.NonEmpty.transpose' *)
 
-Definition uncons {a}
-   : GHC.Base.NonEmpty a -> (a * option (GHC.Base.NonEmpty a))%type :=
-  fun '(GHC.Base.NEcons a as_) => pair a (nonEmpty as_).
+(* Skipping definition `Data.List.NonEmpty.sortBy' *)
 
-Definition map {a} {b}
-   : (a -> b) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | f, GHC.Base.NEcons a as_ => GHC.Base.NEcons (f a) (GHC.Base.fmap f as_)
-    end.
-
-(* Skipping definition `Data.List.NonEmpty.lift' *)
-
-Definition length {a} : GHC.Base.NonEmpty a -> GHC.Num.Int :=
-  fun '(GHC.Base.NEcons _ xs) => #1 GHC.Num.+ Data.Foldable.length xs.
-
-(* Skipping definition `Data.List.NonEmpty.last' *)
-
-(* Skipping definition `Data.List.NonEmpty.iterate' *)
-
-Definition isPrefixOf {a} `{GHC.Base.Eq_ a}
-   : list a -> GHC.Base.NonEmpty a -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | nil, _ => true
-    | cons y ys, GHC.Base.NEcons x xs =>
-        andb (y GHC.Base.== x) (Data.OldList.isPrefixOf ys xs)
-    end.
-
-(* Skipping definition `Data.List.NonEmpty.intersperse' *)
-
-(* Skipping definition `Data.List.NonEmpty.insert' *)
-
-(* Skipping definition `Data.List.NonEmpty.inits' *)
-
-(* Skipping definition `Data.List.NonEmpty.init' *)
-
-Definition head {a} : GHC.Base.NonEmpty a -> a :=
-  fun '(GHC.Base.NEcons a _) => a.
-
-(* Skipping definition `Data.List.NonEmpty.groupWith1' *)
-
-(* Skipping definition `Data.List.NonEmpty.groupWith' *)
-
-(* Skipping definition `Data.List.NonEmpty.groupBy1' *)
-
-(* Skipping definition `Data.List.NonEmpty.groupBy' *)
-
-(* Skipping definition `Data.List.NonEmpty.groupAllWith1' *)
-
-(* Skipping definition `Data.List.NonEmpty.groupAllWith' *)
-
-(* Skipping definition `Data.List.NonEmpty.group1' *)
-
-(* Skipping definition `Data.List.NonEmpty.group' *)
-
-(* Skipping definition `Data.List.NonEmpty.fromList' *)
-
-Definition filter {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
-  fun p => GHC.List.filter p GHC.Base.∘ toList.
-
-Definition dropWhile {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
-  fun p => GHC.List.dropWhile p GHC.Base.∘ toList.
-
-Definition drop {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
-  fun n => GHC.List.drop n GHC.Base.∘ toList.
-
-(* Skipping definition `Data.List.NonEmpty.cycle' *)
-
-Definition cons_ {a} : a -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
-  _<|_.
-
-Definition break {a}
-   : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
-  fun p => span (negb GHC.Base.∘ p).
+Definition sortWith {o} {a} `{GHC.Base.Ord o}
+   : (a -> o) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
+  sortBy GHC.Base.∘ Data.Ord.comparing.
 
 Module Notations.
 Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).

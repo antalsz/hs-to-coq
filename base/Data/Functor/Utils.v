@@ -66,8 +66,6 @@ Instance Unpeel_Max {a} : Prim.Unpeel (Max a) (option a)
 
 (* Converted value declarations: *)
 
-(* Skipping definition `Data.Functor.Utils.hash_compose' *)
-
 Local Definition Semigroup__Max_op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Max inst_a) -> (Max inst_a) -> (Max inst_a) :=
   fun arg_0__ arg_1__ =>
@@ -134,6 +132,23 @@ Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
            GHC.Base.mconcat__ := Monoid__Min_mconcat ;
            GHC.Base.mempty__ := Monoid__Min_mempty |}.
 
+Local Definition Functor__StateL_fmap {inst_s}
+   : forall {a} {b}, (a -> b) -> (StateL inst_s) a -> (StateL inst_s) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_StateL k => Mk_StateL (fun s => let 'pair s' v := k s in pair s' (f v))
+      end.
+
+Local Definition Functor__StateL_op_zlzd__ {inst_s}
+   : forall {a} {b}, a -> (StateL inst_s) b -> (StateL inst_s) a :=
+  fun {a} {b} => Functor__StateL_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__StateL {s} : GHC.Base.Functor (StateL s) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateL_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateL_op_zlzd__ |}.
+
 Local Definition Applicative__StateL_liftA2 {inst_s}
    : forall {a} {b} {c},
      (a -> b -> c) -> (StateL inst_s) a -> (StateL inst_s) b -> (StateL inst_s) c :=
@@ -160,23 +175,6 @@ Local Definition Applicative__StateL_op_zlztzg__ {inst_s}
                        pair s'' (f v))
       end.
 
-Local Definition Functor__StateL_fmap {inst_s}
-   : forall {a} {b}, (a -> b) -> (StateL inst_s) a -> (StateL inst_s) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_StateL k => Mk_StateL (fun s => let 'pair s' v := k s in pair s' (f v))
-      end.
-
-Local Definition Functor__StateL_op_zlzd__ {inst_s}
-   : forall {a} {b}, a -> (StateL inst_s) b -> (StateL inst_s) a :=
-  fun {a} {b} => Functor__StateL_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__StateL {s} : GHC.Base.Functor (StateL s) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateL_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateL_op_zlzd__ |}.
-
 Local Definition Applicative__StateL_op_ztzg__ {inst_s}
    : forall {a} {b},
      (StateL inst_s) a -> (StateL inst_s) b -> (StateL inst_s) b :=
@@ -193,6 +191,23 @@ Program Instance Applicative__StateL {s} : GHC.Base.Applicative (StateL s) :=
            GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateL_op_zlztzg__ ;
            GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateL_op_ztzg__ ;
            GHC.Base.pure__ := fun {a} => Applicative__StateL_pure |}.
+
+Local Definition Functor__StateR_fmap {inst_s}
+   : forall {a} {b}, (a -> b) -> (StateR inst_s) a -> (StateR inst_s) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_StateR k => Mk_StateR (fun s => let 'pair s' v := k s in pair s' (f v))
+      end.
+
+Local Definition Functor__StateR_op_zlzd__ {inst_s}
+   : forall {a} {b}, a -> (StateR inst_s) b -> (StateR inst_s) a :=
+  fun {a} {b} => Functor__StateR_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__StateR {s} : GHC.Base.Functor (StateR s) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateR_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateR_op_zlzd__ |}.
 
 Local Definition Applicative__StateR_liftA2 {inst_s}
    : forall {a} {b} {c},
@@ -220,23 +235,6 @@ Local Definition Applicative__StateR_op_zlztzg__ {inst_s}
                        pair s'' (f v))
       end.
 
-Local Definition Functor__StateR_fmap {inst_s}
-   : forall {a} {b}, (a -> b) -> (StateR inst_s) a -> (StateR inst_s) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_StateR k => Mk_StateR (fun s => let 'pair s' v := k s in pair s' (f v))
-      end.
-
-Local Definition Functor__StateR_op_zlzd__ {inst_s}
-   : forall {a} {b}, a -> (StateR inst_s) b -> (StateR inst_s) a :=
-  fun {a} {b} => Functor__StateR_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__StateR {s} : GHC.Base.Functor (StateR s) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateR_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateR_op_zlzd__ |}.
-
 Local Definition Applicative__StateR_op_ztzg__ {inst_s}
    : forall {a} {b},
      (StateR inst_s) a -> (StateR inst_s) b -> (StateR inst_s) b :=
@@ -253,6 +251,8 @@ Program Instance Applicative__StateR {s} : GHC.Base.Applicative (StateR s) :=
            GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateR_op_zlztzg__ ;
            GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateR_op_ztzg__ ;
            GHC.Base.pure__ := fun {a} => Applicative__StateR_pure |}.
+
+(* Skipping definition `Data.Functor.Utils.hash_compose' *)
 
 (* External variables:
      None Some bool list op_zt__ option pair GHC.Base.Applicative GHC.Base.Functor

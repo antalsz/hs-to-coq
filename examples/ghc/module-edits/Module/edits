@@ -15,6 +15,7 @@ skip module GHC.Fingerprint
 skip module GHC.Fingerprint.Type
 
 order Module.Uniquable__ModuleName Module.Ord__NDModule_compare Module.Ord__NDModule 
+order Module.Uniquable__ModuleName Module.Eq___ModuleName_op_zeze__
 order Module.Uniquable__UnitId Module.Ord__NDModule_compare Ord__NDModule 
 
 
@@ -65,8 +66,10 @@ skip Module.renameHoleModule'
 
 order Module.Eq___ModuleName      Module.Eq___IndefModule_op_zeze__
 order Module.Eq___ModuleName      Module.Eq___Module_op_zeze__
+order Module.Eq___ModuleName      Module.Eq___InstalledModule_op_zeze__
 order Module.Ord__ModuleName      Module.Ord__IndefModule_compare
 order Module.Ord__ModuleName      Module.Ord__Module_compare
+order Module.Ord__ModuleName      Module.Ord__InstalledModule_op_zl__
 order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zeze__
 order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zsze__
 order Module.Eq___InstalledUnitId Module.Eq___InstalledModule_op_zeze__

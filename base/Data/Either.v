@@ -28,65 +28,6 @@ Arguments Right {_} {_} _.
 
 (* Converted value declarations: *)
 
-Definition rights {a} {b} : list (Either a b) -> list b :=
-  fun x =>
-    let cont_0__ arg_1__ :=
-      match arg_1__ with
-      | Right a => cons a nil
-      | _ => nil
-      end in
-    Coq.Lists.List.flat_map cont_0__ x.
-
-Definition lefts {a} {b} : list (Either a b) -> list a :=
-  fun x =>
-    let cont_0__ arg_1__ :=
-      match arg_1__ with
-      | Left a => cons a nil
-      | _ => nil
-      end in
-    Coq.Lists.List.flat_map cont_0__ x.
-
-Definition isRight {a} {b} : Either a b -> bool :=
-  fun arg_0__ => match arg_0__ with | Left _ => false | Right _ => true end.
-
-Definition isLeft {a} {b} : Either a b -> bool :=
-  fun arg_0__ => match arg_0__ with | Left _ => true | Right _ => false end.
-
-Definition fromRight {b} {a} : b -> Either a b -> b :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, Right b => b
-    | b, _ => b
-    end.
-
-Definition fromLeft {a} {b} : a -> Either a b -> a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, Left a => a
-    | a, _ => a
-    end.
-
-Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | f, _, Left x => f x
-    | _, g, Right y => g y
-    end.
-
-Definition partitionEithers {a} {b}
-   : list (Either a b) -> (list a * list b)%type :=
-  let right_ :=
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | a, pair l r => pair l (cons a r)
-      end in
-  let left_ :=
-    fun arg_4__ arg_5__ =>
-      match arg_4__, arg_5__ with
-      | a, pair l r => pair (cons a l) r
-      end in
-  GHC.Base.foldr (either left_ right_) (pair nil nil).
-
 Local Definition Eq___Either_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
   `{GHC.Base.Eq_ inst_b}
    : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
@@ -168,21 +109,6 @@ Program Instance Ord__Either {a} {b} `{GHC.Base.Ord a} `{GHC.Base.Ord b}
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Either.Show__Either' *)
 
-Local Definition Monad__Either_op_zgzgze__ {inst_e}
-   : forall {a} {b},
-     (Either inst_e) a -> (a -> (Either inst_e) b) -> (Either inst_e) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Left l, _ => Left l
-      | Right r, k => k r
-      end.
-
-Local Definition Monad__Either_op_zgzg__ {inst_e}
-   : forall {a} {b},
-     (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
-  fun {a} {b} => fun m k => Monad__Either_op_zgzgze__ m (fun arg_0__ => k).
-
 Local Definition Functor__Either_fmap {inst_a}
    : forall {a} {b}, (a -> b) -> (Either inst_a) a -> (Either inst_a) b :=
   fun {a} {b} =>
@@ -200,6 +126,18 @@ Program Instance Functor__Either {a} : GHC.Base.Functor (Either a) :=
   fun _ k__ =>
     k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Either_fmap ;
            GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Either_op_zlzd__ |}.
+
+Local Definition Semigroup__Either_op_zlzlzgzg__ {inst_a} {inst_b}
+   : (Either inst_a inst_b) -> (Either inst_a inst_b) -> (Either inst_a inst_b) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Left _, b => b
+    | a, _ => a
+    end.
+
+Program Instance Semigroup__Either {a} {b} : GHC.Base.Semigroup (Either a b) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Either_op_zlzlzgzg__ |}.
 
 Local Definition Applicative__Either_op_zlztzg__ {inst_e}
    : forall {a} {b},
@@ -234,6 +172,21 @@ Program Instance Applicative__Either {e} : GHC.Base.Applicative (Either e) :=
            GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Either_op_ztzg__ ;
            GHC.Base.pure__ := fun {a} => Applicative__Either_pure |}.
 
+Local Definition Monad__Either_op_zgzgze__ {inst_e}
+   : forall {a} {b},
+     (Either inst_e) a -> (a -> (Either inst_e) b) -> (Either inst_e) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Left l, _ => Left l
+      | Right r, k => k r
+      end.
+
+Local Definition Monad__Either_op_zgzg__ {inst_e}
+   : forall {a} {b},
+     (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
+  fun {a} {b} => fun m k => Monad__Either_op_zgzgze__ m (fun arg_0__ => k).
+
 Local Definition Monad__Either_return_ {inst_e}
    : forall {a}, a -> (Either inst_e) a :=
   fun {a} => GHC.Base.pure.
@@ -244,17 +197,64 @@ Program Instance Monad__Either {e} : GHC.Base.Monad (Either e) :=
            GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Either_op_zgzgze__ ;
            GHC.Base.return___ := fun {a} => Monad__Either_return_ |}.
 
-Local Definition Semigroup__Either_op_zlzlzgzg__ {inst_a} {inst_b}
-   : (Either inst_a inst_b) -> (Either inst_a inst_b) -> (Either inst_a inst_b) :=
+Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | f, _, Left x => f x
+    | _, g, Right y => g y
+    end.
+
+Definition lefts {a} {b} : list (Either a b) -> list a :=
+  fun x =>
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
+      | Left a => cons a nil
+      | _ => nil
+      end in
+    Coq.Lists.List.flat_map cont_0__ x.
+
+Definition rights {a} {b} : list (Either a b) -> list b :=
+  fun x =>
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
+      | Right a => cons a nil
+      | _ => nil
+      end in
+    Coq.Lists.List.flat_map cont_0__ x.
+
+Definition partitionEithers {a} {b}
+   : list (Either a b) -> (list a * list b)%type :=
+  let right_ :=
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | a, pair l r => pair l (cons a r)
+      end in
+  let left_ :=
+    fun arg_4__ arg_5__ =>
+      match arg_4__, arg_5__ with
+      | a, pair l r => pair (cons a l) r
+      end in
+  GHC.Base.foldr (either left_ right_) (pair nil nil).
+
+Definition isLeft {a} {b} : Either a b -> bool :=
+  fun arg_0__ => match arg_0__ with | Left _ => true | Right _ => false end.
+
+Definition isRight {a} {b} : Either a b -> bool :=
+  fun arg_0__ => match arg_0__ with | Left _ => false | Right _ => true end.
+
+Definition fromLeft {a} {b} : a -> Either a b -> a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | Left _, b => b
+    | _, Left a => a
     | a, _ => a
     end.
 
-Program Instance Semigroup__Either {a} {b} : GHC.Base.Semigroup (Either a b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Either_op_zlzlzgzg__ |}.
+Definition fromRight {b} {a} : b -> Either a b -> b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Right b => b
+    | b, _ => b
+    end.
 
 (* External variables:
      Gt Lt bool comparison cons false list negb nil op_zt__ pair true

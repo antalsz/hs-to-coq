@@ -81,64 +81,85 @@ Definition le_switches (arg_0__ : LevelEnv) :=
 
 (* Converted value declarations: *)
 
+Instance Eq___LevelType : GHC.Base.Eq_ LevelType.
+Proof.
+Admitted.
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `SetLevels.Outputable__FloatSpec' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `SetLevels.Outputable__Level' *)
+
+Instance Eq___Level : GHC.Base.Eq_ Level.
+Proof.
+Admitted.
+
+Axiom floatSpecLevel : FloatSpec -> Level.
+
 Axiom tOP_LEVEL : Level.
 
-Axiom substBndrsSL : BasicTypes.RecFlag ->
-                     LevelEnv -> list Core.InVar -> (LevelEnv * list Core.OutVar)%type.
+Axiom incMajorLvl : Level -> Level.
 
-Axiom substAndLvlBndrs : BasicTypes.RecFlag ->
-                         LevelEnv -> Level -> list Core.InVar -> (LevelEnv * list LevelledBndr)%type.
+Axiom incMinorLvl : Level -> Level.
 
-Axiom stayPut : Level -> Core.OutVar -> LevelledBndr.
+Axiom asJoinCeilLvl : Level -> Level.
+
+Axiom maxLvl : Level -> Level -> Level.
+
+Axiom ltLvl : Level -> Level -> bool.
+
+Axiom ltMajLvl : Level -> Level -> bool.
+
+Axiom isTopLvl : Level -> bool.
+
+Axiom isJoinCeilLvl : Level -> bool.
 
 Axiom setLevels : CoreMonad.FloatOutSwitches ->
                   Core.CoreProgram -> UniqSupply.UniqSupply -> list LevelledBind.
 
-Axiom profitableFloat : LevelEnv -> Level -> bool.
-
-Axiom placeJoinCeiling : LevelEnv -> LevelEnv.
-
-Axiom notWorthFloating : Core.CoreExpr -> list Core.Var -> bool.
-
-Axiom newPolyBndrs : Level ->
-                     LevelEnv ->
-                     list Core.OutVar -> list Core.InId -> LvlM (LevelEnv * list Core.OutId)%type.
-
-Axiom newLvlVar : LevelledExpr ->
-                  option BasicTypes.JoinArity -> bool -> LvlM Core.Id.
-
-Axiom maxLvl : Level -> Level -> Level.
-
-Axiom maxIn : (Core.Var -> bool) -> LevelEnv -> Core.InVar -> Level -> Level.
-
-Axiom maxFvLevel' : (Core.Var -> bool) -> LevelEnv -> Core.TyCoVarSet -> Level.
-
-Axiom maxFvLevel : (Core.Var -> bool) -> LevelEnv -> Core.DVarSet -> Level.
+Axiom lvlTopBind : LevelEnv ->
+                   Core.Bind Core.Id -> LvlM (LevelledBind * LevelEnv)%type.
 
 Axiom lvl_top : LevelEnv ->
                 BasicTypes.RecFlag -> Core.Id -> Core.CoreExpr -> LvlM LevelledExpr.
 
-Axiom lvlTopBind : LevelEnv ->
-                   Core.Bind Core.Id -> LvlM (LevelledBind * LevelEnv)%type.
+Axiom lvlExpr : LevelEnv -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
+
+Axiom lvlNonTailExpr : LevelEnv -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
+
+Axiom lvlApp : LevelEnv ->
+               CoreFVs.CoreExprWithFVs ->
+               (CoreFVs.CoreExprWithFVs * list CoreFVs.CoreExprWithFVs)%type ->
+               LvlM LevelledExpr.
+
+Axiom lvlCase : LevelEnv ->
+                Core.DVarSet ->
+                LevelledExpr ->
+                Core.Id ->
+                AxiomatizedTypes.Type_ -> list CoreFVs.CoreAltWithFVs -> LvlM LevelledExpr.
+
+Axiom lvlNonTailMFE : LevelEnv ->
+                      bool -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
+
+Axiom lvlMFE : LevelEnv -> bool -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
+
+Axiom isBottomThunk : forall {s}, option (BasicTypes.Arity * s)%type -> bool.
+
+Axiom annotateBotStr : Core.Id ->
+                       BasicTypes.Arity -> option (BasicTypes.Arity * Core.StrictSig)%type -> Core.Id.
+
+Axiom notWorthFloating : Core.CoreExpr -> list Core.Var -> bool.
+
+Axiom lvlBind : LevelEnv ->
+                CoreFVs.CoreBindWithFVs -> LvlM (LevelledBind * LevelEnv)%type.
+
+Axiom profitableFloat : LevelEnv -> Level -> bool.
 
 Axiom lvlRhs : LevelEnv ->
                BasicTypes.RecFlag ->
                bool ->
                option BasicTypes.JoinArity -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
-
-Axiom lvlNonTailMFE : LevelEnv ->
-                      bool -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
-
-Axiom lvlNonTailExpr : LevelEnv -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
-
-Axiom lvlMFE : LevelEnv -> bool -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
-
-Axiom lvlLamBndrs : LevelEnv ->
-                    Level -> list Core.OutVar -> (LevelEnv * list LevelledBndr)%type.
-
-Axiom lvlJoinBndrs : LevelEnv ->
-                     Level ->
-                     BasicTypes.RecFlag -> list Core.OutVar -> (LevelEnv * list LevelledBndr)%type.
 
 Axiom lvlFloatRhs : list Core.OutVar ->
                     Level ->
@@ -148,103 +169,82 @@ Axiom lvlFloatRhs : list Core.OutVar ->
                     option BasicTypes.JoinArity ->
                     CoreFVs.CoreExprWithFVs -> LvlM (Core.Expr LevelledBndr).
 
-Axiom lvlExpr : LevelEnv -> CoreFVs.CoreExprWithFVs -> LvlM LevelledExpr.
+Axiom substAndLvlBndrs : BasicTypes.RecFlag ->
+                         LevelEnv -> Level -> list Core.InVar -> (LevelEnv * list LevelledBndr)%type.
 
-Axiom lvlCase : LevelEnv ->
-                Core.DVarSet ->
-                LevelledExpr ->
-                Core.Id ->
-                AxiomatizedTypes.Type_ -> list CoreFVs.CoreAltWithFVs -> LvlM LevelledExpr.
+Axiom substBndrsSL : BasicTypes.RecFlag ->
+                     LevelEnv -> list Core.InVar -> (LevelEnv * list Core.OutVar)%type.
+
+Axiom lvlLamBndrs : LevelEnv ->
+                    Level -> list Core.OutVar -> (LevelEnv * list LevelledBndr)%type.
+
+Axiom lvlJoinBndrs : LevelEnv ->
+                     Level ->
+                     BasicTypes.RecFlag -> list Core.OutVar -> (LevelEnv * list LevelledBndr)%type.
 
 Axiom lvlBndrs : LevelEnv ->
                  Level -> list Core.CoreBndr -> (LevelEnv * list LevelledBndr)%type.
 
-Axiom lvlBind : LevelEnv ->
-                CoreFVs.CoreBindWithFVs -> LvlM (LevelledBind * LevelEnv)%type.
+Axiom stayPut : Level -> Core.OutVar -> LevelledBndr.
 
-Axiom lvlApp : LevelEnv ->
-               CoreFVs.CoreExprWithFVs ->
-               (CoreFVs.CoreExprWithFVs * list CoreFVs.CoreExprWithFVs)%type ->
-               LvlM LevelledExpr.
-
-Axiom ltMajLvl : Level -> Level -> bool.
-
-Axiom ltLvl : Level -> Level -> bool.
-
-Axiom lookupVar : LevelEnv -> Core.Id -> LevelledExpr.
-
-Axiom joinCeilingLevel : LevelEnv -> Level.
-
-Axiom isTopLvl : Level -> bool.
-
-Instance Eq___LevelType : GHC.Base.Eq_ LevelType.
-Proof.
-Admitted.
-
-Instance Eq___Level : GHC.Base.Eq_ Level.
-Proof.
-Admitted.
-
-Axiom isJoinCeilLvl : Level -> bool.
+Axiom destLevel : LevelEnv ->
+                  Core.DVarSet -> Core.TyCoVarSet -> bool -> bool -> bool -> Level.
 
 Axiom isFunction : CoreFVs.CoreExprWithFVs -> bool.
 
-Axiom isBottomThunk : forall {s}, option (BasicTypes.Arity * s)%type -> bool.
+Axiom countFreeIds : Core.DVarSet -> nat.
 
 Axiom initialEnv : CoreMonad.FloatOutSwitches -> LevelEnv.
 
-Axiom initLvl : forall {a}, UniqSupply.UniqSupply -> UniqSupply.UniqSM a -> a.
+Axiom addLvl : Level -> Core.VarEnv Level -> Core.OutVar -> Core.VarEnv Level.
 
-Axiom incMinorLvlFrom : LevelEnv -> Level.
-
-Axiom incMinorLvl : Level -> Level.
-
-Axiom incMajorLvl : Level -> Level.
-
-Axiom floatTopLvlOnly : LevelEnv -> bool.
-
-Axiom floatSpecLevel : FloatSpec -> Level.
-
-Axiom floatOverSat : LevelEnv -> bool.
+Axiom addLvls : Level ->
+                Core.VarEnv Level -> list Core.OutVar -> Core.VarEnv Level.
 
 Axiom floatLams : LevelEnv -> option nat.
 
 Axiom floatConsts : LevelEnv -> bool.
 
+Axiom floatOverSat : LevelEnv -> bool.
+
+Axiom floatTopLvlOnly : LevelEnv -> bool.
+
+Axiom incMinorLvlFrom : LevelEnv -> Level.
+
 Axiom extendCaseBndrEnv : LevelEnv ->
                           Core.Id -> Core.Expr LevelledBndr -> LevelEnv.
 
-Axiom destLevel : LevelEnv ->
-                  Core.DVarSet -> Core.TyCoVarSet -> bool -> bool -> bool -> Level.
+Axiom placeJoinCeiling : LevelEnv -> LevelEnv.
 
-Axiom countFreeIds : Core.DVarSet -> nat.
+Axiom maxFvLevel : (Core.Var -> bool) -> LevelEnv -> Core.DVarSet -> Level.
 
-Axiom cloneLetVars : BasicTypes.RecFlag ->
-                     LevelEnv -> Level -> list Core.InVar -> LvlM (LevelEnv * list Core.OutVar)%type.
+Axiom maxFvLevel' : (Core.Var -> bool) -> LevelEnv -> Core.TyCoVarSet -> Level.
+
+Axiom maxIn : (Core.Var -> bool) -> LevelEnv -> Core.InVar -> Level -> Level.
+
+Axiom lookupVar : LevelEnv -> Core.Id -> LevelledExpr.
+
+Axiom joinCeilingLevel : LevelEnv -> Level.
+
+Axiom abstractVars : Level -> LevelEnv -> Core.DVarSet -> list Core.OutVar.
+
+Axiom initLvl : forall {a}, UniqSupply.UniqSupply -> UniqSupply.UniqSM a -> a.
+
+Axiom newPolyBndrs : Level ->
+                     LevelEnv ->
+                     list Core.OutVar -> list Core.InId -> LvlM (LevelEnv * list Core.OutId)%type.
+
+Axiom newLvlVar : LevelledExpr ->
+                  option BasicTypes.JoinArity -> bool -> LvlM Core.Id.
 
 Axiom cloneCaseBndrs : LevelEnv ->
                        Level -> list Core.Var -> LvlM (LevelEnv * list Core.Var)%type.
 
-Axiom asJoinCeilLvl : Level -> Level.
-
-Axiom annotateBotStr : Core.Id ->
-                       BasicTypes.Arity -> option (BasicTypes.Arity * Core.StrictSig)%type -> Core.Id.
+Axiom cloneLetVars : BasicTypes.RecFlag ->
+                     LevelEnv -> Level -> list Core.InVar -> LvlM (LevelEnv * list Core.OutVar)%type.
 
 Axiom add_id : Core.IdEnv (list Core.Var * LevelledExpr)%type ->
                (Core.Var * Core.Var)%type -> Core.IdEnv (list Core.Var * LevelledExpr)%type.
-
-Axiom addLvls : Level ->
-                Core.VarEnv Level -> list Core.OutVar -> Core.VarEnv Level.
-
-Axiom addLvl : Level -> Core.VarEnv Level -> Core.OutVar -> Core.VarEnv Level.
-
-Axiom abstractVars : Level -> LevelEnv -> Core.DVarSet -> list Core.OutVar.
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `SetLevels.Outputable__Level' *)
-
-(* Skipping all instances of class `Outputable.Outputable', including
-   `SetLevels.Outputable__FloatSpec' *)
 
 Instance Default__Level : GHC.Err.Default Level :=
   GHC.Err.Build_Default _ (Mk_Level GHC.Err.default GHC.Err.default

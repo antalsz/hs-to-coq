@@ -163,62 +163,11 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
 (* Skipping all instances of class `Foreign.Storable.Storable', including
    `Data.Functor.Identity.Storable__Identity' *)
 
-(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
-   `Data.Functor.Identity.MonadFix__Identity' *)
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.Functor.Identity.Read__Identity' *)
 
-Local Definition Monad__Identity_op_zgzgze__
-   : forall {a} {b}, Identity a -> (a -> Identity b) -> Identity b :=
-  fun {a} {b} => fun m k => k (runIdentity m).
-
-Local Definition Monad__Identity_op_zgzg__
-   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
-  fun {a} {b} => fun m k => Monad__Identity_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Applicative__Identity_liftA2
-   : forall {a} {b} {c},
-     (a -> b -> c) -> Identity a -> Identity b -> Identity c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
-
-Local Definition Applicative__Identity_op_zlztzg__
-   : forall {a} {b}, Identity (a -> b) -> Identity a -> Identity b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Identity_fmap
-   : forall {a} {b}, (a -> b) -> Identity a -> Identity b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Functor__Identity_op_zlzd__
-   : forall {a} {b}, a -> Identity b -> Identity a :=
-  fun {a} {b} => Functor__Identity_fmap GHC.Base.∘ GHC.Base.const.
-
-Program Instance Functor__Identity : GHC.Base.Functor Identity :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ |}.
-
-Local Definition Applicative__Identity_op_ztzg__
-   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Identity_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
-
-Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
-  fun {a} => Mk_Identity.
-
-Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
-  fun _ k__ =>
-    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Identity_liftA2 ;
-           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
-           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
-           GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
-
-Local Definition Monad__Identity_return_ : forall {a}, a -> Identity a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__Identity : GHC.Base.Monad Identity :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Identity_op_zgzg__ ;
-           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Identity_op_zgzgze__ ;
-           GHC.Base.return___ := fun {a} => Monad__Identity_return_ |}.
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.Functor.Identity.Show__Identity' *)
 
 Local Definition Foldable__Identity_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
@@ -283,11 +232,62 @@ Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Identity_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__Identity_toList |}.
 
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Data.Functor.Identity.Show__Identity' *)
+Local Definition Functor__Identity_fmap
+   : forall {a} {b}, (a -> b) -> Identity a -> Identity b :=
+  fun {a} {b} => GHC.Prim.coerce.
 
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Data.Functor.Identity.Read__Identity' *)
+Local Definition Functor__Identity_op_zlzd__
+   : forall {a} {b}, a -> Identity b -> Identity a :=
+  fun {a} {b} => Functor__Identity_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Identity : GHC.Base.Functor Identity :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ |}.
+
+Local Definition Applicative__Identity_liftA2
+   : forall {a} {b} {c},
+     (a -> b -> c) -> Identity a -> Identity b -> Identity c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__Identity_op_zlztzg__
+   : forall {a} {b}, Identity (a -> b) -> Identity a -> Identity b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Identity_op_ztzg__
+   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Identity_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
+  fun {a} => Mk_Identity.
+
+Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Identity_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
+
+Local Definition Monad__Identity_op_zgzgze__
+   : forall {a} {b}, Identity a -> (a -> Identity b) -> Identity b :=
+  fun {a} {b} => fun m k => k (runIdentity m).
+
+Local Definition Monad__Identity_op_zgzg__
+   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
+  fun {a} {b} => fun m k => Monad__Identity_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__Identity_return_ : forall {a}, a -> Identity a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__Identity : GHC.Base.Monad Identity :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Identity_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Identity_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__Identity_return_ |}.
+
+(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
+   `Data.Functor.Identity.MonadFix__Identity' *)
 
 (* External variables:
      bool comparison cons false list nil Data.Foldable.Foldable

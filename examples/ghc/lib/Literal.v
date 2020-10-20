@@ -48,110 +48,14 @@ Instance Default__Literal : GHC.Err.Default Literal :=
 
 (* Converted value declarations: *)
 
-Axiom word2IntLit : DynFlags.DynFlags -> Literal -> Literal.
-
-(* Skipping definition `Literal.pprLiteral' *)
-
-(* Skipping definition `Literal.pprIntegerVal' *)
-
-Axiom nullAddrLit : Literal.
-
-(* Skipping definition `Literal.narrow8WordLit' *)
-
-(* Skipping definition `Literal.narrow8IntLit' *)
-
-(* Skipping definition `Literal.narrow32WordLit' *)
-
-(* Skipping definition `Literal.narrow32IntLit' *)
-
-(* Skipping definition `Literal.narrow16WordLit' *)
-
-(* Skipping definition `Literal.narrow16IntLit' *)
-
-(* Skipping definition `Literal.mkMachWordWrap' *)
-
-(* Skipping definition `Literal.mkMachWord64Wrap' *)
-
-(* Skipping definition `Literal.mkMachWord64' *)
-
-(* Skipping definition `Literal.mkMachWord' *)
-
-Axiom mkMachString : GHC.Base.String -> Literal.
-
-(* Skipping definition `Literal.mkMachIntWrap' *)
-
-(* Skipping definition `Literal.mkMachInt64Wrap' *)
-
-(* Skipping definition `Literal.mkMachInt64' *)
-
-(* Skipping definition `Literal.mkMachInt' *)
-
-Axiom mkMachFloat : GHC.Real.Rational -> Literal.
-
-Axiom mkMachDouble : GHC.Real.Rational -> Literal.
-
-Axiom mkMachChar : GHC.Char.Char -> Literal.
-
-Axiom mkLitInteger : GHC.Num.Integer -> AxiomatizedTypes.Type_ -> Literal.
-
-(* Skipping definition `Literal.mapLitValue' *)
-
-Axiom literalType : Literal -> AxiomatizedTypes.Type_.
-
-Axiom litValue : Literal -> GHC.Num.Integer.
-
-Axiom litTag : Literal -> nat.
-
-Axiom litIsTrivial : Literal -> bool.
-
-Axiom litIsLifted : Literal -> bool.
-
-Axiom litIsDupable : DynFlags.DynFlags -> Literal -> bool.
-
-Axiom litFitsInChar : Literal -> bool.
-
-Axiom isZeroLit : Literal -> bool.
-
-Axiom isLitValue_maybe : Literal -> option GHC.Num.Integer.
-
-Axiom isLitValue : Literal -> bool.
-
-Axiom int2WordLit : DynFlags.DynFlags -> Literal -> Literal.
-
-Axiom int2FloatLit : Literal -> Literal.
-
-Axiom int2DoubleLit : Literal -> Literal.
-
-Axiom int2CharLit : Literal -> Literal.
-
-Axiom inWordRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool.
-
-(* Skipping definition `Literal.inWord64Range' *)
-
-Axiom inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool.
-
-(* Skipping definition `Literal.inInt64Range' *)
-
-Axiom inCharRange : GHC.Char.Char -> bool.
-
-(* Skipping definition `Literal.float2IntLit' *)
-
-Axiom float2DoubleLit : Literal -> Literal.
-
-(* Skipping definition `Literal.double2IntLit' *)
-
-Axiom double2FloatLit : Literal -> Literal.
-
-Axiom cmpLit : Literal -> Literal -> comparison.
-
-Axiom char2IntLit : Literal -> Literal.
-
-Axiom absent_lits : UniqFM.UniqFM Literal.
-
-(* Skipping definition `Literal.absentLiteralOf' *)
-
 (* Skipping all instances of class `Data.Data.Data', including
    `Literal.Data__Literal' *)
+
+(* Skipping all instances of class `Binary.Binary', including
+   `Literal.Binary__Literal' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Literal.Outputable__Literal' *)
 
 Instance Eq___Literal : GHC.Base.Eq_ Literal.
 Proof.
@@ -161,11 +65,107 @@ Instance Ord__Literal : GHC.Base.Ord Literal.
 Proof.
 Admitted.
 
-(* Skipping all instances of class `Outputable.Outputable', including
-   `Literal.Outputable__Literal' *)
+(* Skipping definition `Literal.mkMachInt' *)
 
-(* Skipping all instances of class `Binary.Binary', including
-   `Literal.Binary__Literal' *)
+(* Skipping definition `Literal.mkMachIntWrap' *)
+
+(* Skipping definition `Literal.mkMachWord' *)
+
+(* Skipping definition `Literal.mkMachWordWrap' *)
+
+(* Skipping definition `Literal.mkMachInt64' *)
+
+(* Skipping definition `Literal.mkMachInt64Wrap' *)
+
+(* Skipping definition `Literal.mkMachWord64' *)
+
+(* Skipping definition `Literal.mkMachWord64Wrap' *)
+
+Axiom mkMachFloat : GHC.Real.Rational -> Literal.
+
+Axiom mkMachDouble : GHC.Real.Rational -> Literal.
+
+Axiom mkMachChar : GHC.Char.Char -> Literal.
+
+Axiom mkMachString : GHC.Base.String -> Literal.
+
+Axiom mkLitInteger : GHC.Num.Integer -> AxiomatizedTypes.Type_ -> Literal.
+
+Axiom inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool.
+
+Axiom inWordRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool.
+
+(* Skipping definition `Literal.inInt64Range' *)
+
+(* Skipping definition `Literal.inWord64Range' *)
+
+Axiom inCharRange : GHC.Char.Char -> bool.
+
+Axiom isZeroLit : Literal -> bool.
+
+Axiom litValue : Literal -> GHC.Num.Integer.
+
+Axiom isLitValue_maybe : Literal -> option GHC.Num.Integer.
+
+(* Skipping definition `Literal.mapLitValue' *)
+
+Axiom isLitValue : Literal -> bool.
+
+Axiom word2IntLit : DynFlags.DynFlags -> Literal -> Literal.
+
+Axiom int2WordLit : DynFlags.DynFlags -> Literal -> Literal.
+
+(* Skipping definition `Literal.narrow8IntLit' *)
+
+(* Skipping definition `Literal.narrow16IntLit' *)
+
+(* Skipping definition `Literal.narrow32IntLit' *)
+
+(* Skipping definition `Literal.narrow8WordLit' *)
+
+(* Skipping definition `Literal.narrow16WordLit' *)
+
+(* Skipping definition `Literal.narrow32WordLit' *)
+
+Axiom char2IntLit : Literal -> Literal.
+
+Axiom int2CharLit : Literal -> Literal.
+
+(* Skipping definition `Literal.float2IntLit' *)
+
+Axiom int2FloatLit : Literal -> Literal.
+
+(* Skipping definition `Literal.double2IntLit' *)
+
+Axiom int2DoubleLit : Literal -> Literal.
+
+Axiom float2DoubleLit : Literal -> Literal.
+
+Axiom double2FloatLit : Literal -> Literal.
+
+Axiom nullAddrLit : Literal.
+
+Axiom litIsTrivial : Literal -> bool.
+
+Axiom litIsDupable : DynFlags.DynFlags -> Literal -> bool.
+
+Axiom litFitsInChar : Literal -> bool.
+
+Axiom litIsLifted : Literal -> bool.
+
+Axiom literalType : Literal -> AxiomatizedTypes.Type_.
+
+(* Skipping definition `Literal.absentLiteralOf' *)
+
+Axiom absent_lits : UniqFM.UniqFM Literal.
+
+Axiom cmpLit : Literal -> Literal -> comparison.
+
+Axiom litTag : Literal -> nat.
+
+(* Skipping definition `Literal.pprLiteral' *)
+
+(* Skipping definition `Literal.pprIntegerVal' *)
 
 (* External variables:
      bool comparison nat option AxiomatizedTypes.Type_ BasicTypes.FunctionOrData

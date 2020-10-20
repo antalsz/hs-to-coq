@@ -41,22 +41,11 @@ skip Data.Semigroup.Monoid__Max
 ##################################
 
 order Unpeel_Min Data.Semigroup.Eq___Min_op_zeze__
-order Unpeel_Min Data.Semigroup.Eq___Min_op_zsze__
-
 order Unpeel_Max Data.Semigroup.Eq___Max_op_zeze__
-order Unpeel_Max Data.Semigroup.Eq___Max_op_zsze__
-
 order Unpeel_First Data.Semigroup.Eq___First_op_zeze__
-order Unpeel_First Data.Semigroup.Eq___First_op_zsze__
-
 order Unpeel_Last Data.Semigroup.Eq___Last_op_zeze__
-order Unpeel_Last Data.Semigroup.Eq___Last_op_zsze__
-
-order Unpeel_Option Data.Semigroup.Eq___Option_op_zeze__
-order Unpeel_Option Data.Semigroup.Eq___Option_op_zsze__
-
 order Unpeel_WrappedMonoid Data.Semigroup.Eq___WrappedMonoid_op_zeze__
-order Unpeel_WrappedMonoid Data.Semigroup.Eq___WrappedMonoid_op_zsze__
+order Unpeel_Option Data.Semigroup.Eq___Option_op_zeze__
 
 order Data.Semigroup.Eq___Max           Data.Semigroup.Ord__Max
 order Data.Semigroup.Eq___Min           Data.Semigroup.Ord__Min

@@ -1,3 +1,4 @@
+order Control.Monad.Trans.State.Lazy.Monad__StateT Control.Monad.Trans.State.Lazy.MonadFail__StateT
 order Control.Monad.Trans.State.Lazy.Monad__StateT            Control.Monad.Trans.State.Lazy.modify'
 order Control.Monad.Trans.State.Lazy.Functor__StateT          Control.Monad.Trans.State.Lazy.Applicative__StateT_liftA2
 order Control.Monad.Trans.State.Lazy.Applicative__StateT      Control.Monad.Trans.State.Lazy.Monad__StateT_return_

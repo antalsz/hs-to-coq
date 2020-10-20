@@ -44,32 +44,50 @@ Definition DefUses :=
 
 (* Converted value declarations: *)
 
-Definition usesOnly : Uses -> DefUses :=
-  fun uses => cons (pair None uses) nil.
+Definition isEmptyNameSet : NameSet -> bool :=
+  UniqSet.isEmptyUniqSet.
+
+Definition emptyNameSet : NameSet :=
+  UniqSet.emptyUniqSet.
 
 Definition unitNameSet : Name.Name -> NameSet :=
   UniqSet.unitUniqSet.
 
-Definition unitFV : Name.Name -> FreeVars :=
-  unitNameSet.
+Definition mkNameSet : list Name.Name -> NameSet :=
+  UniqSet.mkUniqSet.
 
-Definition unionNameSets : list NameSet -> NameSet :=
-  UniqSet.unionManyUniqSets.
+Definition extendNameSetList : NameSet -> list Name.Name -> NameSet :=
+  UniqSet.addListToUniqSet.
+
+Definition extendNameSet : NameSet -> Name.Name -> NameSet :=
+  UniqSet.addOneToUniqSet.
 
 Definition unionNameSet : NameSet -> NameSet -> NameSet :=
   UniqSet.unionUniqSets.
 
-Definition plusFVs : list FreeVars -> FreeVars :=
-  unionNameSets.
+Definition unionNameSets : list NameSet -> NameSet :=
+  UniqSet.unionManyUniqSets.
 
-Definition plusFV : FreeVars -> FreeVars -> FreeVars :=
-  unionNameSet.
+Definition minusNameSet : NameSet -> NameSet -> NameSet :=
+  UniqSet.minusUniqSet.
 
-Definition plusDU : DefUses -> DefUses -> DefUses :=
-  Coq.Init.Datatypes.app.
+Definition elemNameSet : Name.Name -> NameSet -> bool :=
+  UniqSet.elementOfUniqSet.
 
-Definition nameSetElemsStable : NameSet -> list Name.Name :=
-  fun ns => Data.OldList.sortBy Name.stableNameCmp (UniqSet.nonDetEltsUniqSet ns).
+Definition delFromNameSet : NameSet -> Name.Name -> NameSet :=
+  UniqSet.delOneFromUniqSet.
+
+Definition filterNameSet : (Name.Name -> bool) -> NameSet -> NameSet :=
+  UniqSet.filterUniqSet.
+
+Definition intersectNameSet : NameSet -> NameSet -> NameSet :=
+  UniqSet.intersectUniqSets.
+
+Definition delListFromNameSet : NameSet -> list Name.Name -> NameSet :=
+  fun set ns => Data.Foldable.foldl delFromNameSet set ns.
+
+Definition intersectsNameSet : NameSet -> NameSet -> bool :=
+  fun s1 s2 => negb (isEmptyNameSet (intersectNameSet s1 s2)).
 
 Definition nameSetAny : (Name.Name -> bool) -> NameSet -> bool :=
   UniqSet.uniqSetAny.
@@ -77,11 +95,44 @@ Definition nameSetAny : (Name.Name -> bool) -> NameSet -> bool :=
 Definition nameSetAll : (Name.Name -> bool) -> NameSet -> bool :=
   UniqSet.uniqSetAll.
 
-Definition mkNameSet : list Name.Name -> NameSet :=
-  UniqSet.mkUniqSet.
+Definition nameSetElemsStable : NameSet -> list Name.Name :=
+  fun ns => Data.OldList.sortBy Name.stableNameCmp (UniqSet.nonDetEltsUniqSet ns).
+
+Definition isEmptyFVs : NameSet -> bool :=
+  isEmptyNameSet.
+
+Definition emptyFVs : FreeVars :=
+  emptyNameSet.
+
+Definition plusFVs : list FreeVars -> FreeVars :=
+  unionNameSets.
+
+Definition plusFV : FreeVars -> FreeVars -> FreeVars :=
+  unionNameSet.
 
 Definition mkFVs : list Name.Name -> FreeVars :=
   mkNameSet.
+
+Definition addOneFV : FreeVars -> Name.Name -> FreeVars :=
+  extendNameSet.
+
+Definition unitFV : Name.Name -> FreeVars :=
+  unitNameSet.
+
+Definition delFV : Name.Name -> FreeVars -> FreeVars :=
+  fun n s => delFromNameSet s n.
+
+Definition delFVs : list Name.Name -> FreeVars -> FreeVars :=
+  fun ns s => delListFromNameSet s ns.
+
+Definition intersectFVs : FreeVars -> FreeVars -> FreeVars :=
+  intersectNameSet.
+
+Definition emptyDUs : DefUses :=
+  nil.
+
+Definition usesOnly : Uses -> DefUses :=
+  fun uses => cons (pair None uses) nil.
 
 Definition mkDUs : list (Defs * Uses)%type -> DefUses :=
   fun pairs =>
@@ -90,23 +141,38 @@ Definition mkDUs : list (Defs * Uses)%type -> DefUses :=
       cons (pair (Some defs) uses) nil in
     Coq.Lists.List.flat_map cont_0__ pairs.
 
-Definition minusNameSet : NameSet -> NameSet -> NameSet :=
-  UniqSet.minusUniqSet.
+Definition plusDU : DefUses -> DefUses -> DefUses :=
+  Coq.Init.Datatypes.app.
 
-Definition isEmptyNameSet : NameSet -> bool :=
-  UniqSet.isEmptyUniqSet.
+Definition duDefs : DefUses -> Defs :=
+  fun dus =>
+    let get :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | pair None _u1, d2 => d2
+        | pair (Some d1) _u1, d2 => unionNameSet d1 d2
+        end in
+    Data.Foldable.foldr get emptyNameSet dus.
 
-Definition isEmptyFVs : NameSet -> bool :=
-  isEmptyNameSet.
+Definition allUses : DefUses -> Uses :=
+  fun dus =>
+    let get :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | pair _d1 u1, u2 => unionNameSet u1 u2
+        end in
+    Data.Foldable.foldr get emptyNameSet dus.
 
-Definition intersectNameSet : NameSet -> NameSet -> NameSet :=
-  UniqSet.intersectUniqSets.
-
-Definition intersectsNameSet : NameSet -> NameSet -> bool :=
-  fun s1 s2 => negb (isEmptyNameSet (intersectNameSet s1 s2)).
-
-Definition intersectFVs : FreeVars -> FreeVars -> FreeVars :=
-  intersectNameSet.
+Definition duUses : DefUses -> Uses :=
+  fun dus =>
+    let get :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | pair None rhs_uses, uses => unionNameSet rhs_uses uses
+        | pair (Some defs) rhs_uses, uses =>
+            minusNameSet (unionNameSet rhs_uses uses) defs
+        end in
+    Data.Foldable.foldr get emptyNameSet dus.
 
 Definition findUses : DefUses -> Uses -> Uses :=
   fun dus uses =>
@@ -122,72 +188,6 @@ Definition findUses : DefUses -> Uses -> Uses :=
             uses
         end in
     Data.Foldable.foldr get uses dus.
-
-Definition filterNameSet : (Name.Name -> bool) -> NameSet -> NameSet :=
-  UniqSet.filterUniqSet.
-
-Definition extendNameSetList : NameSet -> list Name.Name -> NameSet :=
-  UniqSet.addListToUniqSet.
-
-Definition extendNameSet : NameSet -> Name.Name -> NameSet :=
-  UniqSet.addOneToUniqSet.
-
-Definition emptyNameSet : NameSet :=
-  UniqSet.emptyUniqSet.
-
-Definition emptyFVs : FreeVars :=
-  emptyNameSet.
-
-Definition emptyDUs : DefUses :=
-  nil.
-
-Definition elemNameSet : Name.Name -> NameSet -> bool :=
-  UniqSet.elementOfUniqSet.
-
-Definition duUses : DefUses -> Uses :=
-  fun dus =>
-    let get :=
-      fun arg_0__ arg_1__ =>
-        match arg_0__, arg_1__ with
-        | pair None rhs_uses, uses => unionNameSet rhs_uses uses
-        | pair (Some defs) rhs_uses, uses =>
-            minusNameSet (unionNameSet rhs_uses uses) defs
-        end in
-    Data.Foldable.foldr get emptyNameSet dus.
-
-Definition duDefs : DefUses -> Defs :=
-  fun dus =>
-    let get :=
-      fun arg_0__ arg_1__ =>
-        match arg_0__, arg_1__ with
-        | pair None _u1, d2 => d2
-        | pair (Some d1) _u1, d2 => unionNameSet d1 d2
-        end in
-    Data.Foldable.foldr get emptyNameSet dus.
-
-Definition delFromNameSet : NameSet -> Name.Name -> NameSet :=
-  UniqSet.delOneFromUniqSet.
-
-Definition delListFromNameSet : NameSet -> list Name.Name -> NameSet :=
-  fun set ns => Data.Foldable.foldl delFromNameSet set ns.
-
-Definition delFVs : list Name.Name -> FreeVars -> FreeVars :=
-  fun ns s => delListFromNameSet s ns.
-
-Definition delFV : Name.Name -> FreeVars -> FreeVars :=
-  fun n s => delFromNameSet s n.
-
-Definition allUses : DefUses -> Uses :=
-  fun dus =>
-    let get :=
-      fun arg_0__ arg_1__ =>
-        match arg_0__, arg_1__ with
-        | pair _d1 u1, u2 => unionNameSet u1 u2
-        end in
-    Data.Foldable.foldr get emptyNameSet dus.
-
-Definition addOneFV : FreeVars -> Name.Name -> FreeVars :=
-  extendNameSet.
 
 (* External variables:
      None Some bool cons list negb nil op_zt__ option orb pair Coq.Init.Datatypes.app

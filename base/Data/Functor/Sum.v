@@ -45,38 +45,154 @@ Arguments InR {_} {_} {_} _.
 (* Skipping all instances of class `GHC.Generics.Generic1', including
    `Data.Functor.Sum.Generic1__Sum__5' *)
 
-Local Definition Traversable__Sum_traverse {inst_f} {inst_g}
-  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> (Sum inst_f inst_g) a -> f ((Sum inst_f inst_g) b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, InL x => InL Data.Functor.<$> Data.Traversable.traverse f x
-      | f, InR y => InR Data.Functor.<$> Data.Traversable.traverse f y
+Local Definition Eq1__Sum_liftEq {inst_f} {inst_g} `{Data.Functor.Classes.Eq1
+  inst_f} `{Data.Functor.Classes.Eq1 inst_g}
+   : forall {a} {b},
+     (a -> b -> bool) -> (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b -> bool :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | eq, InL x1, InL x2 => Data.Functor.Classes.liftEq eq x1 x2
+      | _, InL _, InR _ => false
+      | _, InR _, InL _ => false
+      | eq, InR y1, InR y2 => Data.Functor.Classes.liftEq eq y1 y2
       end.
 
-Local Definition Traversable__Sum_mapM {inst_f} {inst_g}
-  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (Sum inst_f inst_g) a -> m ((Sum inst_f inst_g) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Sum_traverse.
+Program Instance Eq1__Sum {f} {g} `{Data.Functor.Classes.Eq1 f}
+  `{Data.Functor.Classes.Eq1 g}
+   : Data.Functor.Classes.Eq1 (Sum f g) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Sum_liftEq |}.
 
-Local Definition Traversable__Sum_sequenceA {inst_f} {inst_g}
-  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     (Sum inst_f inst_g) (f a) -> f ((Sum inst_f inst_g) a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Sum_traverse GHC.Base.id.
+Local Definition Ord1__Sum_liftCompare {inst_f} {inst_g}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+   : forall {a} {b},
+     (a -> b -> comparison) ->
+     (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b -> comparison :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | comp, InL x1, InL x2 => Data.Functor.Classes.liftCompare comp x1 x2
+      | _, InL _, InR _ => Lt
+      | _, InR _, InL _ => Gt
+      | comp, InR y1, InR y2 => Data.Functor.Classes.liftCompare comp y1 y2
+      end.
 
-Local Definition Traversable__Sum_sequence {inst_f} {inst_g}
-  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m},
-     (Sum inst_f inst_g) (m a) -> m ((Sum inst_f inst_g) a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Sum_sequenceA.
+Program Instance Ord1__Sum {f} {g} `{Data.Functor.Classes.Ord1 f}
+  `{Data.Functor.Classes.Ord1 g}
+   : Data.Functor.Classes.Ord1 (Sum f g) :=
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Sum_liftCompare |}.
+
+(* Skipping all instances of class `Data.Functor.Classes.Read1', including
+   `Data.Functor.Sum.Read1__Sum' *)
+
+(* Skipping all instances of class `Data.Functor.Classes.Show1', including
+   `Data.Functor.Sum.Show1__Sum' *)
+
+Local Definition Eq___Sum_op_zeze__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{Data.Functor.Classes.Eq1 inst_g}
+  `{GHC.Base.Eq_ inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  Data.Functor.Classes.eq1.
+
+Local Definition Eq___Sum_op_zsze__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{Data.Functor.Classes.Eq1 inst_g}
+  `{GHC.Base.Eq_ inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  fun x y => negb (Eq___Sum_op_zeze__ x y).
+
+Program Instance Eq___Sum {f} {g} {a} `{Data.Functor.Classes.Eq1 f}
+  `{Data.Functor.Classes.Eq1 g} `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (Sum f g a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Sum_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Sum_op_zsze__ |}.
+
+Local Definition Ord__Sum_compare {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> comparison :=
+  Data.Functor.Classes.compare1.
+
+Local Definition Ord__Sum_op_zl__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  fun x y => Ord__Sum_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__Sum_op_zlze__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  fun x y => Ord__Sum_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__Sum_op_zg__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  fun x y => Ord__Sum_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Sum_op_zgze__ {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
+  fun x y => Ord__Sum_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__Sum_max {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) ->
+     (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) :=
+  fun x y => if Ord__Sum_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Sum_min {inst_f} {inst_g} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
+  `{GHC.Base.Ord inst_a}
+   : (Sum inst_f inst_g inst_a) ->
+     (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) :=
+  fun x y => if Ord__Sum_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__Sum {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
+  `{Data.Functor.Classes.Ord1 g} `{GHC.Base.Ord a}
+   : GHC.Base.Ord (Sum f g a) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Sum_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Sum_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Sum_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Sum_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Sum_compare ;
+           GHC.Base.max__ := Ord__Sum_max ;
+           GHC.Base.min__ := Ord__Sum_min |}.
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.Functor.Sum.Read__Sum' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.Functor.Sum.Show__Sum' *)
+
+Local Definition Functor__Sum_fmap {inst_f} {inst_g} `{GHC.Base.Functor inst_f}
+  `{GHC.Base.Functor inst_g}
+   : forall {a} {b}, (a -> b) -> (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, InL x => InL (GHC.Base.fmap f x)
+      | f, InR y => InR (GHC.Base.fmap f y)
+      end.
+
+Local Definition Functor__Sum_op_zlzd__ {inst_f} {inst_g} `{GHC.Base.Functor
+  inst_f} `{GHC.Base.Functor inst_g}
+   : forall {a} {b}, a -> (Sum inst_f inst_g) b -> (Sum inst_f inst_g) a :=
+  fun {a} {b} => Functor__Sum_fmap GHC.Base.∘ GHC.Base.const.
+
+Program Instance Functor__Sum {f} {g} `{GHC.Base.Functor f} `{GHC.Base.Functor
+  g}
+   : GHC.Base.Functor (Sum f g) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ |}.
 
 Local Definition Foldable__Sum_foldMap {inst_f} {inst_g}
   `{Data.Foldable.Foldable inst_f} `{Data.Foldable.Foldable inst_g}
@@ -178,27 +294,38 @@ Program Instance Foldable__Sum {f} {g} `{Data.Foldable.Foldable f}
            Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Sum_sum ;
            Data.Foldable.toList__ := fun {a} => Foldable__Sum_toList |}.
 
-Local Definition Functor__Sum_fmap {inst_f} {inst_g} `{GHC.Base.Functor inst_f}
-  `{GHC.Base.Functor inst_g}
-   : forall {a} {b}, (a -> b) -> (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b :=
-  fun {a} {b} =>
+Local Definition Traversable__Sum_traverse {inst_f} {inst_g}
+  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (Sum inst_f inst_g) a -> f ((Sum inst_f inst_g) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, InL x => InL (GHC.Base.fmap f x)
-      | f, InR y => InR (GHC.Base.fmap f y)
+      | f, InL x => InL Data.Functor.<$> Data.Traversable.traverse f x
+      | f, InR y => InR Data.Functor.<$> Data.Traversable.traverse f y
       end.
 
-Local Definition Functor__Sum_op_zlzd__ {inst_f} {inst_g} `{GHC.Base.Functor
-  inst_f} `{GHC.Base.Functor inst_g}
-   : forall {a} {b}, a -> (Sum inst_f inst_g) b -> (Sum inst_f inst_g) a :=
-  fun {a} {b} => Functor__Sum_fmap GHC.Base.∘ GHC.Base.const.
+Local Definition Traversable__Sum_mapM {inst_f} {inst_g}
+  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (Sum inst_f inst_g) a -> m ((Sum inst_f inst_g) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Sum_traverse.
 
-Program Instance Functor__Sum {f} {g} `{GHC.Base.Functor f} `{GHC.Base.Functor
-  g}
-   : GHC.Base.Functor (Sum f g) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap ;
-           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ |}.
+Local Definition Traversable__Sum_sequenceA {inst_f} {inst_g}
+  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     (Sum inst_f inst_g) (f a) -> f ((Sum inst_f inst_g) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Sum_traverse GHC.Base.id.
+
+Local Definition Traversable__Sum_sequence {inst_f} {inst_g}
+  `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m},
+     (Sum inst_f inst_g) (m a) -> m ((Sum inst_f inst_g) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Sum_sequenceA.
 
 Program Instance Traversable__Sum {f} {g} `{Data.Traversable.Traversable f}
   `{Data.Traversable.Traversable g}
@@ -212,133 +339,6 @@ Program Instance Traversable__Sum {f} {g} `{Data.Traversable.Traversable f}
              Traversable__Sum_sequenceA ;
            Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
              Traversable__Sum_traverse |}.
-
-(* Skipping all instances of class `GHC.Show.Show', including
-   `Data.Functor.Sum.Show__Sum' *)
-
-(* Skipping all instances of class `GHC.Read.Read', including
-   `Data.Functor.Sum.Read__Sum' *)
-
-Local Definition Ord1__Sum_liftCompare {inst_f} {inst_g}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-   : forall {a} {b},
-     (a -> b -> comparison) ->
-     (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b -> comparison :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | comp, InL x1, InL x2 => Data.Functor.Classes.liftCompare comp x1 x2
-      | _, InL _, InR _ => Lt
-      | _, InR _, InL _ => Gt
-      | comp, InR y1, InR y2 => Data.Functor.Classes.liftCompare comp y1 y2
-      end.
-
-Local Definition Eq1__Sum_liftEq {inst_f} {inst_g} `{Data.Functor.Classes.Eq1
-  inst_f} `{Data.Functor.Classes.Eq1 inst_g}
-   : forall {a} {b},
-     (a -> b -> bool) -> (Sum inst_f inst_g) a -> (Sum inst_f inst_g) b -> bool :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | eq, InL x1, InL x2 => Data.Functor.Classes.liftEq eq x1 x2
-      | _, InL _, InR _ => false
-      | _, InR _, InL _ => false
-      | eq, InR y1, InR y2 => Data.Functor.Classes.liftEq eq y1 y2
-      end.
-
-Program Instance Eq1__Sum {f} {g} `{Data.Functor.Classes.Eq1 f}
-  `{Data.Functor.Classes.Eq1 g}
-   : Data.Functor.Classes.Eq1 (Sum f g) :=
-  fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Sum_liftEq |}.
-
-Program Instance Ord1__Sum {f} {g} `{Data.Functor.Classes.Ord1 f}
-  `{Data.Functor.Classes.Ord1 g}
-   : Data.Functor.Classes.Ord1 (Sum f g) :=
-  fun _ k__ =>
-    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-             Ord1__Sum_liftCompare |}.
-
-Local Definition Ord__Sum_compare {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> comparison :=
-  Data.Functor.Classes.compare1.
-
-Local Definition Ord__Sum_op_zl__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  fun x y => Ord__Sum_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__Sum_op_zlze__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  fun x y => Ord__Sum_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__Sum_op_zg__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  fun x y => Ord__Sum_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__Sum_op_zgze__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  fun x y => Ord__Sum_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__Sum_max {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) ->
-     (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) :=
-  fun x y => if Ord__Sum_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__Sum_min {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
-  `{GHC.Base.Ord inst_a}
-   : (Sum inst_f inst_g inst_a) ->
-     (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) :=
-  fun x y => if Ord__Sum_op_zlze__ x y : bool then x else y.
-
-Local Definition Eq___Sum_op_zeze__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{Data.Functor.Classes.Eq1 inst_g}
-  `{GHC.Base.Eq_ inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  Data.Functor.Classes.eq1.
-
-Local Definition Eq___Sum_op_zsze__ {inst_f} {inst_g} {inst_a}
-  `{Data.Functor.Classes.Eq1 inst_f} `{Data.Functor.Classes.Eq1 inst_g}
-  `{GHC.Base.Eq_ inst_a}
-   : (Sum inst_f inst_g inst_a) -> (Sum inst_f inst_g inst_a) -> bool :=
-  fun x y => negb (Eq___Sum_op_zeze__ x y).
-
-Program Instance Eq___Sum {f} {g} {a} `{Data.Functor.Classes.Eq1 f}
-  `{Data.Functor.Classes.Eq1 g} `{GHC.Base.Eq_ a}
-   : GHC.Base.Eq_ (Sum f g a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___Sum_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___Sum_op_zsze__ |}.
-
-Program Instance Ord__Sum {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
-  `{Data.Functor.Classes.Ord1 g} `{GHC.Base.Ord a}
-   : GHC.Base.Ord (Sum f g a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__Sum_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__Sum_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__Sum_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__Sum_op_zgze__ ;
-           GHC.Base.compare__ := Ord__Sum_compare ;
-           GHC.Base.max__ := Ord__Sum_max ;
-           GHC.Base.min__ := Ord__Sum_min |}.
-
-(* Skipping all instances of class `Data.Functor.Classes.Show1', including
-   `Data.Functor.Sum.Show1__Sum' *)
-
-(* Skipping all instances of class `Data.Functor.Classes.Read1', including
-   `Data.Functor.Sum.Read1__Sum' *)
 
 (* External variables:
      Gt Lt Type bool comparison false list negb true Coq.Program.Basics.compose

@@ -21,11 +21,11 @@ import HsToCoq.Util.Monad
 import Data.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty (..), fromList)
-import Data.List (partition)
+import Data.List (partition, sortBy)
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 
-import Data.Generics
+import Data.Generics (Data, everywhere, mkT)
 
 import Control.Monad.Reader
 
@@ -156,9 +156,7 @@ convertHsGroup HsGroup{..} = do
 #endif
         sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
         let convertBinding' !b = (,) (convertedBindingName b) <$> convertBinding sigs b
-        defns <- (convertTypedModuleBindings
-                   (map unLoc $ concatMap (bagToList . snd) binds)
-                   sigs
+        defns <- (convertTypedModuleBindings (concatMap (bagToList . snd) binds) sigs
                    ??
                    handler)
                  convertBinding'
@@ -181,7 +179,14 @@ convertHsGroup HsGroup{..} = do
         pure $ (unnamedSentences ++ (concat (snd <$> namedSentences')),
                 concat (snd <$> promotedSentences))
 
-  convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD NOEXTP cid) <- group_instds grp]
+  -- Derived instances have an UnhelpfulSpan, we put those to the top because
+  -- they tend to be self-contained and everything else depends on them.
+  let compareSpan (UnhelpfulSpan _) (UnhelpfulSpan _) = EQ
+      compareSpan (UnhelpfulSpan _) (RealSrcSpan _) = LT
+      compareSpan (RealSrcSpan _) (UnhelpfulSpan _) = GT
+      compareSpan (RealSrcSpan p) (RealSrcSpan q) = compare p q
+  convertedClsInstDecls <- convertClsInstDecls . map unLoc $ sortBy (compareSpan `on` getLoc)
+    [L l cid | grp <- hs_tyclds, L l (ClsInstD NOEXTP cid) <- group_instds grp]
 
   (convertedAddedTyCls,convertedAddedDecls) <- view (edits.additions.at mod.non ([],[]))
 
@@ -362,7 +367,7 @@ moduleDeclarations ConvertedModule{..} = do
 
   orders <- view $ edits.orders
   let sortedDecls = topoSortByVariablesBy bvWithInfix orders $
-        convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
+        convModClsInstDecls ++ convModValDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sortedDecls
   let sortedTyCls = topoSortByVariablesBy bvWithInfix orders $
         convModTyClDecls ++ convModAddedTyCls ++ ax_decls

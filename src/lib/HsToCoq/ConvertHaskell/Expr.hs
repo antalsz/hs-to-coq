@@ -27,6 +27,7 @@ import Data.Bitraversable
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.Either
+import Data.List (sortOn)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -1137,7 +1138,7 @@ convertTypedModuleBinding ty defn =
     withCurrentDefinition name $ convertTypedBinding ty defn
 
 convertTypedModuleBindings :: ConversionMonad r m
-                           => [HsBind GhcRn]
+                           => [LHsBind GhcRn]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GhcRn -> GhcException -> m a)
@@ -1180,7 +1181,7 @@ convertMethodBinding _ (XHsBindsLR v) = noExtCon v
 #endif
 
 convertTypedBindings :: LocalConvMonad r m
-                     => [HsBind GhcRn] -> Map Qualid Signature
+                     => [LHsBind GhcRn] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GhcRn -> GhcException -> m a)
                      -> m [a]
@@ -1188,13 +1189,14 @@ convertTypedBindings = convertMultipleBindings convertTypedBinding
 
 convertMultipleBindings :: ConversionMonad r m
                         => (Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding))
-                        -> [HsBind GhcRn]
+                        -> [LHsBind GhcRn]
                         -> Map Qualid Signature
                         -> (ConvertedBinding -> m a)
                         -> Maybe (HsBind GhcRn -> GhcException -> m a)
                         -> m [a]
-convertMultipleBindings convertSingleBinding defns sigs build mhandler =
-  let (handler, wrap) = case mhandler of
+convertMultipleBindings convertSingleBinding defns0 sigs build mhandler =
+  let defns = sortOn getLoc defns0
+      (handler, wrap) = case mhandler of
         Just handler -> ( uncurry handler
                         , \defn -> ghandle $ pure . Left . (defn,))
         Nothing      -> ( const $ throwProgramError
@@ -1202,7 +1204,7 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                             -- Safe because the only place `Left' is introduced
                             -- is in the previous case branch
                         , flip const )
-  in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
+  in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \(L _ defn) ->
        -- 'MaybeT' is responsible for handling the skipped definitions, and
        -- nothing else
        runMaybeT . wrap defn . fmap Right $ do
@@ -1368,7 +1370,7 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
   -- We are not actually using the rec_flag from GHC, because due to renamings
   -- or `redefinition` edits, maybe the group is no longer recursive.
   convDefss <- for recBinds $ \(_rec_flag, mut_group) ->
-    convertTypedBindings (map unLoc . bagToList $ mut_group) sigs pure Nothing
+    convertTypedBindings (bagToList mut_group) sigs pure Nothing
   let convDefs = concat convDefss
 
   let fromConvertedBinding cb body = case cb of

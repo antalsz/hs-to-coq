@@ -45,7 +45,6 @@ library
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Foldable
                      , HsToCoq.Util.Traversable
-                     , HsToCoq.Util.Monad.ListT
                      , HsToCoq.Util.Monad
                      , HsToCoq.Util.List
                      , HsToCoq.Util.Containers
@@ -119,16 +118,12 @@ library
                      , ghc                  >=8.4
                      , ghc-boot
                      , ghc-paths
-                     , bifunctors
-                     , semigroups
                      , transformers
                      , mtl
                      , array
                      , lens
-                     , pipes
                      , containers
                      , contravariant
-                     , validation
                      , syb
                      , text
                      , directory

@@ -14,11 +14,11 @@ import Control.Lens
 
 import Data.Maybe
 import Data.Semigroup (Semigroup(..))
+import Data.Traversable (for)
 import qualified Data.Text as T
 
 import Control.Monad.Reader
 import Control.Monad.Except
-import HsToCoq.Util.Monad.ListT
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
@@ -46,14 +46,14 @@ data HsSignature = HsSignature { hsSigType   :: LHsSigType GhcRn
 
 collectSigs :: [Sig GhcRn] -> Either String (Map GHC.Name (Either String HsSignature))
 collectSigs sigs = do
-  let asType   = ( , []) . pure
+  let asType x = ([x], [])
       --asFixity = (S.singleton mname, [], ) . pure
 
-      asTypes    lnames sigTy = list $ map ((, asType sigTy) . unLoc) lnames
+      asTypes lnames sigTy = pure (map ((, asType sigTy) . unLoc) lnames)
       --asFixities lnames fixity = list . map (, asFixity fixity) . filter isRdrOperator $ map unLoc lnames
 
   multimap :: M.Map GHC.Name ([LHsSigType GhcRn],[Fixity])
-   <- fmap (M.fromListWith (<>)) . runListT $ list sigs >>= \case
+   <- fmap (M.fromListWith (<>) . concat) . for sigs $ \case
     TypeSig NOEXTP lnames (HsWC wcs hsib)
       | null wcs  -> asTypes lnames hsib
       | otherwise -> throwError "type wildcards found"
@@ -62,15 +62,15 @@ collectSigs sigs = do
     XSig v -> noExtCon v
 #endif
     ClassOpSig NOEXTP False lnames sigTy -> asTypes lnames sigTy
-    ClassOpSig NOEXTP True _ _ -> mempty -- Ignore default methods signatures
-    FixSig NOEXTP _            -> mempty
-    InlineSig NOEXTP _ _       -> mempty
-    SpecSig   NOEXTP _ _ _     -> mempty
-    SpecInstSig NOEXTP _ _     -> mempty
-    MinimalSig  NOEXTP _ _     -> mempty
-    SCCFunSig{}        -> mempty
-    CompleteMatchSig{} -> mempty
-    PatSynSig NOEXTP _ _ -> mempty
+    ClassOpSig NOEXTP True _ _ -> pure [] -- Ignore default methods signatures
+    FixSig NOEXTP _            -> pure []
+    InlineSig NOEXTP _ _       -> pure []
+    SpecSig   NOEXTP _ _ _     -> pure []
+    SpecInstSig NOEXTP _ _     -> pure []
+    MinimalSig  NOEXTP _ _     -> pure []
+    SCCFunSig{}          -> pure []
+    CompleteMatchSig{}   -> pure []
+    PatSynSig NOEXTP _ _ -> pure []
     IdSig     NOEXTP _   -> throwError "generated-code signatures"
 
   pure $ flip M.mapWithKey multimap $ \_key info@(_,_) -> case info of

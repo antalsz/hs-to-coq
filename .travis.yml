@@ -12,6 +12,10 @@ notifications:
     rooms:
      - secure: B38DsPEJPcxRoTwDS4JHks2bi+ViZkTwI6sB/5R+xKXSz4ZEU9chrQ15mXS/NVwdEaQZLNjuIKdxj1LgKAr9gelXZMDLS9lv/bzajx6SRq8x6MZxlYcd7e5ej+xZSmo8R+2ivMLB23iSBtZDi98aTulplbmXb2Qdh5WznShrGRftdtyO7Aqf5xZOy3Q3+0ji7qAXQpWB4sDLJr4Iu2Fjkvj5fBkq9dLHmkK08AR1xyo3kswNx4pssPbfiAiuk3zJY9h+iPGOCj8F3rfVlGdVOGXnF6Qa12rmEVmxCoQ66JNf97ESAp92+lqB84bpNuxLdfn+XZZLQOLZCIRZxm/noJYlQgYs9LPUA5RZ014ryR2B+ThiX/Cgod6toNDVN/vl/lg9QqyQoo+jZbloy/Ot3Z74eFNaVY8vDUkuPpkdSo7bkKDdzQcojmjLXKCT47hnIImD5AclzAv5WnYJd+387XEf2nD3F2RBwi++m2smE+CI66GZ0rizRZKMHIzWUJoEunQY2xRnFqo0XU+jYz50guIdu7h6X5sw2TfilbWLPigaWM03JYwbp4hrB4hqbkEeYaDA4ygqnyePo7oMQMmv57fwwcpvYN2yO6kgun0npSmBg0sWYFkrwQsxT3sI9mTljbhgXtuk0SRDOdXrOvlK1/fRqiq76o6RZ16cE8JN7eQ=
 
+env:
+  global:
+    secure: OBCMmyFo932m7YSM32zm9JrePPNxo/oTc3LfAuug17+/y2s+qY8Y3BFWJ3OZiSE4pN7kwZF7XTvZrs3sNwIoCzWeaYRQfiE9GuMtQbfaUgAjDnk8AUEZr4CfgJvR2DZxdd8Hxx0AfB0Y6AlDe9fVXIzeQ3i4UKgmtP2Hq0EJaTQWYAiI6oI7M2ykkL0FLixjc5IjTVPw50j7pmaqpEBRHndTQ4P4vSjQYmE2Ey1K1uru0snj6QKYQ7JlCMWWXjmdI5ka5MwALwHEcfpRCnwG8LT8D1rPejDXU2H8qkqFjckr5FQIVJ6x9rsUnOYgEWYQth/VBVoZSozFwiuoGqUzWHZyMQCwT3LV2vl2fYvjmxWm4Kto57IB44rxKvPvHpOPw+4nBCc0pfhKySHZahXK9QvJeltnEC86ZyWAbmDhTntT6aUUE+E37eXzEmRKd/AcEU5Zg8g+dY8+ppbavdwd9gKupBwVFBX5DDiPaB4AzuZgBO/DZK6uT0SaFZqvDcJVqvY4VqpOi1clOqpNNBCRAmTwiJ0y5XziaZuU8P4taN0+K/FZYrcQ85uCnEww6+8/+Ps4siGIH8vdQGq4Od3GZn3dQQLe/Et0Ba4nAfKMj/acxv4ClSarGN1wpygtQ4ANjT2gJJTMKgoj3WrJ3SknO4CoHDtTZ4XXVP/T5hYORuI=
+
 # Caching so the next build will be fast too
 before_cache:
   - rm -rf $HOME/.opam/log
@@ -112,7 +116,6 @@ jobs:
       - make -j2 -C examples/dlist
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
-      - make -j2 -C examples/wc
 
   - name: tests and base tests
     script:
@@ -165,3 +168,19 @@ jobs:
       - git add examples/ghc/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
+
+  - stage: Publishing
+    if: branch = release
+
+    name: Publishing base (GHC 8.4)
+    script:
+      - MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
+      - eval $(opam config env)
+      - git clone https://github.com/lastland/coq-ghc-base.git
+      - (cd coq-ghc-base; git checkout -b ghc.8.4)
+      - cp -Lrf base/* coq-ghc-base/
+      - cp .gitignore coq-ghc-base/
+      - cd coq-ghc-base
+      - git add .
+      - git commit -m "${MESSAGE}"
+      - git push "https://lastland:${SECRET_TOKEN}@github.com/lastland/coq-ghc-base.git" ghc.8.4

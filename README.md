@@ -45,6 +45,11 @@ To build `hs-to-coq`, then run
 
     stack build
 
+(`hs-to-coq` can be built with GHC 8.4, 8.6, 8.8, and 8.10. However, the repo
+only contains the translation of Haskell libraries such as `base` from GHC
+8.4. Therefore, it is advised to build `hs-to-coq` with GHC 8.4 if you plan to
+use example translations contained in this repo.)
+
 ## Building the `base` library
 
 This repository comes with a version of (parts of the) Haskell base library

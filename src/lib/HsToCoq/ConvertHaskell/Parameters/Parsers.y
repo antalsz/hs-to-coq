@@ -96,6 +96,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   original        { TokWord    "original"       }
   name            { TokWord    "name"           }
   promote         { TokWord    "promote"        }
+  polyrec         { TokWord    "polyrec"        }
   except          { TokWord    "except"         }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
@@ -329,6 +330,7 @@ Edit :: { Edit }
   | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
   | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
   | promote Qualid                                        { PromoteEdit                      $2                                    }
+  | polyrec Qualid                                        { PolyrecEdit                      $2                                    }
   | except 'in' SepBy1(Qualid, ',') Edit                  { ExceptInEdit                     $3 $4                                 }
 
 Edits :: { [Edit] }

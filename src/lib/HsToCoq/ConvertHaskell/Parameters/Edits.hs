@@ -9,7 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, exceptInEdits, promotions,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, exceptInEdits, promotions, polyrecs,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -164,6 +164,7 @@ data Edit = TypeSynonymTypeEdit              Ident Ident
           | InEdit                           Qualid Edit
           | ExceptInEdit                     (NonEmpty Qualid) Edit
           | PromoteEdit                      Qualid
+          | PolyrecEdit                      Qualid
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -215,6 +216,7 @@ data Edits = Edits { _typeSynonymTypes               :: !(Map Ident Ident)
                    , _inEdits                        :: !(Map Qualid Edits)
                    , _exceptInEdits                  :: !(Map Qualid Edits)
                    , _promotions                     :: !(Set Qualid)
+                   , _polyrecs                       :: !(Set Qualid)
                    }
            deriving (Eq, Ord, Show, Generic)
 instance Semigroup Edits where (<>)   = (%<>)
@@ -268,6 +270,7 @@ subtractEdits edits1 edits2 =
   , _inEdits                        = edits1^.inEdits
   , _exceptInEdits                  = edits1^.exceptInEdits
   , _promotions                     = edits1^.promotions
+  , _polyrecs                       = (edits1^.polyrecs) S.\\ (edits2^.polyrecs)
   }
 
 -- Derived edits
@@ -338,6 +341,7 @@ descDuplEdit = \case
   InEdit                           _ _          -> error "In Edits are never duplicates"
   ExceptInEdit                     _ _          -> error "ExceptIn Edits are never duplicates"
   PromoteEdit                      _            -> error "Promote edits are never duplicates"
+  PolyrecEdit                      _            -> error "Polyrec edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -382,6 +386,7 @@ addEdit e = case e of
   RewriteEdit                      rewrite          -> return . (rewrites %~ (rewrite:))
   InEdit                           qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
   PromoteEdit                      qid              -> addFresh e promotions                             qid                         ()
+  PolyrecEdit                      qid              -> addFresh e polyrecs                               qid                         ()
   ExceptInEdit                     qids edit        -> addExceptInEdit qids edit
 
 

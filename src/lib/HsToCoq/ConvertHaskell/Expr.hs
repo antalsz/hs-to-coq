@@ -1290,7 +1290,8 @@ addRecursion eBindings = do
   where
     fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
       pure $ cd :| []
-    fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
+    fixConnComp cds = do
+      (commonArgs, cds) <- splitArgs cds
       bodies <- for cds $ \case
         ConvertedDefinition{_convDefBody = Fun args body, ..} ->
           let fullType = maybeForall _convDefArgs <$> _convDefType
@@ -1350,6 +1351,13 @@ addRecursion eBindings = do
                                 , _convDefType = mty
                                 , _convDefBody = fixFor name }
       pure $ recDefs ++> extraDefs
+
+splitArgs :: (ConversionMonad r m, Traversable t) => t ConvertedDefinition -> m ([Binder], t ConvertedDefinition)
+splitArgs cds = do
+  polyrec <- findM (\rd -> view $ edits.polyrecs.at (_convDefName rd)) cds
+  case polyrec of
+    Nothing -> pure (splitCommonPrefixOf convDefArgs cds)
+    Just _  -> pure ([], cds)
 
 --------------------------------------------------------------------------------
 

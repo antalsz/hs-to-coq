@@ -2,23 +2,23 @@ module Control.Monad.Parse (
   -- * The 'MonadParse' type class and 'MonadNewlinesParse' constraint
   MonadParse(..), MonadNewlinesParse,
   -- * The 'Parse' monad
-  Parse, runParse, evalParse,
+  P.Parse, P.runParse, P.evalParse,
   -- * The 'ParseT' monad transformer
-  ParseT(..), runParseT, evalParseT,
+  P.ParseT(..), P.runParseT, P.evalParseT,
   -- * The 'NewlinesParse' monad
-  NewlinesParse, runNewlinesParse, evalNewlinesParse,
+  NewlinesParse, evalNewlinesParse,
   -- * The 'NewlinesParseT' monad transformer
-  NewlinesParseT(..), runNewlinesParseT, evalNewlinesParseT,
+  NewlinesParseT(..), evalNewlinesParseT,
   -- * Derived 'ParseT' operations
-  parseWithM', parseWith,
   parseToken, parseCharTokenLookahead,
   -- ** Lower-level operations
   parseChar, parseChars,
+  -- * Errors
+  P.Location(..), P.ParseError(..), P.prettyParseError,
   -- * Newline status
   NewlineStatus(..)
 ) where
 
-import Control.Monad.Trans.Parse ( Parse,      runParse,  evalParse
-                                 , ParseT(..), runParseT, evalParseT )
+import qualified Control.Monad.Trans.Parse as P
 import Control.Monad.Trans.NewlinesParse
 import Control.Monad.Parse.Class

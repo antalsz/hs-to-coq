@@ -427,10 +427,10 @@ FixBinders :: { (NonEmpty Binder, Maybe Order) }
   : Some(Or(Binder,Order))
       {% case partitionEithers $ toList $1 of
            (b : bs, [ann]) | isRight (NEL.last $1) -> pure (b :| bs, Just ann)
-                           | otherwise             -> throwError "decreasing argument for fixpoint specified too early"
+                           | otherwise             -> parseError "decreasing argument for fixpoint specified too early"
            (b : bs, [])                            -> pure (b :| bs, Nothing)
-           ([],     _)                             -> throwError "no binders given for fixpoint"
-           (_,      _:_:_)                         -> throwError "too many decreasing arguments given for fixpoint" }
+           ([],     _)                             -> parseError "no binders given for fixpoint"
+           (_,      _:_:_)                         -> parseError "too many decreasing arguments given for fixpoint" }
 
 BinderName :: { Name }
   : Qualid    { Ident $1 }
@@ -602,7 +602,7 @@ uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f = \(a,b,c) -> f a b c
 
 unexpected :: MonadParse m => Token -> m a
-unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
+unexpected tok = parseError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid
 forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malformed qualid: " ++ show x) (identToQualid x)

@@ -4,7 +4,7 @@
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- * Lexing
-  Lexing, runLexing, requestTactics,
+  Lexing, runLexing, requestTactics, prettyParseError,
   -- * Tokens
   Token(..), tokenDescription,
   token, token', proofBody,
@@ -172,7 +172,7 @@ parseUntilAny stops = do
       
       terminator = asum [Left res <$ parseCommand stop | (stop, res) <- stops]
       char       = Right <$> parseChar stopInit
-  
+
   fix $ \loop -> do
     text <- parseChars $ not . stopInit
     (terminator <|> char) >>= \case
@@ -213,10 +213,10 @@ proofBody = do
 
 requestTactics :: (MonadActivatable Token m, MonadParse m) => m ()
 requestTactics = activateWith $ \case
-  DoubleActivation -> "already about to parse tactics"
-  EarlyActivation  -> "can't parse tactics again immediately after parsing tactics"
+  DoubleActivation -> parseError "already about to parse tactics"
+  EarlyActivation  -> parseError "can't parse tactics again immediately after parsing tactics"
 
 type Lexing = ActivatableT Token NewlinesParse
 
-runLexing :: Lexing a -> Text -> Either String a
-runLexing = evalNewlinesParse . finalizeActivatableT (const "trailing post-tactics keyword not parsed")
+runLexing :: Lexing a -> Text -> Either [ParseError] a
+runLexing = evalNewlinesParse . finalizeActivatableT (\_ -> parseError "trailing post-tactics keyword not parsed")

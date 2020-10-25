@@ -74,11 +74,11 @@ switching' basic activated = switching basic activated <&> \case
                                Activated a -> a
                                Residual  x -> x
 
-activateWith :: (MonadError e m, MonadActivatable x m) => (ActivationError -> e) -> m ()
-activateWith toError = traverse_ (throwError . toError) =<< tryActivate
+activateWith :: MonadActivatable x m => (ActivationError -> m ()) -> m ()
+activateWith handleAE = traverse_ handleAE =<< tryActivate
 
 activate :: (MonadError ActivationError m, MonadActivatable x m) => m ()
-activate = activateWith id
+activate = activateWith throwError
 
 --------------------------------------------------------------------------------
 -- Instances

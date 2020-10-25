@@ -445,9 +445,26 @@ ImplicitBinderGuts :: { Binder }
   : BinderName                         { Inferred Implicit $1 }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
 
+-- Generalizable binders have an ambiguous syntax:
+--
+-- > `{ x : t }
+--
+-- where x is a single variable or an underscore, and t is a term; or:
+--
+-- > `{ t }
+--
+-- where t is a term (which should be a type class, possibly with quantifiers in front).
+--
+-- Below, we just parse the more general syntax @`{ t }@, and fix the special case
+-- afterwards, since it gets parsed as a type annotation (@HasType@).
 GeneralizableBinderGuts :: { Explicitness -> Binder }
-  : '(' Term ')'                    { \ei -> Generalized ei $2 }
-  | Some(BinderName) TypeAnnotation { \ei -> Typed Generalizable ei $1 $2 }
+  : Term
+    { \ei -> case $1 of
+        { HasType (Qualid name) t -> Typed Generalizable ei (pure (Ident name))   t
+        ; HasType Underscore    t -> Typed Generalizable ei (pure UnderscoreName) t
+        ; t -> Generalized ei t
+        }
+    }
 
 Binder :: { Binder }
   : BinderName                        { Inferred Explicit $1 }

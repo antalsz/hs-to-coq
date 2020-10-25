@@ -1,17 +1,19 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Parse.Class (
   -- * The 'MonadParse' type class
   MonadParse(..),
   -- * Derived 'ParseT' operations
-  parseWithM', parseWith,
   parseToken, parseCharTokenLookahead,
   -- ** Lower-level operations
   parseChar, parseChars,
 ) where
 
 import Control.Monad
-import Control.Monad.Error.Class
 
 import HsToCoq.Util.Function
 
@@ -35,26 +37,31 @@ import qualified Control.Monad.Trans.Parse as P
 -- 'MonadParse'
 --------------------------------------------------------------------------------
 
-class (MonadPlus m, MonadError String m) => MonadParse m where
-  parseWithM :: (Text -> Either String (a, Text)) -> m a
+class MonadPlus m => MonadParse m where
+  liftParse  :: P.Parse a -> m a
   peekChar   :: m (Maybe Char)
   atEOF      :: m Bool
+  parseError :: String -> m void
 
-parseWithM' :: MonadParse m => String -> (Text -> Maybe (a, Text)) -> m a
-parseWithM' msg f = parseWithM $ note msg . f
-  where note x = maybe (Left x) Right
+  default liftParse :: DeriveMonadParse m t n => P.Parse a -> m a
+  liftParse = lift . liftParse
 
-parseWith :: MonadParse m => (Text -> (a, Text)) -> m a
-parseWith f = parseWithM $ Right . f
+  default peekChar :: DeriveMonadParse m t n => m (Maybe Char)
+  peekChar = lift peekChar
+
+  default atEOF :: DeriveMonadParse m t n => m Bool
+  atEOF = lift atEOF
+
+  default parseError :: DeriveMonadParse m t n => String -> m void
+  parseError = lift . parseError
+
+type DeriveMonadParse m t n = (m ~ t n, MonadTrans t, Monad (t n), MonadParse n)
 
 parseChar :: MonadParse m => (Char -> Bool) -> m Char
-parseChar pred = do
-  c <- parseWithM' "unexpected EOF" T.uncons
-  guard $ pred c
-  pure c
+parseChar = liftParse . P.parseChar
 
 parseChars :: MonadParse m => (Char -> Bool) -> m Text
-parseChars pred = parseWith $ T.span pred
+parseChars = liftParse . P.parseChars
 
 parseToken :: MonadParse m
            => (Text -> a)
@@ -79,51 +86,17 @@ parseCharTokenLookahead build isFirst isNext = do
 --------------------------------------------------------------------------------
 
 instance Monad m => MonadParse (P.ParseT m) where
-  parseWithM = P.parseWithM
+  liftParse  = P.liftParse
   peekChar   = P.peekChar
   atEOF      = P.atEOF
+  parseError = P.parseError
 
 instance MonadParse m => MonadParse (I.IdentityT m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance MonadParse m => MonadParse (R.ReaderT r m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance (MonadParse m, Monoid w) => MonadParse (WS.WriterT w m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance (MonadParse m, Monoid w) => MonadParse (WL.WriterT w m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance MonadParse m => MonadParse (SS.StateT s m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance MonadParse m => MonadParse (SL.StateT s m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance (MonadParse m, Monoid w) => MonadParse (RWSS.RWST r w s m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance (MonadParse m, Monoid w) => MonadParse (RWSL.RWST r w s m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
 instance MonadParse m => MonadParse (M.MaybeT m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF

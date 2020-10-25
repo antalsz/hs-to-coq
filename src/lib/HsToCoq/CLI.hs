@@ -254,7 +254,7 @@ processFilesMain process = do
   let parseConfigFiles files builder parser =
         liftIO . forFold (conf^.files) $ \filename ->
           (runLexing parser <$> T.readFile filename) >>= \case
-            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
+            Left  err -> die $ unlines $ map (prettyParseError filename) err
             Right res -> either die pure $ builder res
 
   edits <- parseConfigFiles editsFiles buildEdits parseEditList

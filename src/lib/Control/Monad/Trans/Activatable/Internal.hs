@@ -63,10 +63,10 @@ runActivatableT (ActivatableT act) =
     (res, Residuating x) -> Left  (x,res)
     (res, _)             -> Right res
 
-finalizeActivatableT :: forall m e x a. MonadError e m => (x -> e) -> ActivatableT x m a -> m a
-finalizeActivatableT toError (ActivatableT act) =
+finalizeActivatableT :: forall m x a. Monad m => (x -> m a) -> ActivatableT x m a -> m a
+finalizeActivatableT throwR (ActivatableT act) =
   flip runStateT Base act >>= \case
-    (_,   Residuating x) -> throwError $ toError x
+    (_,   Residuating x) -> throwR x
     (res, _)             -> pure res
 
 runActivatable :: forall x a. Activatable x a -> Either (x,a) a

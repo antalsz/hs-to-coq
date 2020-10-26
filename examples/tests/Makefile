@@ -39,6 +39,7 @@ PASS = \
   Promote \
   Promote2 \
   ExceptIn \
+  ParserTests \
 
 # tests that *should* pass but currently fail
 TODO_PASS = \

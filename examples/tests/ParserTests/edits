@@ -1,0 +1,7 @@
+# Tests for the parser
+
+# Generalizable binder
+redefine Definition ParserTests.a1 `{C a} : a -> a := c.
+
+# Right-nested arrows
+redefine Definition ParserTests.a2 {a} {b} : (a -> b) -> a -> b := fun x => x.

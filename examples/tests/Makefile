@@ -40,12 +40,12 @@ PASS = \
   Promote2 \
   ExceptIn \
   ParserTests \
+  StrictPair \
 
 # tests that *should* pass but currently fail
 TODO_PASS = \
   InstVar \
   TypeAnnotations \
-  StrictPair \
   MutrecInst \
   TopBind \
   ExceptInDataDefinition \

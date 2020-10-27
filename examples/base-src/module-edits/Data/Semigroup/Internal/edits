@@ -70,14 +70,14 @@ delete unused type variables Data.SemigroupInternal.Ord__Alt
 
 # hs-to-coq uses the wrong type variable names in a type annotation to the argument of `coerce`
 redefine Local Definition Data.SemigroupInternal.Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}
-  `{(GHC.Base.Alternative inst_f)} : (Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
+  `{GHC.Base.Alternative inst_f} : (Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
   GHC.Prim.coerce (GHC.Base.op_zlzbzg__).
 
-redefine Local Definition Data.SemigroupInternal.Semigroup__Product_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Product_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
    : (Product inst_a) -> ((Product inst_a) -> (Product inst_a)) :=
   GHC.Prim.coerce (GHC.Num.*).
 
-redefine Local Definition Data.SemigroupInternal.Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
    : (Sum inst_a) -> ((Sum inst_a) -> (Sum inst_a)) :=
   GHC.Prim.coerce (GHC.Num.+).
 

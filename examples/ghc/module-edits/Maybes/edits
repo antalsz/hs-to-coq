@@ -8,7 +8,7 @@ skip Maybes.tryMaybeT
 #
 # add Default constraint to partial function
 #
-set type Maybes.expectJust : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> ((option a) -> a)
+set type Maybes.expectJust : forall {a} `{GHC.Err.Default a}, GHC.Base.String -> ((option a) -> a)
 
 #
 # fmap and <*> defined in terms of liftM and ap

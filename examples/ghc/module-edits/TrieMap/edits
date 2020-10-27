@@ -101,7 +101,7 @@ axiomatize definition TrieMap.Eq___DeBruijn__CoreAlt
 # This both recurses through itself and doesn't expose that, and is naturally
 # recursive on a subterm of its arguments, not the whole thing.
 redefine Definition TrieMap.Eq___DeBruijn__list_op_zeze__
-                      {a} `{(GHC.Base.Eq_ (TrieMap.DeBruijn a))}
+                      {a} `{GHC.Base.Eq_ (TrieMap.DeBruijn a)}
                       (dbl_xs dbl_ys : TrieMap.DeBruijn (list a)) : bool :=
            match dbl_xs , dbl_ys with
            | TrieMap.D env_xs xs0 , TrieMap.D env_ys ys0 =>
@@ -135,7 +135,7 @@ axiomatize definition TrieMap.xtList
 axiomatize definition TrieMap.lkList
 axiomatize definition TrieMap.fdList
 redefine Axiom TrieMap.TrieMap__ListMap_emptyTM :
-           forall {m} {a} `{(TrieMap.TrieMap m)}, TrieMap.ListMap m a.
+           forall {m} {a} `{TrieMap.TrieMap m}, TrieMap.ListMap m a.
   # We can't use `axiomatize definition` because the type signature isn't
   # available.
 
@@ -148,14 +148,14 @@ axiomatize definition TrieMap.fdG
 # `Key` in the type signature is swapped.  Eventually we'll need a more general
 # solution to this.
 redefine Axiom TrieMap.xtG :
-           forall {m} {a} `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))},
+           forall {m} {a} `{TrieMap.TrieMap m} `{GHC.Base.Eq_ (TrieMap.Key m)},
            (TrieMap.Key m) -> ((TrieMap.XT a) -> ((TrieMap.GenMap m a) -> (TrieMap.GenMap m a))).
 redefine Axiom TrieMap.lkG :
-           forall {m} {a}  `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))},
+           forall {m} {a}  `{TrieMap.TrieMap m} `{GHC.Base.Eq_ (TrieMap.Key m)},
            (TrieMap.Key m) -> ((TrieMap.GenMap m a) -> (option a)).
 # Again, solves the parameter order problem, the solution is just uglier.  It
 # also solves something about the `Key` type, but i'm not 100% sure what, tbh.
-redefine Instance TrieMap.TrieMap__GenMap {m} `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))}
+redefine Instance TrieMap.TrieMap__GenMap {m} `{TrieMap.TrieMap m} `{GHC.Base.Eq_ (TrieMap.Key m)}
     : TrieMap.TrieMap (TrieMap.GenMap m) :=
   Build_TrieMap (TrieMap.GenMap m)
                 (TrieMap.Key m)

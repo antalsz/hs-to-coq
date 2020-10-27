@@ -20,7 +20,6 @@ import Control.Monad
 import Control.Monad.Fail
 import Control.Monad.Fix
 import Control.Monad.State
-import Control.Monad.Except
 import HsToCoq.Util.Function
 
 import Data.Text (Text)

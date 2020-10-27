@@ -219,9 +219,12 @@ SepByIf(intro,p,sep)
   : OptionalList(AndThen(intro, SepBy1(p, sep)))    { $1 }
 
 -- Keep the separator
-ExplicitBeginBy1(p,sep)
-  : sep p { [($1, $2)] }
-  | sep p ExplicitBeginBy1(p,sep) { ($1, $2) : $3 }
+ExplicitSepBy1(p,sep)
+  : p ExplicitBeginBy(p,sep) { ($1, $2) }
+
+ExplicitBeginBy(p,sep)
+  : {- empty -} { [] }
+  | sep p ExplicitBeginBy(p,sep) { ($1, $2) : $3 }
 
 Optional(p)
   : p              { Just $1 }
@@ -364,12 +367,10 @@ EqlessQualOp :: { Qualid }
 
 EqlessTerm :: { Term }
   : MediumTerm(EqlessQualOp, EqlessTerm)    { $1 }
-  | SmallTerm                               { $1 }
 
 Term :: { Term }
   : LargeTerm    { $1 }
   | MediumTerm(QualOp, Term)    { $1 }
-  | SmallTerm    { $1 }
 
 LargeTerm :: { Term }
   : fun   Binders '=>' Term     { Fun $2 $4 }
@@ -380,14 +381,13 @@ LargeTerm :: { Term }
 -- Lets us implement EqlessTerm
 MediumTerm(Binop, RTerm) :: { Term }
   : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' RTerm     { Let $2 $3 $4 $6 $8 }
-  | SmallTerm           ':' RTerm { HasType $1 $3 }
   | SmallishTerm(Binop) ':' RTerm { HasType $1 $3 }
   | SmallishTerm(Binop) { $1 }
 
 -- SmallTerms separated by binary operators
 SmallishTerm(Binop) :: { Term }
-  : SmallTerm ExplicitBeginBy1(SmallTerm, Binop)
-    {% buildSTB $1 $2 }
+  : ExplicitSepBy1(SmallTerm, Binop)
+    {% uncurry buildSTB $1 }
 
 SmallTerm :: { Term }
   : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom

@@ -74,7 +74,7 @@ skip Core.collectNAnnBndrs
 # ISSUE: unfortunately our termination edits don't work in the presence 
 # of a default constraint because the type changes.
 #
-# set type Core.collectNAnnBndrs : forall {bndr} {annot} `{(GHC.Err.Default annot)}, nat -> (Core.AnnExpr bndr annot -> (list bndr * Core.AnnExpr bndr annot))
+# set type Core.collectNAnnBndrs : forall {bndr} {annot} `{GHC.Err.Default annot}, nat -> (Core.AnnExpr bndr annot -> (list bndr * Core.AnnExpr bndr annot))
 # in Core.collectNAnnBndrs termination collect { measure arg_0__ }
 #
 

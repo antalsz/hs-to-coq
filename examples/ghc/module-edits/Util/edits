@@ -18,8 +18,8 @@ redefine Definition Util.HasDebugCallStack := unit.
 rewrite forall x, GHC.Unicode.toUpper x = x
 
 ## partial
-set type Util.only : forall {a}`{(GHC.Err.Default a)}, (list a) -> a
-set type Util.foldl2 : forall {acc} {a} {b} `{(GHC.Err.Default acc)}, (acc -> (a -> (b -> acc))) -> (acc -> ((list a) -> ((list b) -> acc)))
+set type Util.only : forall {a}`{GHC.Err.Default a}, (list a) -> a
+set type Util.foldl2 : forall {acc} {a} {b} `{GHC.Err.Default acc}, (acc -> (a -> (b -> acc))) -> (acc -> ((list a) -> ((list b) -> acc)))
 
 ## termination
 skip Util.nTimes

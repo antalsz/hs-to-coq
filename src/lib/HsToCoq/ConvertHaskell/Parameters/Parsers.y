@@ -16,6 +16,7 @@ import Data.Either
 import Data.List.NonEmpty (NonEmpty(..), (<|))
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
+import qualified Data.Set as S
 
 import Control.Monad.Except
 import Control.Monad.State
@@ -26,6 +27,7 @@ import HsToCoq.Util.GHC.Module (ModuleName(), mkModuleNameT)
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Orphans ()
+import HsToCoq.Coq.Pretty (showP)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
@@ -216,6 +218,11 @@ SepBy(p,sep)
 SepByIf(intro,p,sep)
   : OptionalList(AndThen(intro, SepBy1(p, sep)))    { $1 }
 
+-- Keep the separator
+ExplicitBeginBy1(p,sep)
+  : sep p { [($1, $2)] }
+  | sep p ExplicitBeginBy1(p,sep) { ($1, $2) : $3 }
+
 Optional(p)
   : p              { Just $1 }
   | {- empty -}    { Nothing }
@@ -361,6 +368,7 @@ EqlessTerm :: { Term }
 
 Term :: { Term }
   : LargeTerm    { $1 }
+  | MediumTerm(QualOp, Term)    { $1 }
   | SmallTerm    { $1 }
 
 LargeTerm :: { Term }
@@ -368,17 +376,18 @@ LargeTerm :: { Term }
   | fix   FixBodies             { Fix   $2 }
   | cofix FixBodies             { Cofix $2 }
   | forall Binders ',' Term     { Forall $2 $4 }
-  | MediumTerm(QualOp, Term)    { $1 }
 
 -- Lets us implement EqlessTerm
-MediumTerm(Binop, LetRHS) :: { Term }
-  : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' LetRHS    { Let $2 $3 $4 $6 $8 }
-  | match SepBy1(MatchItem, ',') with Many(Equation) end                        { Match $2 Nothing $4 }
-  | SmallTerm BinopRHS(Binop)                                                   { $2 $1 }
+MediumTerm(Binop, RTerm) :: { Term }
+  : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' RTerm     { Let $2 $3 $4 $6 $8 }
+  | SmallTerm           ':' RTerm { HasType $1 $3 }
+  | SmallishTerm(Binop) ':' RTerm { HasType $1 $3 }
+  | SmallishTerm(Binop) { $1 }
 
-BinopRHS(Binop) :: { Term -> Term }
-  : ':'   SmallTerm    { \lhs -> HasType lhs $2 }
-  | Binop SmallTerm    { if $1 == "->" then \lhs -> Arrow lhs $2 else \lhs -> mkInfix lhs $1 $2 }
+-- SmallTerms separated by binary operators
+SmallishTerm(Binop) :: { Term }
+  : SmallTerm ExplicitBeginBy1(SmallTerm, Binop)
+    {% buildSTB $1 $2 }
 
 SmallTerm :: { Term }
   : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom
@@ -394,6 +403,8 @@ Atom :: { Term }
   | Num             { Num $1 }
   | '_'             { Underscore }
   | StringLit       { String $1 }
+  | match SepBy1(MatchItem, ',') with Many(Equation) end
+                    { Match $2 Nothing $4 }
 
 TypeAnnotation :: { Term }
   : ':' Term    { $2 }
@@ -445,9 +456,26 @@ ImplicitBinderGuts :: { Binder }
   : BinderName                         { Inferred Implicit $1 }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
 
+-- Generalizable binders have an ambiguous syntax:
+--
+-- > `{ x : t }
+--
+-- where x is a single variable or an underscore, and t is a term; or:
+--
+-- > `{ t }
+--
+-- where t is a term (which should be a type class, possibly with quantifiers in front).
+--
+-- Below, we just parse the more general syntax @`{ t }@, and fix the special case
+-- afterwards, since it gets parsed as a type annotation (@HasType@).
 GeneralizableBinderGuts :: { Explicitness -> Binder }
-  : '(' Term ')'                    { \ei -> Generalized ei $2 }
-  | Some(BinderName) TypeAnnotation { \ei -> Typed Generalizable ei $1 $2 }
+  : Term
+    { \ei -> case $1 of
+        { HasType (Qualid name) t -> Typed Generalizable ei (pure (Ident name))   t
+        ; HasType Underscore    t -> Typed Generalizable ei (pure UnderscoreName) t
+        ; t -> Generalized ei t
+        }
+    }
 
 Binder :: { Binder }
   : BinderName                        { Inferred Explicit $1 }
@@ -611,4 +639,32 @@ prechomp :: T.Text -> T.Text
 prechomp t = case T.stripPrefix "\n" t of
                Just t' -> t'
                Nothing -> t
+
+buildSTB :: MonadParse m => Term -> [(Qualid, Term)] -> m Term
+buildSTB t b = do
+  let (ambig, t1) = buildSTB' t b
+  unless (null ambig) . parseError $
+    "ambiguous expression, mixing operators " ++ show (qualidToOp' <$> snub ambig) ++ ": " ++ showP t
+  pure t1
+
+qualidToOp' :: Qualid -> Op
+qualidToOp' x = fromMaybe (error $ "internal error: malformed qualid (should be an op): " ++ show x) (qualidToOp x)
+
+snub :: Ord a => [a] -> [a]
+snub = S.toList . S.fromList
+
+buildSTB' :: Term -> [(Qualid, Term)] -> ([Qualid], Term)
+buildSTB' t suffix =
+  case more_ of
+    [] -> (ambig, t0)
+    (_, tmore) : more ->
+      let (ambig1, t1) = buildSTB' tmore more in
+      (ambig ++ ambig1, Arrow t0 t1)
+  where
+    ambig = case operands of
+      [] -> []
+      [_] -> []
+      _ : _ : _ -> fmap fst operands
+    (operands, more_) = span (\(op, _) -> op /= "->") suffix
+    t0 = foldl (\t0 (op, t1) -> mkInfix t0 op t1) t operands
 }

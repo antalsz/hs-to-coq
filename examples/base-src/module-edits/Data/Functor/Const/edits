@@ -2,7 +2,7 @@ add Data.Functor.Const Instance Unpeel_Const a b : GHC.Prim.Unpeel (Const a b) a
 
 # Avoid wrong type variable names in argument to coerce
 # TODO: ScopedTypeVariables
-redefine Local Definition Data.Functor.Const.Applicative__Const_op_zlztzg__ {inst_m} `{(GHC.Base.Monoid inst_m)}
+redefine Local Definition Data.Functor.Const.Applicative__Const_op_zlztzg__ {inst_m} `{GHC.Base.Monoid inst_m}
    : forall {a} {b}, (Const inst_m (a -> b)) -> ((Const inst_m a) -> (Const inst_m b)) :=
   fun {a} {b} => GHC.Prim.coerce (GHC.Base.mappend).
 

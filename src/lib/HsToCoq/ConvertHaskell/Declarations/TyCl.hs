@@ -63,6 +63,7 @@ import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
+import HsToCoq.ConvertHaskell.Declarations.Notations (buildInfixNotations)
 
 --------------------------------------------------------------------------------
 
@@ -212,7 +213,9 @@ convertDeclarationGroup DeclarationGroup{..} =
       pure [InductiveSentence $ CoInductive coinds []]
     
     (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing, Nothing) ->
-      pure [DefinitionSentence $ DefinitionDef Global name args oty def NotExistingClass]
+      let sigs = M.empty  -- TODO: fixity information
+      in pure $  [DefinitionSentence $ DefinitionDef Global name args oty def NotExistingClass]
+              ++ (NotationSentence <$> buildInfixNotations sigs name)
     
 {-    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
       pure $  foldMap recSynType syns
@@ -223,7 +226,6 @@ convertDeclarationGroup DeclarationGroup{..} =
           synDefs' = expandAllDefs synDefs
       in pure $  [InductiveSentence $ Inductive (subst synDefs' inds) []]
               ++ (orderRecSynDefs $ synDefs)
-
     
     (Nothing, Nothing, Nothing, Just (classDef :| []), Nothing) ->
       classSentences classDef
@@ -233,7 +235,6 @@ convertDeclarationGroup DeclarationGroup{..} =
     
     (_, _, _, _, _) ->
       let indName (IndBody name _ _ _)                       = name
-          synName (SynBody name _ _ _)                       = name
           clsName (ClassBody (ClassDefinition name _ _ _) _) = name
           axmName (name, _)                                  = name
           
@@ -249,6 +250,9 @@ convertDeclarationGroup DeclarationGroup{..} =
                                       , explain "type axiom"       "type axioms"       axmName dgAxioms ]
 
   where
+    synName :: SynBody -> Qualid
+    synName (SynBody name _ _ _) = name
+
     expandAllDefs :: M.Map Qualid Term -> M.Map Qualid Term
     expandAllDefs map =
        let map' = M.map (subst map) map
@@ -438,6 +442,20 @@ generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
 
 --------------------------------------------------------------------------------
 
+indNames :: IndBody -> [Qualid]
+indNames (IndBody tyName _params _resTy cons) = tyName : map (\(name, _, _) -> name) cons
+
+generateGroupDataInfixNotations :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
+generateGroupDataInfixNotations =
+  let sigs = M.empty  -- TODO: fixity information
+  in pure
+  . fmap NotationSentence
+  . concatMap (buildInfixNotations sigs)
+  . concatMap indNames
+  . (\x -> dgInductives x ++ dgCoInductives x)
+
+--------------------------------------------------------------------------------
+
 groupTyClDecls :: ConversionMonad r m
                => [TyClDecl GhcRn] -> m [DeclarationGroup]
 groupTyClDecls decls = do
@@ -463,6 +481,7 @@ convertModuleTyClDecls =  fork [ foldTraverse convertDeclarationGroup
                                , foldTraverse generateGroupArgumentSpecifiers
                                , foldTraverse generateGroupDefaultInstances
                                , foldTraverse generateGroupRecordAccessors
+                               , foldTraverse generateGroupDataInfixNotations
                                ]
                        <=< groupTyClDecls
   where fork fns x = mconcat <$> sequence (map ($x) fns)

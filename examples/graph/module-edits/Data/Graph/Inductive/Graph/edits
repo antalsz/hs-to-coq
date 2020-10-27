@@ -11,16 +11,16 @@ skip class GHC.Base.Eq_
 redefine Definition Data.Graph.Inductive.Graph.Node := Coq.Numbers.BinNums.N.
 
 #termination for ufold
-set type Data.Graph.Inductive.Graph.ufold : forall {gr} {a} {b} {c} `{(Graph gr)} `{(LawfulGraph gr)}, (((Context a b) -> (c -> c))) -> (c -> ((gr a b) -> c))
+set type Data.Graph.Inductive.Graph.ufold : forall {gr} {a} {b} {c} `{Graph gr} `{LawfulGraph gr}, (((Context a b) -> (c -> c))) -> (c -> ((gr a b) -> c))
 termination Data.Graph.Inductive.Graph.ufold        {measure (BinInt.Z.abs_nat(noNodes g))}
 obligations Data.Graph.Inductive.Graph.ufold        (Tactics.program_simpl; eapply matchAny_decr_size; try(apply Heq_anonymous); auto)
 
 #other functions that use ufold and thus need a lawful graph
-set type Data.Graph.Inductive.Graph.gmap : forall {gr} {a} {b} {c} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, ((Context a b) -> (Context c d)) -> ((gr a b) -> (gr c d))
-set type Data.Graph.Inductive.Graph.nemap : forall {gr} {a} {c} {b} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, (a -> c) -> ((b -> d) -> ((gr a b) -> (gr c d)))
-set type Data.Graph.Inductive.Graph.nmap : forall {gr} {a} {c} {b} `{(DynGraph gr)} `{(LawfulGraph gr)}, (a -> c) -> ((gr a b) -> (gr c b))
-set type Data.Graph.Inductive.Graph.gfiltermap: forall {gr} {a} {b} {c} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, (Context a b -> MContext c d) -> ((gr a b) -> (gr c d))
-set type Data.Graph.Inductive.Graph.emap: forall {gr} {b} {c} {a} `{(DynGraph gr)} `{(LawfulGraph gr)}, (b -> c) -> ((gr a b) -> (gr a c))
+set type Data.Graph.Inductive.Graph.gmap : forall {gr} {a} {b} {c} {d} `{DynGraph gr} `{LawfulGraph gr}, ((Context a b) -> (Context c d)) -> ((gr a b) -> (gr c d))
+set type Data.Graph.Inductive.Graph.nemap : forall {gr} {a} {c} {b} {d} `{DynGraph gr} `{LawfulGraph gr}, (a -> c) -> ((b -> d) -> ((gr a b) -> (gr c d)))
+set type Data.Graph.Inductive.Graph.nmap : forall {gr} {a} {c} {b} `{DynGraph gr} `{LawfulGraph gr}, (a -> c) -> ((gr a b) -> (gr c b))
+set type Data.Graph.Inductive.Graph.gfiltermap: forall {gr} {a} {b} {c} {d} `{DynGraph gr} `{LawfulGraph gr}, (Context a b -> MContext c d) -> ((gr a b) -> (gr c d))
+set type Data.Graph.Inductive.Graph.emap: forall {gr} {b} {c} {a} `{DynGraph gr} `{LawfulGraph gr}, (b -> c) -> ((gr a b) -> (gr a c))
 
 #coq cannot infer all of the type arguments correctly
 in Data.Graph.Inductive.Graph.lab rewrite forall, GHC.Base.fmap = (@GHC.Base.fmap option _ _ _)
@@ -29,10 +29,10 @@ in Data.Graph.Inductive.Graph.lab rewrite forall, GHC.Base.fmap = (@GHC.Base.fma
 rewrite forall s, (GHC.Show.show s) = (GHC.Base.hs_string__ String.EmptyString)
 
 #need some Default constraints
-set type Data.Graph.Inductive.Graph.insEdge : forall {gr} {b} {a} `{(DynGraph gr)} `{(Err.Default (Context a b))}, (LEdge b) -> ((gr a b) -> (gr a b))
-set type Data.Graph.Inductive.Graph.insEdges : forall {gr} {b} {a} `{(DynGraph gr)} `{(Err.Default (Context a b))}, list (LEdge b) -> ((gr a b) -> (gr a b))
-set type Data.Graph.Inductive.Graph.context: forall {gr} {a} {b} `{(Graph gr)} `{(Err.Default (Context a b))}, (gr a b) -> (Node -> (Context a b))
-set type Data.Graph.Inductive.Graph.deg: forall {gr} {a} {b} `{(Graph gr)} `{(Err.Default (Context a b))}, (gr a b) -> (Node -> GHC.Num.Int)
+set type Data.Graph.Inductive.Graph.insEdge : forall {gr} {b} {a} `{DynGraph gr} `{Err.Default (Context a b)}, (LEdge b) -> ((gr a b) -> (gr a b))
+set type Data.Graph.Inductive.Graph.insEdges : forall {gr} {b} {a} `{DynGraph gr} `{Err.Default (Context a b)}, list (LEdge b) -> ((gr a b) -> (gr a b))
+set type Data.Graph.Inductive.Graph.context: forall {gr} {a} {b} `{Graph gr} `{Err.Default (Context a b)}, (gr a b) -> (Node -> (Context a b))
+set type Data.Graph.Inductive.Graph.deg: forall {gr} {a} {b} `{Graph gr} `{Err.Default (Context a b)}, (gr a b) -> (Node -> GHC.Num.Int)
 
 #Coq gets confused about some polymorphic definitions
 in Data.Graph.Inductive.Graph.hasNeighborAdj rewrite forall, Data.Foldable.elem = GHC.List.elem

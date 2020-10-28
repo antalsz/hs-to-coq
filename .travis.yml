@@ -12,10 +12,6 @@ notifications:
     rooms:
      - secure: B38DsPEJPcxRoTwDS4JHks2bi+ViZkTwI6sB/5R+xKXSz4ZEU9chrQ15mXS/NVwdEaQZLNjuIKdxj1LgKAr9gelXZMDLS9lv/bzajx6SRq8x6MZxlYcd7e5ej+xZSmo8R+2ivMLB23iSBtZDi98aTulplbmXb2Qdh5WznShrGRftdtyO7Aqf5xZOy3Q3+0ji7qAXQpWB4sDLJr4Iu2Fjkvj5fBkq9dLHmkK08AR1xyo3kswNx4pssPbfiAiuk3zJY9h+iPGOCj8F3rfVlGdVOGXnF6Qa12rmEVmxCoQ66JNf97ESAp92+lqB84bpNuxLdfn+XZZLQOLZCIRZxm/noJYlQgYs9LPUA5RZ014ryR2B+ThiX/Cgod6toNDVN/vl/lg9QqyQoo+jZbloy/Ot3Z74eFNaVY8vDUkuPpkdSo7bkKDdzQcojmjLXKCT47hnIImD5AclzAv5WnYJd+387XEf2nD3F2RBwi++m2smE+CI66GZ0rizRZKMHIzWUJoEunQY2xRnFqo0XU+jYz50guIdu7h6X5sw2TfilbWLPigaWM03JYwbp4hrB4hqbkEeYaDA4ygqnyePo7oMQMmv57fwwcpvYN2yO6kgun0npSmBg0sWYFkrwQsxT3sI9mTljbhgXtuk0SRDOdXrOvlK1/fRqiq76o6RZ16cE8JN7eQ=
 
-env:
-  global:
-    secure: OBCMmyFo932m7YSM32zm9JrePPNxo/oTc3LfAuug17+/y2s+qY8Y3BFWJ3OZiSE4pN7kwZF7XTvZrs3sNwIoCzWeaYRQfiE9GuMtQbfaUgAjDnk8AUEZr4CfgJvR2DZxdd8Hxx0AfB0Y6AlDe9fVXIzeQ3i4UKgmtP2Hq0EJaTQWYAiI6oI7M2ykkL0FLixjc5IjTVPw50j7pmaqpEBRHndTQ4P4vSjQYmE2Ey1K1uru0snj6QKYQ7JlCMWWXjmdI5ka5MwALwHEcfpRCnwG8LT8D1rPejDXU2H8qkqFjckr5FQIVJ6x9rsUnOYgEWYQth/VBVoZSozFwiuoGqUzWHZyMQCwT3LV2vl2fYvjmxWm4Kto57IB44rxKvPvHpOPw+4nBCc0pfhKySHZahXK9QvJeltnEC86ZyWAbmDhTntT6aUUE+E37eXzEmRKd/AcEU5Zg8g+dY8+ppbavdwd9gKupBwVFBX5DDiPaB4AzuZgBO/DZK6uT0SaFZqvDcJVqvY4VqpOi1clOqpNNBCRAmTwiJ0y5XziaZuU8P4taN0+K/FZYrcQ85uCnEww6+8/+Ps4siGIH8vdQGq4Od3GZn3dQQLe/Et0Ba4nAfKMj/acxv4ClSarGN1wpygtQ4ANjT2gJJTMKgoj3WrJ3SknO4CoHDtTZ4XXVP/T5hYORuI=
-
 # Caching so the next build will be fast too
 before_cache:
   - rm -rf $HOME/.opam/log
@@ -52,6 +48,9 @@ jobs:
   # take longer than 50 minutes. Otherwise it just takes precious minutes
   # to load the cache
   - stage: Install dependencies, build hs-to-coq
+    git:
+      depth: false
+      submodules: false
     install:
       # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 -n -y; fi
@@ -69,29 +68,7 @@ jobs:
       - stack --no-terminal --install-ghc install
 
   - stage: Tests and Examples
-
-    name: GHC (including transformers)
-    script:
-      - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers
-      - make -j2 -C examples/transformers
-      - make -j2 -C examples/containers/theories
-      - make -j2 -C examples/ghc/lib
-      - make -j2 -C examples/ghc/theories
-      - make -j2 -C examples/core-semantics
-
-  - name: Containers (theory)
-    script:
-      - stack --no-terminal --install-ghc install
-      - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers/lib
-      - make -j2 -C examples/containers/theories
-
-  - name: Containers (extraction)
+    name: Containers (extraction)
     script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
@@ -102,28 +79,57 @@ jobs:
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
 
-  - name: Other examples
+  - &test-coq-files
+    name: GHC (including transformers, containers)
+    services:
+      - docker
+    git:
+      depth: false
+      submodules: false
+    cache: false
+    addons: false
+    before_install:
+      - docker pull lastland/hs-to-coq-testbed
+      - sudo chown 1000:1000 . -R
+      - shopt -s expand_aliases
+      - alias drun='docker run -v "$(pwd)":/home/coq/hs-to-coq lastland/hs-to-coq-testbed /bin/sh -c'
     script:
-      - stack --no-terminal --install-ghc install
+      - drun "cd hs-to-coq; make -j -C base"
+      - drun "cd hs-to-coq; make -j -C base-thy"
+      - drun "cd hs-to-coq; make -j -C examples/transformers/lib"
+      - drun "cd hs-to-coq; make -j -C examples/transformers/theories"
+      - drun "cd hs-to-coq; make -j -C examples/containers/lib"
+      - drun "cd hs-to-coq; make -j -C examples/containers/theories"
+      - drun "cd hs-to-coq; make -j -C examples/ghc/lib"
+      - drun "cd hs-to-coq; make -j -C examples/ghc/theories"
+      - drun "cd hs-to-coq; make -j -C examples/core-semantics/lib"
+
+  - name: Other examples
+    git:
+      depth: false
+      submodules: false
+    script:
       - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/successors
-      - make -j2 -C examples/compiler
-      - make -j2 -C examples/rle
-      - make -j2 -C examples/bag
-      - make -j2 -C examples/quicksort
-      - make -j2 -C examples/dlist
-      - make -j2 -C examples/intervals
-      - make -j2 -C examples/coinduction
+      - make -j -C base
+      - make -j -C base-thy
+      - make -j -C examples/successors
+      - make -j -C examples/compiler
+      - make -j -C examples/rle
+      - make -j -C examples/bag
+      - make -j -C examples/quicksort
+      - make -j -C examples/dlist
+      - make -j -C examples/intervals
+      - make -j -C examples/coinduction
 
   - name: tests and base tests
+    git:
+      depth: false
+      submodules: false
     script:
       - eval $(opam config env)
-      - stack --no-terminal --install-ghc install
-      - make -j2 -C base
-      - make -j2 -C examples/tests
-      - make -j2 -C examples/base-tests
+      - make -j -C base
+      - make -j -C examples/tests
+      - make -j -C examples/base-tests
 
   - name: Translating base (ensures convenience copy is up-to-date)
     script:
@@ -164,13 +170,18 @@ jobs:
       - eval $(opam config env)
       - make -C examples/ghc clean
       - make -C examples/ghc vfiles
+      - make -C examples/core-semantics clean
+      - make -C examples/core-semantics vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/ghc/lib
+      - git add examples/core-semantics/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
 
   - stage: Publishing
     if: branch = release
+    env:
+      secure: OBCMmyFo932m7YSM32zm9JrePPNxo/oTc3LfAuug17+/y2s+qY8Y3BFWJ3OZiSE4pN7kwZF7XTvZrs3sNwIoCzWeaYRQfiE9GuMtQbfaUgAjDnk8AUEZr4CfgJvR2DZxdd8Hxx0AfB0Y6AlDe9fVXIzeQ3i4UKgmtP2Hq0EJaTQWYAiI6oI7M2ykkL0FLixjc5IjTVPw50j7pmaqpEBRHndTQ4P4vSjQYmE2Ey1K1uru0snj6QKYQ7JlCMWWXjmdI5ka5MwALwHEcfpRCnwG8LT8D1rPejDXU2H8qkqFjckr5FQIVJ6x9rsUnOYgEWYQth/VBVoZSozFwiuoGqUzWHZyMQCwT3LV2vl2fYvjmxWm4Kto57IB44rxKvPvHpOPw+4nBCc0pfhKySHZahXK9QvJeltnEC86ZyWAbmDhTntT6aUUE+E37eXzEmRKd/AcEU5Zg8g+dY8+ppbavdwd9gKupBwVFBX5DDiPaB4AzuZgBO/DZK6uT0SaFZqvDcJVqvY4VqpOi1clOqpNNBCRAmTwiJ0y5XziaZuU8P4taN0+K/FZYrcQ85uCnEww6+8/+Ps4siGIH8vdQGq4Od3GZn3dQQLe/Et0Ba4nAfKMj/acxv4ClSarGN1wpygtQ4ANjT2gJJTMKgoj3WrJ3SknO4CoHDtTZ4XXVP/T5hYORuI=
 
     name: Publishing base (GHC 8.4)
     script:

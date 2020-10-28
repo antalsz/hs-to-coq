@@ -1,6 +1,1 @@
-redefine Local Definition Deriv.Eq___MyBool_op_zsze__ a b := negb (Deriv.Eq___MyBool_op_zeze__ a b).
-redefine Local Definition Deriv.Eq___Option_op_zsze__ {a} {_ : GHC.Base.Eq_ a} x y := negb (Deriv.Eq___Option_op_zeze__ x y).
-
-order Deriv.Eq___Option Deriv.Ord__Option
-
-order Deriv.Eq___MyBool Deriv.Ord__MyBool
+in Deriv.Ord__F_op_zl__ rewrite forall , Deriv.Ord__F_compare = GHC.Base.compare

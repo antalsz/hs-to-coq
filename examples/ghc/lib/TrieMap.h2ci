@@ -41,23 +41,23 @@ recordFieldTypes:
   TrieMap.am_data: Qualified "TrieMap" "AltMap"
   TrieMap.tlm_number: Qualified "TrieMap" "TyLitMap"
 classDefns:
-  TrieMap.TrieMap: ClassDefinition (Qualified "TrieMap" "TrieMap") [Inferred Explicit
+  TrieMap.TrieMap: ClassDefinition (Qualified "TrieMap" "TrieMap") [ExplicitBinder
     (Ident (Bare "m"))] Nothing [(Qualified "TrieMap" "Key",Qualid (Bare "Type")),(Qualified
-    "TrieMap" "alterTM",Forall (Inferred Implicit (Ident (Bare "b")) :| []) (Arrow
+    "TrieMap" "alterTM",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| []) (Arrow
     (Qualid (Qualified "TrieMap" "Key")) (Arrow (App (Qualid (Qualified "TrieMap"
     "XT")) (PosArg (Qualid (Bare "b")) :| [])) (Arrow (App (Qualid (Bare "m")) (PosArg
     (Qualid (Bare "b")) :| [])) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "b"))
-    :| [])))))),(Qualified "TrieMap" "emptyTM",Forall (Inferred Implicit (Ident (Bare
-    "a")) :| []) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| []))),(Qualified
-    "TrieMap" "foldTM",Forall (Inferred Implicit (Ident (Bare "a")) :| [Inferred Implicit
-    (Ident (Bare "b"))]) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Arrow (Qualid
+    :| [])))))),(Qualified "TrieMap" "emptyTM",Forall (ImplicitBinders (Ident (Bare
+    "a") :| []) :| []) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| []))),(Qualified
+    "TrieMap" "foldTM",Forall (ImplicitBinders (Ident (Bare "a") :| []) :| [ImplicitBinders
+    (Ident (Bare "b") :| [])]) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Arrow (Qualid
     (Bare "b")) (Qualid (Bare "b"))))) (Arrow (App (Qualid (Bare "m")) (PosArg (Qualid
     (Bare "a")) :| [])) (Arrow (Qualid (Bare "b")) (Qualid (Bare "b")))))),(Qualified
-    "TrieMap" "lookupTM",Forall (Inferred Implicit (Ident (Bare "b")) :| []) (Arrow
+    "TrieMap" "lookupTM",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| []) (Arrow
     (Qualid (Qualified "TrieMap" "Key")) (Arrow (App (Qualid (Bare "m")) (PosArg (Qualid
     (Bare "b")) :| [])) (App (Qualid (Bare "option")) (PosArg (Qualid (Bare "b"))
-    :| []))))),(Qualified "TrieMap" "mapTM",Forall (Inferred Implicit (Ident (Bare
-    "a")) :| [Inferred Implicit (Ident (Bare "b"))]) (Arrow (Parens (Arrow (Qualid
+    :| []))))),(Qualified "TrieMap" "mapTM",Forall (ImplicitBinders (Ident (Bare "a")
+    :| []) :| [ImplicitBinders (Ident (Bare "b") :| [])]) (Arrow (Parens (Arrow (Qualid
     (Bare "a")) (Qualid (Bare "b")))) (Arrow (App (Qualid (Bare "m")) (PosArg (Qualid
     (Bare "a")) :| [])) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "b")) :| [])))))]
 constructorTypes:
@@ -73,4 +73,4 @@ constructorTypes:
   TrieMap.Mk_CoercionMapX: Qualified "TrieMap" "CoercionMapX"
   TrieMap.VM: Qualified "TrieMap" "VarMap"
 explicitMethodArguments:
-  TrieMap.Key: ! '[Inferred Explicit (Ident (Bare "m"))]'
+  TrieMap.Key: ! '[ExplicitBinder (Ident (Bare "m"))]'

@@ -19,9 +19,9 @@ recordFieldTypes:
   OccName.occNameFS: Qualified "OccName" "OccName"
   OccName.occNameSpace: Qualified "OccName" "OccName"
 classDefns:
-  OccName.HasOccName: ClassDefinition (Qualified "OccName" "HasOccName") [Inferred
-    Explicit (Ident (Bare "name"))] Nothing [(Qualified "OccName" "occName",Arrow
-    (Qualid (Bare "name")) (Qualid (Qualified "OccName" "OccName")))]
+  OccName.HasOccName: ClassDefinition (Qualified "OccName" "HasOccName") [ExplicitBinder
+    (Ident (Bare "name"))] Nothing [(Qualified "OccName" "occName",Arrow (Qualid (Bare
+    "name")) (Qualid (Qualified "OccName" "OccName")))]
 constructorTypes:
   OccName.Mk_OccName: Qualified "OccName" "OccName"
   OccName.A: Qualified "OccName" "OccEnv"

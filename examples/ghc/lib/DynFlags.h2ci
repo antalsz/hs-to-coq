@@ -607,11 +607,11 @@ recordFieldTypes:
   DynFlags.modRenamings: Qualified "DynFlags" "ModRenaming"
   DynFlags.lAttributes: Qualified "DynFlags" "LlvmTarget"
 classDefns:
-  DynFlags.HasDynFlags: ClassDefinition (Qualified "DynFlags" "HasDynFlags") [Inferred
-    Explicit (Ident (Bare "m"))] Nothing [(Qualified "DynFlags" "getDynFlags",App
-    (Qualid (Bare "m")) (PosArg (Qualid (Qualified "DynFlags" "DynFlags")) :| []))]
+  DynFlags.HasDynFlags: ClassDefinition (Qualified "DynFlags" "HasDynFlags") [ExplicitBinder
+    (Ident (Bare "m"))] Nothing [(Qualified "DynFlags" "getDynFlags",App (Qualid (Bare
+    "m")) (PosArg (Qualid (Qualified "DynFlags" "DynFlags")) :| []))]
   DynFlags.ContainsDynFlags: ClassDefinition (Qualified "DynFlags" "ContainsDynFlags")
-    [Inferred Explicit (Ident (Bare "t"))] Nothing [(Qualified "DynFlags" "extractDynFlags",Arrow
+    [ExplicitBinder (Ident (Bare "t"))] Nothing [(Qualified "DynFlags" "extractDynFlags",Arrow
     (Qualid (Bare "t")) (Qualid (Qualified "DynFlags" "DynFlags")))]
 constructorTypes:
   DynFlags.Opt_WarnOverlappingPatterns: Qualified "DynFlags" "WarningFlag"

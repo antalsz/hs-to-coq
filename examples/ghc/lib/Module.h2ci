@@ -58,12 +58,12 @@ recordFieldTypes:
   Module.indefModuleName: Qualified "Module" "IndefModule"
   Module.installedModuleName: Qualified "Module" "InstalledModule"
 classDefns:
-  Module.HasModule: ClassDefinition (Qualified "Module" "HasModule") [Inferred Explicit
+  Module.HasModule: ClassDefinition (Qualified "Module" "HasModule") [ExplicitBinder
     (Ident (Bare "m"))] Nothing [(Qualified "Module" "getModule",App (Qualid (Bare
     "m")) (PosArg (Qualid (Qualified "Module" "Module")) :| []))]
-  Module.ContainsModule: ClassDefinition (Qualified "Module" "ContainsModule") [Inferred
-    Explicit (Ident (Bare "t"))] Nothing [(Qualified "Module" "extractModule",Arrow
-    (Qualid (Bare "t")) (Qualid (Qualified "Module" "Module")))]
+  Module.ContainsModule: ClassDefinition (Qualified "Module" "ContainsModule") [ExplicitBinder
+    (Ident (Bare "t"))] Nothing [(Qualified "Module" "extractModule",Arrow (Qualid
+    (Bare "t")) (Qualid (Qualified "Module" "Module")))]
 constructorTypes:
   Module.DefiniteUnitId: Qualified "Module" "UnitId"
   Module.Mk_ComponentId: Qualified "Module" "ComponentId"

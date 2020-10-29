@@ -349,7 +349,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
 
     underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
 
-    binderArgumentSpecifiers binder = case binder ^. binderExplicitness of
+    binderArgumentSpecifiers binder = case binderExplicitness binder of
       Explicit -> ArgExplicit
       Implicit -> ArgMaximal
 
@@ -417,19 +417,20 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
     arg <- genqid "arg"
 
     let indices (Forall bs t)  = toList bs ++ indices t
-        indices (Arrow  t1 t2) = Typed Ungeneralizable Coq.Explicit [UnderscoreName] t1 : indices t2
+        indices (Arrow  t1 t2) = mkBinders Coq.Explicit [UnderscoreName] t1 : indices t2
         indices _              = []
 
         deunderscore UnderscoreName = Ident <$> genqid "ty"
         deunderscore name           = pure name
 
     typeArgs <- for (params ++ indices resTy) $ \case
-                  Inferred ei name           -> Inferred ei <$> deunderscore name
+                  ExplicitBinder  name  -> ExplicitBinder  <$> deunderscore name
+                  ImplicitBinders names -> ImplicitBinders <$> traverse deunderscore names
                   Typed    gen ex names kind -> (Typed gen ex ?? kind) <$> traverse deunderscore names
                   binder                     -> pure binder
 
-    let implicitArgs = typeArgs & mapped.binderExplicitness .~ Coq.Implicit
-        argBinder    = Typed Ungeneralizable Coq.Explicit
+    let implicitArgs = toImplicitBinder <$> typeArgs
+        argBinder    = mkBinders Coq.Explicit
                                [Ident arg] (appList (Qualid tyName) $ binderArgs typeArgs)
 
     pure . (\ m -> DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing m NotExistingClass) $

@@ -68,7 +68,7 @@ import HsToCoq.Coq.Gallina.UseTypeInBinders
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
-import HsToCoq.Util.FVs
+import HsToCoq.Util.FVs (ErrOrVars(..))
 import HsToCoq.Coq.Pretty
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -203,7 +203,7 @@ convertExpr_ (ExplicitTuple NOEXTP exprs _boxity) = do
 #if __GLASGOW_HASKELL__ >= 806
                      XTupArg v -> noExtCon v
 #endif
-  pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
+  pure $ maybe id Fun (nonEmpty $ map (mkBinder Coq.Explicit . Ident) args) tuple
 
 convertExpr_ (HsCase NOEXTP e mg) = do
   scrut    <- convertLExpr e
@@ -510,7 +510,7 @@ convert_section  ml opE mr = do
       -- generalized.
       hs :: ConversionMonad r m => Qualid -> m (HsExpr GhcRn)
       hs  = fmap (HsVar NOEXT . mkGeneralLocated "generated") . freshInternalName . T.unpack . qualidToIdent
-      coq = Inferred Coq.Explicit . Ident
+      coq = mkBinder Coq.Explicit . Ident
 
   arg <- Bare <$> gensym "arg"
   let orArg = maybe (fmap noLoc $ hs arg) pure
@@ -538,7 +538,7 @@ convertFunction _ mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction skipEqns mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (genqid "arg") >>= maybe err pure . nonEmpty
-  let argBinders = (Inferred Coq.Explicit . Ident) <$> args
+  let argBinders = (mkBinder Coq.Explicit . Ident) <$> args
   match <- convertMatchGroup skipEqns (Qualid <$> args) mg
   pure (argBinders, match)
  where
@@ -568,7 +568,7 @@ convTrivialMatch alt = do
   (MultPattern pats, _, rhs) <- convertMatch alt
                                   <&> maybe (error "internal error: convTrivialMatch: not a trivial match!") id
   names <- mapM patToName pats
-  let argBinders = (Inferred Coq.Explicit) <$> names
+  let argBinders = (mkBinder Explicit) <$> names
   body <- rhs patternFailure
   return (argBinders, body)
 
@@ -606,7 +606,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial buildSkipped fall
      
       refutability pat >>= \case
         Trivial tpat | null guards ->
-          buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
+          buildTrivial exp $ Fun [mkBinder Coq.Explicit $ maybe UnderscoreName Ident tpat]
      
         nontrivial -> do
           cont <- genqid "cont"
@@ -621,7 +621,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial buildSkipped fall
                          | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
      
           buildNontrivial exp cont $ \body rest ->
-            Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
+            Let cont [mkBinder Coq.Explicit $ Ident arg] Nothing
                      (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing $
                        Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
               body
@@ -1046,7 +1046,7 @@ collapseLet _ _ =
 
 wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
- = pure $ App1 (Qualid deferredFixN) $ Fun (Inferred Explicit (Ident ident) NEL.<| argBinders ) rhs
+ = pure $ App1 (Qualid deferredFixN) $ Fun (mkBinder Explicit (Ident ident) NEL.<| argBinders ) rhs
   where
     deferredFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.DeferredFix.deferredFix"
@@ -1064,7 +1064,7 @@ wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
         [ rel
         , Fun argBinders measure
         , Underscore
-        , Fun (argBinders NEL.|> Inferred Explicit (Ident ident)) rhs
+        , Fun (argBinders NEL.|> mkBinder Explicit (Ident ident)) rhs
         ]
   where
     wfFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))

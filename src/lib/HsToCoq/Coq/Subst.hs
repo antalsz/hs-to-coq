@@ -41,8 +41,9 @@ instance Subst IndBody where
              substCon f (qid,binders, Just t)  = (qid, map (subst f) binders, Just (subst f t))
 
 instance Subst Binder where
-  subst _f b@(Inferred _ex _x) = b
-  subst f (Typed gen ex xs ty) = Typed gen ex xs (subst f ty)
+  subst _f b@(ExplicitBinder _) = b
+  subst _f b@(ImplicitBinders _) = b
+  subst f (Typed gen ei names ty) = Typed gen ei names (subst f ty)
   subst f (Generalized ex ty)  = Generalized ex (subst f ty)
 
 instance Subst MatchItem where

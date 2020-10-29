@@ -255,7 +255,7 @@ instance Gallina Term where
       group $ "fun" <+> hcat (fmap (("'"<>) . parens . renderGallina) pats)
                     <+> nest 2 ("=>" <!> renderGallina' funPrec body)
     where fvs = getFreeVars body
-          check (Inferred Explicit (Ident name) : vars) (MatchItem (Qualid v) Nothing Nothing:ss)
+          check (ExplicitBinder (Ident name) : vars) (MatchItem (Qualid v) Nothing Nothing:ss)
               = v `S.notMember` fvs  && name == v  && check vars ss
           check [] [] = True
           check _ _ = False
@@ -425,8 +425,10 @@ binder_decoration Ungeneralizable ex b = if_explicit ex (if b then parensN else 
 binder_decoration Generalizable   ex _ = ("`" <>) . if_explicit ex parensN
 
 instance Gallina Binder where
-  renderGallina' _ (Inferred ex name)  =
-    binder_decoration Ungeneralizable ex False $ renderGallina name
+  renderGallina' _ (ExplicitBinder name)  =
+    binder_decoration Ungeneralizable Explicit False $ renderGallina name
+  renderGallina' _ (ImplicitBinders names)  =
+    binder_decoration Ungeneralizable Implicit False $ render_args H names
   renderGallina' _ (Typed gen ex names ty) =
     binder_decoration gen ex True $ render_args_ty H names ty
   renderGallina' _ (Generalized ex ty)  =

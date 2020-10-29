@@ -448,13 +448,11 @@ BinderName :: { Name }
   | '_'     { UnderscoreName }
 
 ExplicitBinderGuts :: { Binder }
-  : BinderName                                        { Inferred Explicit $1 }
-  | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
-  | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
+  : Some(BinderName) TypeAnnotation   { mkBinders Explicit $1 $2 }
 
 ImplicitBinderGuts :: { Binder }
-  : BinderName                         { Inferred Implicit $1 }
-  | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
+  : Some(BinderName)                  { ImplicitBinders $1 }
+  | Some(BinderName) TypeAnnotation   { mkBinders Implicit $1 $2 }
 
 -- Generalizable binders have an ambiguous syntax:
 --
@@ -478,7 +476,7 @@ GeneralizableBinderGuts :: { Explicitness -> Binder }
     }
 
 Binder :: { Binder }
-  : BinderName                        { Inferred Explicit $1 }
+  : BinderName                        { ExplicitBinder $1 }
   | '(' ExplicitBinderGuts ')'        { $2 }
   | '{' ImplicitBinderGuts '}'        { $2 }
   | '`' '(' GeneralizableBinderGuts ')'    { $3 Explicit }

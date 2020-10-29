@@ -41,7 +41,7 @@ staticPreamble = T.unlines
 -- an axiom of the type given here is added to the preamble
 builtInAxioms :: M.Map Qualid Term
 builtInAxioms = M.fromList $ map (first Bare)
-    [ "missingValue"   =: Forall [ Inferred Implicit (Ident (Bare "a")) ] a
+    [ "missingValue"   =: Forall [ ImplicitBinders (pure (Ident (Bare "a"))) ] a
     ]
   where
    a = "a"

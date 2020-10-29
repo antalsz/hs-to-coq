@@ -69,7 +69,7 @@ getImplicitBindersForClassMember className memberName = do
 getImplicits :: Term -> [Binder]
 getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplicits t else imps where
     imps = NE.takeWhile (\b -> case b of
-                                 Inferred Implicit _ -> True
+                                 ImplicitBinders _ -> True
                                  Generalized Implicit _ -> True
                                  _ -> False) bs
 getImplicits _ = []
@@ -176,7 +176,8 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   args <- withCurrentDefinition name $ convertLHsTyVarBndrs Coq.Explicit ltvs
   kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.classKinds.at name)
   let args' = zipWith go args kinds
-       where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
+       where go (ExplicitBinder  name)  (Just t) = mkBinders Explicit (name NE.:| []) t
+             go (ImplicitBinders names) (Just t) = mkBinders Implicit names t
              go a _ = a
   
   let argNames = foldMap (toListOf binderIdents) args
@@ -241,7 +242,7 @@ directClassSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
 directClassSentences (ClassBody clsDef@(ClassDefinition name args _ _) nots) = do
   supers <- fromMaybe 0      <$> lookupSuperclassCount name
   types  <- fromMaybe mempty <$> lookupClassTypes      name
-  let argCount = length $ filter ((== Explicit) . view binderExplicitness) args
+  let argCount = length $ filter (\b -> binderExplicitness b == Explicit) args
   pure $  ClassSentence clsDef
        :  map NotationSentence nots
        ++ map (\ty -> ArgumentsSentence . Arguments Nothing ty
@@ -259,7 +260,7 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
       cont_name = "g__0__" -- Can't use `g__` because it could collide with a CPSed class method
   -- result_ty <- genqid "r"
   -- cont_name <- genqid "g"
-  let class_ty = Forall [ Inferred Explicit $ Ident result_ty ] $
+  let class_ty = Forall [ ExplicitBinder $ Ident result_ty ] $
                    (app_args dict_name `Arrow` Qualid result_ty) `Arrow` Qualid result_ty
   
   let wholeClassSentences =
@@ -280,7 +281,7 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
     
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments
-    inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
+    inst_args = filter (\b -> binderExplicitness b == Explicit) args
     app_args f = foldl App1 (Qualid f) (map Qualid (foldMap (toListOf binderIdents) inst_args))
     
     method_def g meth ty = do

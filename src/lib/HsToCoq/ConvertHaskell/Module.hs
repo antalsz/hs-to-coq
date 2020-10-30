@@ -97,8 +97,8 @@ convertBinding sigs (ConvertedDefinitionBinding cdef@ConvertedDefinition{_convDe
     t  <- view (edits.termination.at name)
     obl <- view (edits.obligations.at name)
     useProgram <- useProgramHere
-    if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
-       ->  pure <$> toProgramFixpointSentence cdef order obl
+    if | Just (WellFoundedTA order) <- t  -- turn into Program Fixpoint
+       ->  pure <$> toProgramFixpointSentence cdef (fromWFOrder order) obl
        | otherwise                   -- no edit
        -> let def = DefinitionDef Global (cdef^.convDefName)
                                          (cdef^.convDefArgs)

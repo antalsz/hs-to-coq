@@ -1051,15 +1051,11 @@ wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
     deferredFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.DeferredFix.deferredFix"
 
-wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
+wfFix (WellFoundedTA order) (FixBody ident argBinders Nothing Nothing rhs)
  = do (rel, measure) <- case order of
-        StructOrder _                   -> convUnsupportedIn
-                                             "well-founded recursion does not include structural recursion"
-                                             "fixpoint"
-                                             (showP ident)
-        MeasureOrder measure Nothing    -> pure ("Coq.Init.Peano.lt", measure)
-        MeasureOrder measure (Just rel) -> pure (rel, measure)
-        WFOrder rel arg                 -> pure (rel, Qualid arg)
+        MeasureOrder_ measure Nothing    -> pure ("Coq.Init.Peano.lt", measure)
+        MeasureOrder_ measure (Just rel) -> pure (rel, measure)
+        WFOrder_ rel arg                 -> pure (rel, Qualid arg)
       pure . appList (Qualid wfFixN) $ map PosArg
         [ rel
         , Fun argBinders measure
@@ -1071,6 +1067,11 @@ wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
         "GHC.Wf.wfFix"
 
 wfFix Corecursive fb = pure . Cofix $ FixOne fb
+
+wfFix StructOrderTA{} (FixBody ident _ _ _ _) = convUnsupportedIn
+  "well-founded recursion does not include structural recursion"
+  "fixpoint" (showP ident)
+
 wfFix _ fb = convUnsupportedIn "well-founded recursion cannot handle annotations or types"
                                "fixpoint"
                                (showP $ fb^.fixBodyName)
@@ -1222,6 +1223,7 @@ convertMultipleBindings convertSingleBinding defns0 sigs build mhandler =
 --       ('rdFullType')
 data RecDef = RecDef { rdName       :: !Qualid
                      , rdArgs       :: !Binders
+                     , rdStruct     :: !(Maybe Order)
                      , rdResultType :: !(Maybe Term)
                      , rdFullType   :: !(Maybe Term)
                      , rdBody       :: !Term }
@@ -1233,7 +1235,7 @@ data RecDef = RecDef { rdName       :: !Qualid
 -- We can't unilaterally abort unless we can change type signatures.
 
 rdToFixBody :: RecDef -> FixBody
-rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing rdResultType rdBody
+rdToFixBody RecDef{..} = FixBody rdName rdArgs rdStruct rdResultType rdBody
 
 rdToLet :: RecDef -> Term -> Term
 rdToLet RecDef{..} = Let rdName (toList rdArgs) rdResultType rdBody
@@ -1292,26 +1294,14 @@ addRecursion eBindings = do
       pure $ cd :| []
     fixConnComp cds = do
       (commonArgs, cds) <- splitArgs cds
-      bodies <- for cds $ \case
-        ConvertedDefinition{_convDefBody = Fun args body, ..} ->
-          let fullType = maybeForall _convDefArgs <$> _convDefType
-              (resultType, convArgs') =
-                let allArgs = _convDefArgs <++ args
-                in case fullType of
-                     Just ty | Right (ty', args', UTIBIsTypeTooShort False) <- useTypeInBinders ty allArgs ->
-                       (Just ty', args')
-                     _ ->
-                       (Nothing, allArgs)
-          in pure $ RecDef { rdName       = _convDefName
-                           , rdArgs       = convArgs'
-                           , rdResultType = resultType
-                           , rdFullType   = fullType
-                           , rdBody       = body }
-        cd ->
-          convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
-      
-      nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
-      
+      tbodies <- for cds fixConvertedDefinition
+
+      let bodies = fst <$> tbodies
+
+      let nonstructural = listToMaybe [t | (_, Just t) <- toList tbodies, isNonstructural t]
+          isNonstructural (StructOrderTA _) = False
+          isNonstructural _ = True
+
       let getInfo = fmap $ rdName &&& rdFullType
       
       (fixFor, recInfos, extraDefs) <- case (nonstructural, bodies) of
@@ -1351,6 +1341,36 @@ addRecursion eBindings = do
                                 , _convDefType = mty
                                 , _convDefBody = fixFor name }
       pure $ recDefs ++> extraDefs
+
+fixConvertedDefinition ::
+  ConversionMonad r m => ConvertedDefinition -> m (RecDef, Maybe TerminationArgument)
+fixConvertedDefinition (ConvertedDefinition{_convDefBody = Fun args body, ..}) = do
+  let fullType = maybeForall _convDefArgs <$> _convDefType
+      allArgs = _convDefArgs <++ args
+      (resultType, convArgs') = case fullType of
+        Just ty | Right (ty', args', UTIBIsTypeTooShort False) <- useTypeInBinders ty allArgs ->
+          (Just ty', args')
+        _ -> (Nothing, allArgs)
+  termination <- view (edits.termination.at _convDefName)
+  struct <- case termination of
+    Just (StructOrderTA (StructId_  n)) -> (pure . Just) (StructOrder n)
+    Just (StructOrderTA (StructPos_ i)) ->
+      case args ^? elementOf (traverse . binderNames) (i - 1) of
+        Just (Ident name) -> (pure . Just) (StructOrder name)
+        Just UnderscoreName ->
+          throwProgramError ("error: function " ++ showP _convDefName ++ ": its " ++ show i ++ "-th argument is unnamed")
+        Nothing -> throwProgramError ("error: function " ++ showP _convDefName ++ " has fewer than " ++ show i ++ " arguments")
+    _ -> pure Nothing
+  let b = RecDef
+        { rdName       = _convDefName
+        , rdArgs       = convArgs'
+        , rdStruct     = struct
+        , rdResultType = resultType
+        , rdFullType   = fullType
+        , rdBody       = body }
+  pure (b, termination)
+fixConvertedDefinition cd =
+  convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
 
 splitArgs :: (ConversionMonad r m, Traversable t) => t ConvertedDefinition -> m ([Binder], t ConvertedDefinition)
 splitArgs cds = do

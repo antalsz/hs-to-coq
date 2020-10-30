@@ -15,6 +15,7 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   CoqDefinition(..), definitionSentence,
   anAssertionVariety,
   ScopePlace(..),
+  StructOrder_(..), WFOrder_(..), fromOrder, fromWFOrder,
   TerminationArgument(..),
   NormalizedPattern(), getNormalizedPattern, normalizePattern,
   Rewrite(..), Rewrites,
@@ -95,8 +96,34 @@ instance HasBV Qualid CoqDefinition where
 data ScopePlace = SPValue | SPConstructor
                 deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-data TerminationArgument = WellFounded Order | Deferred | Corecursive
-                deriving (Eq, Ord, Show, Read)
+data StructOrder_
+  = StructId_ Qualid  -- ^ Name of decreasing argument
+  | StructPos_ Int    -- ^ Position of decreasing argument, count from 1 (in Haskell, so excluding type arguments)
+  deriving (Eq, Ord, Show, Read)
+
+data WFOrder_
+  = MeasureOrder_ Term (Maybe Term)  -- ^@measure /term/ (/term/)?/
+  | WFOrder_ Term Qualid             -- ^@wf /term/ /ident//
+  deriving (Eq, Ord, Show, Read)
+
+fromWFOrder :: WFOrder_ -> Order
+fromWFOrder (MeasureOrder_ t u) = MeasureOrder t u
+fromWFOrder (WFOrder_ t u) = WFOrder t u
+
+fromOrder :: Order -> TerminationArgument
+fromOrder (StructOrder q) = StructOrderTA (StructId_ q)
+fromOrder (MeasureOrder t u) = WellFoundedTA (MeasureOrder_ t u)
+fromOrder (WFOrder t u) = WellFoundedTA (WFOrder_ t u)
+
+-- | 'StructOrderTA' and 'WellFoundedTA' correspond to 'Coq.Order', but
+-- we explicitily separate the 'StructOrder' case because it is used at a different
+-- place in the translation, and we also recognize a special syntax for unnamed arguments.
+data TerminationArgument
+  = StructOrderTA StructOrder_
+  | WellFoundedTA WFOrder_
+  | Deferred
+  | Corecursive
+  deriving (Eq, Ord, Show, Read)
 
 -- Used to match patterns that might disagree on the question of whether a name
 -- is an @ArgsPat qid []@ or a @QualidPat@; this is useful when reading from an edits file.
@@ -281,7 +308,7 @@ useProgram name edits = or
     , name `M.member`_obligations edits
     ]
   where
-   isWellFounded (WellFounded {}) = True
+   isWellFounded (WellFoundedTA {}) = True
    isWellFounded _                = False
 
 -- Module-local'

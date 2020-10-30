@@ -556,7 +556,8 @@ Order :: { Order }
 TerminationArgument :: { TerminationArgument }
   : 'deferred'    { Deferred }
   | 'corecursive' { Corecursive }
-  | Order         { WellFounded $1 }
+  | Order         { fromOrder $1 }
+  | '{' struct Num '}' { StructOrderTA (StructPos_ (fromIntegral $3)) }
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

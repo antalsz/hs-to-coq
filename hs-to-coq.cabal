@@ -123,7 +123,6 @@ library
                      , array
                      , lens
                      , containers
-                     , contravariant
                      , syb
                      , text
                      , directory

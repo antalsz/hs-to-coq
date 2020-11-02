@@ -6,53 +6,53 @@ superclassCount:
   Control.Arrow.ArrowPlus: '3'
   Control.Arrow.ArrowLoop: '2'
 defaultMethods:
-  Control.Arrow.Arrow: fromList [(Qualified "Control.Arrow" "first",Parens (Fun (Inferred
-    Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow"
-    "op_ztztzt__")) (PosArg (Qualid (Bare "arg_0__")) :| [PosArg (Qualid (Qualified
-    "Control.Category" "id"))])))),(Qualified "Control.Arrow" "op_zazaza__",Fun (Inferred
-    Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))]) (App (Qualid
-    (Qualified "Control.Category" "op_zgzgzg__")) (PosArg (App (Qualid (Qualified
-    "Control.Arrow" "arr")) (PosArg (Parens (Fun (Inferred Explicit (Ident (Bare "b"))
-    :| []) (App (Qualid (Bare "pair")) (PosArg (Qualid (Bare "b")) :| [PosArg (Qualid
-    (Bare "b"))])))) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Arrow" "op_ztztzt__"))
-    (PosArg (Qualid (Bare "f")) :| [PosArg (Qualid (Bare "g"))]))]))),(Qualified "Control.Arrow"
-    "op_ztztzt__",Fun (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit
-    (Ident (Bare "g"))]) (Let (Bare "swap") [] Nothing (Fun (Inferred Explicit (Ident
-    (Bare "arg_0__")) :| []) (Match (MatchItem (Qualid (Bare "arg_0__")) Nothing Nothing
-    :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "pair") [QualidPat (Bare
-    "x"),QualidPat (Bare "y")] :| []) :| []) (App (Qualid (Bare "pair")) (PosArg (Qualid
-    (Bare "y")) :| [PosArg (Qualid (Bare "x"))]))])) (App (Qualid (Qualified "Control.Category"
-    "op_zgzgzg__")) (PosArg (App (Qualid (Qualified "Control.Arrow" "first")) (PosArg
-    (Qualid (Bare "f")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Category"
+  Control.Arrow.Arrow: fromList [(Qualified "Control.Arrow" "first",Parens (Fun (ExplicitBinder
+    (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow" "op_ztztzt__"))
+    (PosArg (Qualid (Bare "arg_0__")) :| [PosArg (Qualid (Qualified "Control.Category"
+    "id"))])))),(Qualified "Control.Arrow" "op_zazaza__",Fun (ExplicitBinder (Ident
+    (Bare "f")) :| [ExplicitBinder (Ident (Bare "g"))]) (App (Qualid (Qualified "Control.Category"
     "op_zgzgzg__")) (PosArg (App (Qualid (Qualified "Control.Arrow" "arr")) (PosArg
-    (Qualid (Bare "swap")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Category"
-    "op_zgzgzg__")) (PosArg (App (Qualid (Qualified "Control.Arrow" "first")) (PosArg
-    (Qualid (Bare "g")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Arrow"
-    "arr")) (PosArg (Qualid (Bare "swap")) :| []))]))]))])))),(Qualified "Control.Arrow"
-    "second",Parens (Fun (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid
-    (Qualified "Control.Arrow" "op_ztztzt__")) (PosArg (Qualid (Qualified "Control.Category"
-    "id")) :| [PosArg (Qualid (Bare "arg_0__"))]))))]
+    (Parens (Fun (ExplicitBinder (Ident (Bare "b")) :| []) (App (Qualid (Bare "pair"))
+    (PosArg (Qualid (Bare "b")) :| [PosArg (Qualid (Bare "b"))])))) :| [])) :| [PosArg
+    (App (Qualid (Qualified "Control.Arrow" "op_ztztzt__")) (PosArg (Qualid (Bare
+    "f")) :| [PosArg (Qualid (Bare "g"))]))]))),(Qualified "Control.Arrow" "op_ztztzt__",Fun
+    (ExplicitBinder (Ident (Bare "f")) :| [ExplicitBinder (Ident (Bare "g"))]) (Let
+    (Bare "swap") [] Nothing (Fun (ExplicitBinder (Ident (Bare "arg_0__")) :| [])
+    (Match (MatchItem (Qualid (Bare "arg_0__")) Nothing Nothing :| []) Nothing [Equation
+    (MultPattern (ArgsPat (Bare "pair") [QualidPat (Bare "x"),QualidPat (Bare "y")]
+    :| []) :| []) (App (Qualid (Bare "pair")) (PosArg (Qualid (Bare "y")) :| [PosArg
+    (Qualid (Bare "x"))]))])) (App (Qualid (Qualified "Control.Category" "op_zgzgzg__"))
+    (PosArg (App (Qualid (Qualified "Control.Arrow" "first")) (PosArg (Qualid (Bare
+    "f")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Category" "op_zgzgzg__"))
+    (PosArg (App (Qualid (Qualified "Control.Arrow" "arr")) (PosArg (Qualid (Bare
+    "swap")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Category" "op_zgzgzg__"))
+    (PosArg (App (Qualid (Qualified "Control.Arrow" "first")) (PosArg (Qualid (Bare
+    "g")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Arrow" "arr")) (PosArg
+    (Qualid (Bare "swap")) :| []))]))]))])))),(Qualified "Control.Arrow" "second",Parens
+    (Fun (ExplicitBinder (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow"
+    "op_ztztzt__")) (PosArg (Qualid (Qualified "Control.Category" "id")) :| [PosArg
+    (Qualid (Bare "arg_0__"))]))))]
   Control.Arrow.ArrowChoice: fromList [(Qualified "Control.Arrow" "left_",Parens (Fun
-    (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow"
+    (ExplicitBinder (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow"
     "op_zpzpzp__")) (PosArg (Qualid (Bare "arg_0__")) :| [PosArg (Qualid (Qualified
-    "Control.Category" "id"))])))),(Qualified "Control.Arrow" "op_zbzbzb__",Fun (Inferred
-    Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))]) (Let (Bare
-    "untag") [] Nothing (Fun (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (Match
-    (MatchItem (Qualid (Bare "arg_0__")) Nothing Nothing :| []) Nothing [Equation
-    (MultPattern (ArgsPat (Qualified "Data.Either" "Left") [QualidPat (Bare "x")]
-    :| []) :| []) (Qualid (Bare "x")),Equation (MultPattern (ArgsPat (Qualified "Data.Either"
-    "Right") [QualidPat (Bare "y")] :| []) :| []) (Qualid (Bare "y"))])) (App (Qualid
-    (Qualified "Control.Category" "op_zgzgzg__")) (PosArg (App (Qualid (Qualified
-    "Control.Arrow" "op_zpzpzp__")) (PosArg (Qualid (Bare "f")) :| [PosArg (Qualid
-    (Bare "g"))])) :| [PosArg (App (Qualid (Qualified "Control.Arrow" "arr")) (PosArg
-    (Qualid (Bare "untag")) :| []))])))),(Qualified "Control.Arrow" "op_zpzpzp__",Fun
-    (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))])
-    (Let (Bare "mirror") [Inferred Implicit (Ident (Bare "x")),Inferred Implicit (Ident
-    (Bare "y"))] (Just (Arrow (App (App (Qualid (Qualified "Data.Either" "Either"))
-    (PosArg (Qualid (Bare "x")) :| [])) (PosArg (Qualid (Bare "y")) :| [])) (App (App
-    (Qualid (Qualified "Data.Either" "Either")) (PosArg (Qualid (Bare "y")) :| []))
-    (PosArg (Qualid (Bare "x")) :| [])))) (Fun (Inferred Explicit (Ident (Bare "arg_0__"))
-    :| []) (Match (MatchItem (Qualid (Bare "arg_0__")) Nothing Nothing :| []) Nothing
+    "Control.Category" "id"))])))),(Qualified "Control.Arrow" "op_zbzbzb__",Fun (ExplicitBinder
+    (Ident (Bare "f")) :| [ExplicitBinder (Ident (Bare "g"))]) (Let (Bare "untag")
+    [] Nothing (Fun (ExplicitBinder (Ident (Bare "arg_0__")) :| []) (Match (MatchItem
+    (Qualid (Bare "arg_0__")) Nothing Nothing :| []) Nothing [Equation (MultPattern
+    (ArgsPat (Qualified "Data.Either" "Left") [QualidPat (Bare "x")] :| []) :| [])
+    (Qualid (Bare "x")),Equation (MultPattern (ArgsPat (Qualified "Data.Either" "Right")
+    [QualidPat (Bare "y")] :| []) :| []) (Qualid (Bare "y"))])) (App (Qualid (Qualified
+    "Control.Category" "op_zgzgzg__")) (PosArg (App (Qualid (Qualified "Control.Arrow"
+    "op_zpzpzp__")) (PosArg (Qualid (Bare "f")) :| [PosArg (Qualid (Bare "g"))]))
+    :| [PosArg (App (Qualid (Qualified "Control.Arrow" "arr")) (PosArg (Qualid (Bare
+    "untag")) :| []))])))),(Qualified "Control.Arrow" "op_zpzpzp__",Fun (ExplicitBinder
+    (Ident (Bare "f")) :| [ExplicitBinder (Ident (Bare "g"))]) (Let (Bare "mirror")
+    [ImplicitBinders (Ident (Bare "x") :| []),ImplicitBinders (Ident (Bare "y") :|
+    [])] (Just (Arrow (App (App (Qualid (Qualified "Data.Either" "Either")) (PosArg
+    (Qualid (Bare "x")) :| [])) (PosArg (Qualid (Bare "y")) :| [])) (App (App (Qualid
+    (Qualified "Data.Either" "Either")) (PosArg (Qualid (Bare "y")) :| [])) (PosArg
+    (Qualid (Bare "x")) :| [])))) (Fun (ExplicitBinder (Ident (Bare "arg_0__")) :|
+    []) (Match (MatchItem (Qualid (Bare "arg_0__")) Nothing Nothing :| []) Nothing
     [Equation (MultPattern (ArgsPat (Qualified "Data.Either" "Left") [QualidPat (Bare
     "x")] :| []) :| []) (App (Qualid (Qualified "Data.Either" "Right")) (PosArg (Qualid
     (Bare "x")) :| [])),Equation (MultPattern (ArgsPat (Qualified "Data.Either" "Right")
@@ -65,7 +65,7 @@ defaultMethods:
     "op_zgzgzg__")) (PosArg (App (Qualid (Qualified "Control.Arrow" "left_")) (PosArg
     (Qualid (Bare "g")) :| [])) :| [PosArg (App (Qualid (Qualified "Control.Arrow"
     "arr")) (PosArg (Qualid (Bare "mirror")) :| []))]))]))])))),(Qualified "Control.Arrow"
-    "right_",Parens (Fun (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid
+    "right_",Parens (Fun (ExplicitBinder (Ident (Bare "arg_0__")) :| []) (App (Qualid
     (Qualified "Control.Arrow" "op_zpzpzp__")) (PosArg (Qualid (Qualified "Control.Category"
     "id")) :| [PosArg (Qualid (Bare "arg_0__"))]))))]
 classTypes:
@@ -88,34 +88,35 @@ classDefns:
     Ungeneralizable Explicit (Ident (Bare "a") :| []) (Arrow (Qualid (Bare "Type"))
     (Arrow (Qualid (Bare "Type")) (Qualid (Bare "Type")))),Generalized Implicit (App
     (Qualid (Qualified "Control.Category" "Category")) (PosArg (Qualid (Bare "a"))
-    :| []))] Nothing [(Qualified "Control.Arrow" "arr",Forall (Inferred Implicit (Ident
-    (Bare "b")) :| [Inferred Implicit (Ident (Bare "c"))]) (Arrow (Parens (Arrow (Qualid
-    (Bare "b")) (Qualid (Bare "c")))) (App (App (Qualid (Bare "a")) (PosArg (Qualid
-    (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])))),(Qualified "Control.Arrow"
-    "first",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident
-    (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (App (App (Qualid (Bare
-    "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| []))
-    (App (App (Qualid (Bare "a")) (PosArg (InScope (App (Qualid (Bare "op_zt__"))
-    (PosArg (Qualid (Bare "b")) :| [PosArg (Qualid (Bare "d"))])) "type") :| []))
-    (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare "c")) :|
-    [PosArg (Qualid (Bare "d"))])) "type") :| [])))),(Qualified "Control.Arrow" "op_zazaza__",Forall
-    (Inferred Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "c")),Inferred
-    Implicit (Ident (Bare "c'"))]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid
-    (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid
-    (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c'")) :|
-    [])) (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg
-    (InScope (App (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare "c")) :| [PosArg
-    (Qualid (Bare "c'"))])) "type") :| []))))),(Qualified "Control.Arrow" "op_ztztzt__",Forall
-    (Inferred Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "c")),Inferred
-    Implicit (Ident (Bare "b'")),Inferred Implicit (Ident (Bare "c'"))]) (Arrow (App
+    :| []))] Nothing [(Qualified "Control.Arrow" "arr",Forall (ImplicitBinders (Ident
+    (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "c") :| [])]) (Arrow (Parens
+    (Arrow (Qualid (Bare "b")) (Qualid (Bare "c")))) (App (App (Qualid (Bare "a"))
+    (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])))),(Qualified
+    "Control.Arrow" "first",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "d") :| [])]) (Arrow (App
     (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
-    "c")) :| [])) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b'"))
+    "c")) :| [])) (App (App (Qualid (Bare "a")) (PosArg (InScope (App (Qualid (Bare
+    "op_zt__")) (PosArg (Qualid (Bare "b")) :| [PosArg (Qualid (Bare "d"))])) "type")
+    :| [])) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare
+    "c")) :| [PosArg (Qualid (Bare "d"))])) "type") :| [])))),(Qualified "Control.Arrow"
+    "op_zazaza__",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "c'") :| [])]) (Arrow (App
+    (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
+    "c")) :| [])) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b"))
     :| [])) (PosArg (Qualid (Bare "c'")) :| [])) (App (App (Qualid (Bare "a")) (PosArg
-    (InScope (App (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare "b")) :| [PosArg
-    (Qualid (Bare "b'"))])) "type") :| [])) (PosArg (InScope (App (Qualid (Bare "op_zt__"))
-    (PosArg (Qualid (Bare "c")) :| [PosArg (Qualid (Bare "c'"))])) "type") :| []))))),(Qualified
-    "Control.Arrow" "second",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred
-    Implicit (Ident (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (App
+    (Qualid (Bare "b")) :| [])) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg
+    (Qualid (Bare "c")) :| [PosArg (Qualid (Bare "c'"))])) "type") :| []))))),(Qualified
+    "Control.Arrow" "op_ztztzt__",Forall (ImplicitBinders (Ident (Bare "b") :| [])
+    :| [ImplicitBinders (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "b'")
+    :| []),ImplicitBinders (Ident (Bare "c'") :| [])]) (Arrow (App (App (Qualid (Bare
+    "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| []))
+    (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b'")) :| [])) (PosArg
+    (Qualid (Bare "c'")) :| [])) (App (App (Qualid (Bare "a")) (PosArg (InScope (App
+    (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare "b")) :| [PosArg (Qualid (Bare
+    "b'"))])) "type") :| [])) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg
+    (Qualid (Bare "c")) :| [PosArg (Qualid (Bare "c'"))])) "type") :| []))))),(Qualified
+    "Control.Arrow" "second",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "d") :| [])]) (Arrow (App
     (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
     "c")) :| [])) (App (App (Qualid (Bare "a")) (PosArg (InScope (App (Qualid (Bare
     "op_zt__")) (PosArg (Qualid (Bare "d")) :| [PosArg (Qualid (Bare "b"))])) "type")
@@ -125,70 +126,70 @@ classDefns:
     [Typed Ungeneralizable Explicit (Ident (Bare "a") :| []) (Arrow (Qualid (Bare
     "Type")) (Arrow (Qualid (Bare "Type")) (Qualid (Bare "Type")))),Generalized Implicit
     (App (Qualid (Qualified "Control.Arrow" "Arrow")) (PosArg (Qualid (Bare "a"))
-    :| []))] Nothing [(Qualified "Control.Arrow" "app",Forall (Inferred Implicit (Ident
-    (Bare "b")) :| [Inferred Implicit (Ident (Bare "c"))]) (App (App (Qualid (Bare
-    "a")) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg (App (App (Qualid
-    (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :|
-    [])) :| [PosArg (Qualid (Bare "b"))])) "type") :| [])) (PosArg (Qualid (Bare "c"))
-    :| [])))]
+    :| []))] Nothing [(Qualified "Control.Arrow" "app",Forall (ImplicitBinders (Ident
+    (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "c") :| [])]) (App (App (Qualid
+    (Bare "a")) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg (App (App
+    (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
+    "c")) :| [])) :| [PosArg (Qualid (Bare "b"))])) "type") :| [])) (PosArg (Qualid
+    (Bare "c")) :| [])))]
   Control.Arrow.ArrowChoice: ClassDefinition (Qualified "Control.Arrow" "ArrowChoice")
-    [Inferred Explicit (Ident (Bare "a")),Generalized Implicit (App (Qualid (Qualified
+    [ExplicitBinder (Ident (Bare "a")),Generalized Implicit (App (Qualid (Qualified
     "Control.Arrow" "Arrow")) (PosArg (Qualid (Bare "a")) :| []))] Nothing [(Qualified
-    "Control.Arrow" "left_",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred
-    Implicit (Ident (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (App
+    "Control.Arrow" "left_",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "d") :| [])]) (Arrow (App
     (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
     "c")) :| [])) (App (App (Qualid (Bare "a")) (PosArg (Parens (App (App (Qualid
     (Qualified "Data.Either" "Either")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg
     (Qualid (Bare "d")) :| []))) :| [])) (PosArg (Parens (App (App (Qualid (Qualified
     "Data.Either" "Either")) (PosArg (Qualid (Bare "c")) :| [])) (PosArg (Qualid (Bare
-    "d")) :| []))) :| [])))),(Qualified "Control.Arrow" "op_zbzbzb__",Forall (Inferred
-    Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "d")),Inferred
-    Implicit (Ident (Bare "c"))]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid
+    "d")) :| []))) :| [])))),(Qualified "Control.Arrow" "op_zbzbzb__",Forall (ImplicitBinders
+    (Ident (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "d") :| []),ImplicitBinders
+    (Ident (Bare "c") :| [])]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid
     (Bare "b")) :| [])) (PosArg (Qualid (Bare "d")) :| [])) (Arrow (App (App (Qualid
     (Bare "a")) (PosArg (Qualid (Bare "c")) :| [])) (PosArg (Qualid (Bare "d")) :|
     [])) (App (App (Qualid (Bare "a")) (PosArg (Parens (App (App (Qualid (Qualified
     "Data.Either" "Either")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
     "c")) :| []))) :| [])) (PosArg (Qualid (Bare "d")) :| []))))),(Qualified "Control.Arrow"
-    "op_zpzpzp__",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred Implicit
-    (Ident (Bare "c")),Inferred Implicit (Ident (Bare "b'")),Inferred Implicit (Ident
-    (Bare "c'"))]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b"))
-    :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid (Bare "a"))
-    (PosArg (Qualid (Bare "b'")) :| [])) (PosArg (Qualid (Bare "c'")) :| [])) (App
-    (App (Qualid (Bare "a")) (PosArg (Parens (App (App (Qualid (Qualified "Data.Either"
-    "Either")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "b'")) :|
-    []))) :| [])) (PosArg (Parens (App (App (Qualid (Qualified "Data.Either" "Either"))
-    (PosArg (Qualid (Bare "c")) :| [])) (PosArg (Qualid (Bare "c'")) :| []))) :| []))))),(Qualified
-    "Control.Arrow" "right_",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred
-    Implicit (Ident (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (App
-    (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
-    "c")) :| [])) (App (App (Qualid (Bare "a")) (PosArg (Parens (App (App (Qualid
-    (Qualified "Data.Either" "Either")) (PosArg (Qualid (Bare "d")) :| [])) (PosArg
-    (Qualid (Bare "b")) :| []))) :| [])) (PosArg (Parens (App (App (Qualid (Qualified
-    "Data.Either" "Either")) (PosArg (Qualid (Bare "d")) :| [])) (PosArg (Qualid (Bare
-    "c")) :| []))) :| []))))]
+    "op_zpzpzp__",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "c") :| []),ImplicitBinders (Ident (Bare "b'") :| []),ImplicitBinders
+    (Ident (Bare "c'") :| [])]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid
+    (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid
+    (Bare "a")) (PosArg (Qualid (Bare "b'")) :| [])) (PosArg (Qualid (Bare "c'"))
+    :| [])) (App (App (Qualid (Bare "a")) (PosArg (Parens (App (App (Qualid (Qualified
+    "Data.Either" "Either")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
+    "b'")) :| []))) :| [])) (PosArg (Parens (App (App (Qualid (Qualified "Data.Either"
+    "Either")) (PosArg (Qualid (Bare "c")) :| [])) (PosArg (Qualid (Bare "c'")) :|
+    []))) :| []))))),(Qualified "Control.Arrow" "right_",Forall (ImplicitBinders (Ident
+    (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "c") :| []),ImplicitBinders
+    (Ident (Bare "d") :| [])]) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid
+    (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (App (App (Qualid (Bare
+    "a")) (PosArg (Parens (App (App (Qualid (Qualified "Data.Either" "Either")) (PosArg
+    (Qualid (Bare "d")) :| [])) (PosArg (Qualid (Bare "b")) :| []))) :| [])) (PosArg
+    (Parens (App (App (Qualid (Qualified "Data.Either" "Either")) (PosArg (Qualid
+    (Bare "d")) :| [])) (PosArg (Qualid (Bare "c")) :| []))) :| []))))]
   Control.Arrow.ArrowZero: ClassDefinition (Qualified "Control.Arrow" "ArrowZero")
     [Typed Ungeneralizable Explicit (Ident (Bare "a") :| []) (Arrow (Qualid (Bare
     "Type")) (Arrow (Qualid (Bare "Type")) (Qualid (Bare "Type")))),Generalized Implicit
     (App (Qualid (Qualified "Control.Arrow" "Arrow")) (PosArg (Qualid (Bare "a"))
-    :| []))] Nothing [(Qualified "Control.Arrow" "zeroArrow",Forall (Inferred Implicit
-    (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "c"))]) (App (App (Qualid
-    (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :|
-    [])))]
+    :| []))] Nothing [(Qualified "Control.Arrow" "zeroArrow",Forall (ImplicitBinders
+    (Ident (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "c") :| [])]) (App (App
+    (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
+    "c")) :| [])))]
   Control.Arrow.ArrowPlus: ClassDefinition (Qualified "Control.Arrow" "ArrowPlus")
     [Typed Ungeneralizable Explicit (Ident (Bare "a") :| []) (Arrow (Qualid (Bare
     "Type")) (Arrow (Qualid (Bare "Type")) (Qualid (Bare "Type")))),Generalized Implicit
     (App (Qualid (Qualified "Control.Arrow" "ArrowZero")) (PosArg (Qualid (Bare "a"))
-    :| []))] Nothing [(Qualified "Control.Arrow" "op_zlzpzg__",Forall (Inferred Implicit
-    (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "c"))]) (Arrow (App (App
-    (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare
-    "c")) :| [])) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b"))
-    :| [])) (PosArg (Qualid (Bare "c")) :| [])) (App (App (Qualid (Bare "a")) (PosArg
-    (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])))))]
+    :| []))] Nothing [(Qualified "Control.Arrow" "op_zlzpzg__",Forall (ImplicitBinders
+    (Ident (Bare "b") :| []) :| [ImplicitBinders (Ident (Bare "c") :| [])]) (Arrow
+    (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid
+    (Bare "c")) :| [])) (Arrow (App (App (Qualid (Bare "a")) (PosArg (Qualid (Bare
+    "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (App (App (Qualid (Bare "a"))
+    (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])))))]
   Control.Arrow.ArrowLoop: ClassDefinition (Qualified "Control.Arrow" "ArrowLoop")
-    [Inferred Explicit (Ident (Bare "a")),Generalized Implicit (App (Qualid (Qualified
+    [ExplicitBinder (Ident (Bare "a")),Generalized Implicit (App (Qualid (Qualified
     "Control.Arrow" "Arrow")) (PosArg (Qualid (Bare "a")) :| []))] Nothing [(Qualified
-    "Control.Arrow" "loop",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred
-    Implicit (Ident (Bare "d")),Inferred Implicit (Ident (Bare "c"))]) (Arrow (App
+    "Control.Arrow" "loop",Forall (ImplicitBinders (Ident (Bare "b") :| []) :| [ImplicitBinders
+    (Ident (Bare "d") :| []),ImplicitBinders (Ident (Bare "c") :| [])]) (Arrow (App
     (App (Qualid (Bare "a")) (PosArg (InScope (App (Qualid (Bare "op_zt__")) (PosArg
     (Qualid (Bare "b")) :| [PosArg (Qualid (Bare "d"))])) "type") :| [])) (PosArg
     (InScope (App (Qualid (Bare "op_zt__")) (PosArg (Qualid (Bare "c")) :| [PosArg

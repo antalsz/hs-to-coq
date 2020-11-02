@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, PatternSynonyms, MultiParamTypeClasses #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TypeSynonym (SynBody(..), convertSynDecl) where
 
@@ -13,7 +13,7 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Set as S
 
 import HsToCoq.Coq.Gallina as Coq
-import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Util (pattern Var, appList, binderIdents)
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Util.FVs
 

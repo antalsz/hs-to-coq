@@ -1,10 +1,10 @@
 superclassCount:
   Name.NamedThing: '0'
 defaultMethods:
-  Name.NamedThing: fromList [(Qualified "Name" "getOccName",Fun (Inferred Explicit
-    (Ident (Bare "n")) :| []) (App (Qualid (Qualified "Name" "nameOccName")) (PosArg
-    (Parens (App (Qualid (Qualified "Name" "getName")) (PosArg (Qualid (Bare "n"))
-    :| []))) :| [])))]
+  Name.NamedThing: fromList [(Qualified "Name" "getOccName",Fun (ExplicitBinder (Ident
+    (Bare "n")) :| []) (App (Qualid (Qualified "Name" "nameOccName")) (PosArg (Parens
+    (App (Qualid (Qualified "Name" "getName")) (PosArg (Qualid (Bare "n")) :| [])))
+    :| [])))]
 classTypes:
   Name.NamedThing: fromList []
 constructors:
@@ -27,7 +27,7 @@ recordFieldTypes:
   Name.n_uniq: Qualified "Name" "Name"
   Name.n_occ: Qualified "Name" "Name"
 classDefns:
-  Name.NamedThing: ClassDefinition (Qualified "Name" "NamedThing") [Inferred Explicit
+  Name.NamedThing: ClassDefinition (Qualified "Name" "NamedThing") [ExplicitBinder
     (Ident (Bare "a"))] Nothing [(Qualified "Name" "getName",Arrow (Qualid (Bare "a"))
     (Qualid (Qualified "Name" "Name"))),(Qualified "Name" "getOccName",Arrow (Qualid
     (Bare "a")) (Qualid (Qualified "OccName" "OccName")))]

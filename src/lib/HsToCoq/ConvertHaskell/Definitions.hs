@@ -60,7 +60,7 @@ decomposeFixpoint (Fix (FixOne (FixBody name binders _ mty body)))
 -- argument is part of the “Gallina” AST, and the concrete representation
 -- is created by the pretty-printer
 decomposeFixpoint (App _wfFix [PosArg _rel, PosArg _measure, PosArg _underscore, PosArg (Fun binders body)])
-    | (b:bs, Inferred Explicit (Ident name)) <- unsnocNEL binders
+    | (b:bs, ExplicitBinder (Ident name)) <- unsnocNEL binders
     = Just (name, b :| bs, Nothing, body)
 decomposeFixpoint _
     = Nothing

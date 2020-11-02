@@ -101,7 +101,7 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc)
        fieldInfo <- fmap RecordFields qualids
        storeConstructorFields con fieldInfo
        qualids <- qualids
-       let namedBinders = fmap (\(x,y) -> Typed Ungeneralizable Explicit ( Ident x  NE.:| [] ) y) $ zip qualids args
+       let namedBinders = fmap (\(x,y) -> mkBinders Explicit ( Ident x  NE.:| [] ) y) $ zip qualids args
        pure [(con, params ++ namedBinders , Just . maybeForall extraArgs $ foldr Arrow curType [])]
     _ ->
      do
@@ -137,19 +137,16 @@ rewriteDataTypeArguments dta bs = do
   let dtaEditFailure what =
         editFailure $ what ++ " when adjusting data type parameters and indices"
 
-  let (ibs, ebs) = flip span bs $ (== Coq.Implicit) . \case
-                     Inferred ei _     -> ei
-                     Typed    _ ei _ _ -> ei
-                     _                 -> Coq.Explicit
+  let (ibs, ebs) = span (\b -> binderExplicitness b == Coq.Implicit) bs
 
   explicitMap <-
     let extraImplicit  = "non-initial implicit arguments"
         complexBinding = "complex (let/generalized) bindings"
     in either dtaEditFailure (pure . M.fromList) . forFold ebs $ \case
-         Inferred   Coq.Explicit x     -> Right [(x, Inferred Coq.Explicit x)]
+         ExplicitBinder x              -> Right [(x, Coq.ExplicitBinder x)]
          Typed    g Coq.Explicit xs ty -> Right [(x, Typed g Coq.Explicit (pure x) ty) | x <- toList xs]
 
-         Inferred   Coq.Implicit _   -> Left extraImplicit
+         ImplicitBinders _           -> Left extraImplicit
          Typed    _ Coq.Implicit _ _ -> Left extraImplicit
 
          Generalized _ _   -> Left complexBinding
@@ -169,9 +166,9 @@ rewriteDataTypeArguments dta bs = do
       coalesceTypedBinders (b : bs) =
         b : coalesceTypedBinders bs
 
-      getBindersFor = coalesceTypedBinders . map ((explicitMap M.!) . Ident) . (dta^.)
+      gemkBindersFor = coalesceTypedBinders . map ((explicitMap M.!) . Ident) . (dta^.)
 
-  pure (ibs ++ getBindersFor dtParameters, getBindersFor dtIndices)
+  pure (ibs ++ gemkBindersFor dtParameters, gemkBindersFor dtIndices)
 
 --------------------------------------------------------------------------------
 
@@ -196,10 +193,10 @@ convertDataDecl name tvs defn = do
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.dataKinds.at coqName)
   let cvtName tv = Ident <$> var TypeNS (unLoc tv)
   let  go :: ConversionMonad r m => LHsTyVarBndr GhcRn -> Maybe Term -> m Binder
-       go (L _ (UserTyVar NOEXTP name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
-       go (L _ (UserTyVar NOEXTP name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
-       go (L _ (KindedTyVar NOEXTP name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
-       go (L _ (KindedTyVar NOEXTP name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen
+       go (L _ (UserTyVar NOEXTP name))     (Just t) = cvtName name >>= \n -> return $ mkBinders Coq.Explicit (n NE.:| []) t
+       go (L _ (UserTyVar NOEXTP name))     Nothing  = cvtName name >>= \n -> return $ ExplicitBinder n
+       go (L _ (KindedTyVar NOEXTP name _)) (Just t) = cvtName name >>= \n -> return $ mkBinders Coq.Explicit (n NE.:| []) t
+       go (L _ (KindedTyVar NOEXTP name _)) Nothing  = cvtName name >>= \n -> return $ ExplicitBinder n  -- dunno if this could happen
 #if __GLASGOW_HASKELL__ >= 806
        go (L _ (XTyVarBndr v)) _ = noExtCon v
 #endif
@@ -210,7 +207,7 @@ convertDataDecl name tvs defn = do
     view (edits . dataTypeArguments . at coqName) >>= \case
       Just dta -> rewriteDataTypeArguments dta rawParams
       Nothing  -> pure (rawParams, [])
-  let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
+  let conIndices = toImplicitBinder <$> indices
 
   let curType  = appList (Qualid coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)

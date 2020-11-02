@@ -304,7 +304,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           (Nothing, Nothing, Just term) ->
             let extraSubst
                   | meth `elem` classTypes =
-                    let names = foldMap (^..binderIdents) . filter ((== Explicit) . view binderExplicitness)
+                    let names = foldMap (^..binderIdents) . filter (\b -> binderExplicitness b == Explicit)
                     in M.fromList $ zip (names classArgs) [instTy]
                   | otherwise =
                     mempty
@@ -351,7 +351,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           let cont_name :: Qualid
               cont_name = "k__"
           -- cont_name <- genqid "k"
-          let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident cont_name)])
+          let instBody = Fun (ExplicitBinder UnderscoreName NE.:| [ExplicitBinder (Ident cont_name)])
                              (App1 (Qualid cont_name) instRHS)
           let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
 
@@ -416,7 +416,8 @@ makeInstanceMethodTy className params instTy memberName = do
       sub ty = ($ ty) <$> gets subst
 
       (instBnds, instSubst) = (runState ?? M.empty) $ for params $ \case
-        Inferred      ei x     -> Inferred      ei <$> renameInst x
+        ExplicitBinder  x      -> ExplicitBinder  <$> renameInst x
+        ImplicitBinders xs     -> ImplicitBinders <$> traverse renameInst xs
         Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty
         Generalized ei tm      -> Generalized   ei <$> sub tm
 

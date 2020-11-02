@@ -7,7 +7,7 @@ constructors:
 constructorFields:
   Unique.MkUnique: NonRecordFields 1
 classDefns:
-  Unique.Uniquable: ClassDefinition (Qualified "Unique" "Uniquable") [Inferred Explicit
+  Unique.Uniquable: ClassDefinition (Qualified "Unique" "Uniquable") [ExplicitBinder
     (Ident (Bare "a"))] Nothing [(Qualified "Unique" "getUnique",Arrow (Qualid (Bare
     "a")) (Qualid (Qualified "Unique" "Unique")))]
 constructorTypes:

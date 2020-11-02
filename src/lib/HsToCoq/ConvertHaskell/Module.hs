@@ -74,7 +74,10 @@ data ConvertedModuleDeclarations =
 
 annotateFixpoint :: [Binder] -> (Maybe Term) -> [Binder]
 annotateFixpoint [] _ = []
-annotateFixpoint ((Inferred e n):tl) (Just (Arrow x y)) = (Typed Generalizable e (fromList [n]) x):(annotateFixpoint tl (Just y))
+annotateFixpoint (ExplicitBinder n:tl) (Just (Arrow x y)) =
+  (Typed Generalizable Explicit (fromList [n]) x):(annotateFixpoint tl (Just y))
+annotateFixpoint (ImplicitBinders ns:tl) (Just (Arrow x y)) =
+  (Typed Generalizable Implicit ns x):(annotateFixpoint tl (Just y))
 annotateFixpoint (a:tl) (Just (Arrow _ y)) = a:(annotateFixpoint tl (Just y))
 annotateFixpoint x _ = x
 
@@ -94,8 +97,8 @@ convertBinding sigs (ConvertedDefinitionBinding cdef@ConvertedDefinition{_convDe
     t  <- view (edits.termination.at name)
     obl <- view (edits.obligations.at name)
     useProgram <- useProgramHere
-    if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
-       ->  pure <$> toProgramFixpointSentence cdef order obl
+    if | Just (WellFoundedTA order) <- t  -- turn into Program Fixpoint
+       ->  pure <$> toProgramFixpointSentence cdef (fromWFOrder order) obl
        | otherwise                   -- no edit
        -> let def = DefinitionDef Global (cdef^.convDefName)
                                          (cdef^.convDefArgs)

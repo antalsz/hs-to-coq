@@ -6,7 +6,7 @@ License     : MIT
 Maintainer  : antal.b.sz@gmail.com
 Stability   : experimental
 
-<https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
+<https://coq.inria.fr/distrib/V8.12.0/refman/language/core/. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -93,7 +93,7 @@ import           Data.Data          (Data (..))
 import           Data.Typeable
 
 -- $Lexical
--- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#lexical §1.1, \"Lexical conventions\", in the Coq reference manual.>
+-- <https://coq.inria.fr/distrib/V8.12.0/refman/language/core/basic.html#lexical-conventions §1.1, \"Lexical conventions\", in the Coq reference manual.>
 --
 -- We don't model the lexical conventions.  Values are just strings or numbers
 -- or what have you.
@@ -111,7 +111,7 @@ type Num         = Natural
 type Op          = Text
 
 -- $Terms
--- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#term §1.2, \"Terms\", in the Coq reference manual.>
+-- <https://coq.inria.fr/distrib/V8.12.0/refman/language/core/basic.html#essential-vocabulary \"Essential vocabulary\", in the Coq reference manual.>
 
 -- |NB: There is a bug in the Coq manual as regards the definition
 -- of destructuring pattern-@let@, i.e. with @let ' /pattern/ …@.  The
@@ -185,8 +185,11 @@ data Explicitness = Explicit                                                    
                   deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/binder/ ::=@ – the @/explicitness/@ is extra
-data Binder = Inferred Explicitness Name                                                       -- ^@/name/@ or @{ /name/ }@
-            | Typed Generalizability Explicitness (NonEmpty Name) Term                         -- ^@/generalizability/@ @( /name/ … /name/ : /term/ )@ or @/generalizability/@ @{ /name/ … /name/ : /term/ }@
+--
+-- https://coq.inria.fr/distrib/V8.12.0/refman/language/core/assumptions.html#grammar-token-binder
+data Binder = ExplicitBinder Name                                                              -- ^@/name/@ (inferred type)
+            | ImplicitBinders (NonEmpty Name)                                                  -- ^@{/name/ ... /name/}@ (inferred type)
+            | Typed Generalizability Explicitness (NonEmpty Name) Term                         -- ^@generalizability/ ( /name/ … /name/ : /term/ )@ or @/generalizability/ { /name/ … /name/ : /term/ }@
             | Generalized Explicitness Term                                                    -- ^@` ( /term/ )@ or @` { /term/ }@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 

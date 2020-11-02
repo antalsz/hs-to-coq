@@ -21,4 +21,4 @@ instance IsString Term where
 instance IsString Qualid where
     fromString x = unsafeIdentToQualid (T.pack x)
 instance IsString Binder where
-    fromString x = Inferred Explicit (Ident (unsafeIdentToQualid (T.pack x)))
+    fromString x = ExplicitBinder (Ident (unsafeIdentToQualid (T.pack x)))

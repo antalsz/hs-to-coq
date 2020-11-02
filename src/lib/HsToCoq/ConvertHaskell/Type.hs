@@ -44,8 +44,8 @@ import HsToCoq.ConvertHaskell.Literals
 
 convertLHsTyVarBndrs :: LocalConvMonad r m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
-  UserTyVar   NOEXTP tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
-  KindedTyVar NOEXTP tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
+  UserTyVar   NOEXTP tv   -> mkBinder ex . Ident <$> var TypeNS (unLoc tv)
+  KindedTyVar NOEXTP tv k -> mkBinders ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 #if __GLASGOW_HASKELL__ >= 806
   XTyVarBndr v -> noExtCon v
 #endif
@@ -197,7 +197,7 @@ finishConvertHsSigTypeWithExcls utvm coq_itvs coq_ty excls =
         PreserveUnusedTyVars -> coq_itvs
         DeleteUnusedTyVars   -> let fvs = getFreeVars coq_ty
                                 in filter (`elem` fvs) coq_itvs
-      coq_binders = Inferred Coq.Implicit . Ident <$> coq_tyVars \\ excls
+      coq_binders = mkBinder Coq.Implicit . Ident <$> coq_tyVars \\ excls
   in pure $ maybeForall coq_binders coq_ty
 
 convertLHsSigType :: LocalConvMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term

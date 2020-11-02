@@ -871,6 +871,22 @@ Examples:
 
     promote MyModule.foo
 
+``polyrec`` -- Make a function polymorphic recursive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: polyrec, edit
+
+Format:
+  | **polyrec** *qualified_name*
+
+Effect:
+  Translates a function which calls itself recursively at a different type.
+
+Examples:
+  .. code-block:: shell
+
+    polyrec MyModule.foo
 
 ``manual notation`` -- Indicate presence of manual notation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -883,7 +899,7 @@ Format:
   | **manual notation** *name*
 
 Effect:
-  If your preamble inludes custom notation (usually for operators), you need
+  If your preamble includes custom notation (usually for operators), you need
   to indicate this using this edit.
   See Section :ref:`mangling` for more information about
   how ``hs-to-coq`` implements custom notation.
@@ -940,6 +956,16 @@ Examples:
 Format:
   | **termination** *qualified_name* *termination_argument*
 
+Examples:
+  .. code-block:: shell
+
+    termination MyModule.foo {struct arg_33__}
+    termination MyModule.foo {struct 3}
+    termination MyModule.foo {measure myExpr}
+    termination MyModule.foo {wf myRel myExpr}
+    termination MyModule.foo {corecursive}
+    termination MyModule.foo {deferred}
+
 Effect:
 
   By default, ``hs-to-coq`` translates recursive definitions using Coq’s
@@ -959,9 +985,15 @@ Effect:
 
     **{** **struct** *qualified_name* **}**
 
-    Coq’s ``fix`` operator usually determines the recusive argument
+    Coq’s ``fix`` operator usually determines the recursive argument
     automatically, but also supports the user to specify it explicitly. This
     *termination_argument* is just passed along to Coq’s ``fix``.
+
+    **{** **struct** *number* **}**
+
+    This variant specifies the position of the recursive argument, counting from 1
+    and ignoring type arguments. (Note: this variant is not actually valid Coq
+    syntax, it is only allowed in edits files.)
 
   * .. index::
        single: measure, termination argument

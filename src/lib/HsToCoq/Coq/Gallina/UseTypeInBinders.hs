@@ -42,8 +42,8 @@ binder_match_errors b bi
   | badExplicitness                        = Just UTIBMismatchedExplicitness
   | otherwise                              = Nothing
   where
-    badGeneralizability = b^.binderGeneralizability /= bi^.biGeneralizability
-    badExplicitness     = b^.binderExplicitness     /= bi^.biExplicitness
+    badGeneralizability = binderGeneralizability b /= _biGeneralizability bi
+    badExplicitness     = binderExplicitness     b /= _biExplicitness bi
 
 useTypeInBindersM :: (MonadError UTIBError m, MonadState Term m) => Binders -> m (Binders, UTIBIsTypeTooShort)
 useTypeInBindersM (b :| bs) = drain_binder >>= \case
@@ -52,8 +52,8 @@ useTypeInBindersM (b :| bs) = drain_binder >>= \case
     traverse_ throwError $ binder_match_errors b bi
     
     let newBinderNamed x = case mtyp of
-          Just typ -> Typed    g ei (x :| []) typ
-          Nothing  -> Inferred   ei x  -- Without a type, we can't be in the 'Generalizable' case
+          Just typ -> Typed g ei (x :| []) typ
+          Nothing  -> mkBinder ei x  -- Without a type, we can't be in the 'Generalizable' case
         
         newNamelessBinder = case mtyp of
           Just typ -> Generalized ei typ
@@ -62,10 +62,9 @@ useTypeInBindersM (b :| bs) = drain_binder >>= \case
         
         continue b' mb'' = first (b' :|) <$> useTypeInBindersML (maybeToList mb'' ++ bs)
     
-    caseOneBinder b
-      (\  _ x       -> continue (newBinderNamed x) Nothing)
-      (\_ _ x _ mb' -> continue (newBinderNamed x) mb')
-      (\  _   _     -> continue newNamelessBinder  Nothing)
+    case caseOneBinder b of
+      Binder_ _ _ x _ mb' -> continue (newBinderNamed x) mb'
+      Generalized_{} -> continue newNamelessBinder Nothing
   where
     useTypeInBindersML []       = pure ([], UTIBIsTypeTooShort False)
     useTypeInBindersML (b : bs) = first toList <$> useTypeInBindersM (b :| bs)

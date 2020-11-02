@@ -96,6 +96,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   original        { TokWord    "original"       }
   name            { TokWord    "name"           }
   promote         { TokWord    "promote"        }
+  polyrec         { TokWord    "polyrec"        }
   except          { TokWord    "except"         }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
@@ -329,6 +330,7 @@ Edit :: { Edit }
   | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
   | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
   | promote Qualid                                        { PromoteEdit                      $2                                    }
+  | polyrec Qualid                                        { PolyrecEdit                      $2                                    }
   | except 'in' SepBy1(Qualid, ',') Edit                  { ExceptInEdit                     $3 $4                                 }
 
 Edits :: { [Edit] }
@@ -448,13 +450,11 @@ BinderName :: { Name }
   | '_'     { UnderscoreName }
 
 ExplicitBinderGuts :: { Binder }
-  : BinderName                                        { Inferred Explicit $1 }
-  | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
-  | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
+  : Some(BinderName) TypeAnnotation   { mkBinders Explicit $1 $2 }
 
 ImplicitBinderGuts :: { Binder }
-  : BinderName                         { Inferred Implicit $1 }
-  | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
+  : Some(BinderName)                  { ImplicitBinders $1 }
+  | Some(BinderName) TypeAnnotation   { mkBinders Implicit $1 $2 }
 
 -- Generalizable binders have an ambiguous syntax:
 --
@@ -478,7 +478,7 @@ GeneralizableBinderGuts :: { Explicitness -> Binder }
     }
 
 Binder :: { Binder }
-  : BinderName                        { Inferred Explicit $1 }
+  : BinderName                        { ExplicitBinder $1 }
   | '(' ExplicitBinderGuts ')'        { $2 }
   | '{' ImplicitBinderGuts '}'        { $2 }
   | '`' '(' GeneralizableBinderGuts ')'    { $3 Explicit }
@@ -556,7 +556,8 @@ Order :: { Order }
 TerminationArgument :: { TerminationArgument }
   : 'deferred'    { Deferred }
   | 'corecursive' { Corecursive }
-  | Order         { WellFounded $1 }
+  | Order         { fromOrder $1 }
+  | '{' struct Num '}' { StructOrderTA (StructPos_ (fromIntegral $3)) }
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

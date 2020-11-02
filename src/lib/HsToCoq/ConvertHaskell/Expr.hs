@@ -68,7 +68,7 @@ import HsToCoq.Coq.Gallina.UseTypeInBinders
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
-import HsToCoq.Util.FVs
+import HsToCoq.Util.FVs (ErrOrVars(..))
 import HsToCoq.Coq.Pretty
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -203,7 +203,7 @@ convertExpr_ (ExplicitTuple NOEXTP exprs _boxity) = do
 #if __GLASGOW_HASKELL__ >= 806
                      XTupArg v -> noExtCon v
 #endif
-  pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
+  pure $ maybe id Fun (nonEmpty $ map (mkBinder Coq.Explicit . Ident) args) tuple
 
 convertExpr_ (HsCase NOEXTP e mg) = do
   scrut    <- convertLExpr e
@@ -510,7 +510,7 @@ convert_section  ml opE mr = do
       -- generalized.
       hs :: ConversionMonad r m => Qualid -> m (HsExpr GhcRn)
       hs  = fmap (HsVar NOEXT . mkGeneralLocated "generated") . freshInternalName . T.unpack . qualidToIdent
-      coq = Inferred Coq.Explicit . Ident
+      coq = mkBinder Coq.Explicit . Ident
 
   arg <- Bare <$> gensym "arg"
   let orArg = maybe (fmap noLoc $ hs arg) pure
@@ -538,7 +538,7 @@ convertFunction _ mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction skipEqns mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (genqid "arg") >>= maybe err pure . nonEmpty
-  let argBinders = (Inferred Coq.Explicit . Ident) <$> args
+  let argBinders = (mkBinder Coq.Explicit . Ident) <$> args
   match <- convertMatchGroup skipEqns (Qualid <$> args) mg
   pure (argBinders, match)
  where
@@ -568,7 +568,7 @@ convTrivialMatch alt = do
   (MultPattern pats, _, rhs) <- convertMatch alt
                                   <&> maybe (error "internal error: convTrivialMatch: not a trivial match!") id
   names <- mapM patToName pats
-  let argBinders = (Inferred Coq.Explicit) <$> names
+  let argBinders = (mkBinder Explicit) <$> names
   body <- rhs patternFailure
   return (argBinders, body)
 
@@ -606,7 +606,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial buildSkipped fall
      
       refutability pat >>= \case
         Trivial tpat | null guards ->
-          buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
+          buildTrivial exp $ Fun [mkBinder Coq.Explicit $ maybe UnderscoreName Ident tpat]
      
         nontrivial -> do
           cont <- genqid "cont"
@@ -621,7 +621,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial buildSkipped fall
                          | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
      
           buildNontrivial exp cont $ \body rest ->
-            Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
+            Let cont [mkBinder Coq.Explicit $ Ident arg] Nothing
                      (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing $
                        Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
               body
@@ -1046,31 +1046,32 @@ collapseLet _ _ =
 
 wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
- = pure $ App1 (Qualid deferredFixN) $ Fun (Inferred Explicit (Ident ident) NEL.<| argBinders ) rhs
+ = pure $ App1 (Qualid deferredFixN) $ Fun (mkBinder Explicit (Ident ident) NEL.<| argBinders ) rhs
   where
     deferredFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.DeferredFix.deferredFix"
 
-wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
+wfFix (WellFoundedTA order) (FixBody ident argBinders Nothing Nothing rhs)
  = do (rel, measure) <- case order of
-        StructOrder _                   -> convUnsupportedIn
-                                             "well-founded recursion does not include structural recursion"
-                                             "fixpoint"
-                                             (showP ident)
-        MeasureOrder measure Nothing    -> pure ("Coq.Init.Peano.lt", measure)
-        MeasureOrder measure (Just rel) -> pure (rel, measure)
-        WFOrder rel arg                 -> pure (rel, Qualid arg)
+        MeasureOrder_ measure Nothing    -> pure ("Coq.Init.Peano.lt", measure)
+        MeasureOrder_ measure (Just rel) -> pure (rel, measure)
+        WFOrder_ rel arg                 -> pure (rel, Qualid arg)
       pure . appList (Qualid wfFixN) $ map PosArg
         [ rel
         , Fun argBinders measure
         , Underscore
-        , Fun (argBinders NEL.|> Inferred Explicit (Ident ident)) rhs
+        , Fun (argBinders NEL.|> mkBinder Explicit (Ident ident)) rhs
         ]
   where
     wfFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.Wf.wfFix"
 
 wfFix Corecursive fb = pure . Cofix $ FixOne fb
+
+wfFix StructOrderTA{} (FixBody ident _ _ _ _) = convUnsupportedIn
+  "well-founded recursion does not include structural recursion"
+  "fixpoint" (showP ident)
+
 wfFix _ fb = convUnsupportedIn "well-founded recursion cannot handle annotations or types"
                                "fixpoint"
                                (showP $ fb^.fixBodyName)
@@ -1222,6 +1223,7 @@ convertMultipleBindings convertSingleBinding defns0 sigs build mhandler =
 --       ('rdFullType')
 data RecDef = RecDef { rdName       :: !Qualid
                      , rdArgs       :: !Binders
+                     , rdStruct     :: !(Maybe Order)
                      , rdResultType :: !(Maybe Term)
                      , rdFullType   :: !(Maybe Term)
                      , rdBody       :: !Term }
@@ -1233,7 +1235,7 @@ data RecDef = RecDef { rdName       :: !Qualid
 -- We can't unilaterally abort unless we can change type signatures.
 
 rdToFixBody :: RecDef -> FixBody
-rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing rdResultType rdBody
+rdToFixBody RecDef{..} = FixBody rdName rdArgs rdStruct rdResultType rdBody
 
 rdToLet :: RecDef -> Term -> Term
 rdToLet RecDef{..} = Let rdName (toList rdArgs) rdResultType rdBody
@@ -1290,27 +1292,16 @@ addRecursion eBindings = do
   where
     fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
       pure $ cd :| []
-    fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
-      bodies <- for cds $ \case
-        ConvertedDefinition{_convDefBody = Fun args body, ..} ->
-          let fullType = maybeForall _convDefArgs <$> _convDefType
-              (resultType, convArgs') =
-                let allArgs = _convDefArgs <++ args
-                in case fullType of
-                     Just ty | Right (ty', args', UTIBIsTypeTooShort False) <- useTypeInBinders ty allArgs ->
-                       (Just ty', args')
-                     _ ->
-                       (Nothing, allArgs)
-          in pure $ RecDef { rdName       = _convDefName
-                           , rdArgs       = convArgs'
-                           , rdResultType = resultType
-                           , rdFullType   = fullType
-                           , rdBody       = body }
-        cd ->
-          convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
-      
-      nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
-      
+    fixConnComp cds = do
+      (commonArgs, cds) <- splitArgs cds
+      tbodies <- for cds fixConvertedDefinition
+
+      let bodies = fst <$> tbodies
+
+      let nonstructural = listToMaybe [t | (_, Just t) <- toList tbodies, isNonstructural t]
+          isNonstructural (StructOrderTA _) = False
+          isNonstructural _ = True
+
       let getInfo = fmap $ rdName &&& rdFullType
       
       (fixFor, recInfos, extraDefs) <- case (nonstructural, bodies) of
@@ -1350,6 +1341,43 @@ addRecursion eBindings = do
                                 , _convDefType = mty
                                 , _convDefBody = fixFor name }
       pure $ recDefs ++> extraDefs
+
+fixConvertedDefinition ::
+  ConversionMonad r m => ConvertedDefinition -> m (RecDef, Maybe TerminationArgument)
+fixConvertedDefinition (ConvertedDefinition{_convDefBody = Fun args body, ..}) = do
+  let fullType = maybeForall _convDefArgs <$> _convDefType
+      allArgs = _convDefArgs <++ args
+      (resultType, convArgs') = case fullType of
+        Just ty | Right (ty', args', UTIBIsTypeTooShort False) <- useTypeInBinders ty allArgs ->
+          (Just ty', args')
+        _ -> (Nothing, allArgs)
+  termination <- view (edits.termination.at _convDefName)
+  struct <- case termination of
+    Just (StructOrderTA (StructId_  n)) -> (pure . Just) (StructOrder n)
+    Just (StructOrderTA (StructPos_ i)) ->
+      case args ^? elementOf (traverse . binderNames) (i - 1) of
+        Just (Ident name) -> (pure . Just) (StructOrder name)
+        Just UnderscoreName ->
+          throwProgramError ("error: function " ++ showP _convDefName ++ ": its " ++ show i ++ "-th argument is unnamed")
+        Nothing -> throwProgramError ("error: function " ++ showP _convDefName ++ " has fewer than " ++ show i ++ " arguments")
+    _ -> pure Nothing
+  let b = RecDef
+        { rdName       = _convDefName
+        , rdArgs       = convArgs'
+        , rdStruct     = struct
+        , rdResultType = resultType
+        , rdFullType   = fullType
+        , rdBody       = body }
+  pure (b, termination)
+fixConvertedDefinition cd =
+  convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
+
+splitArgs :: (ConversionMonad r m, Traversable t) => t ConvertedDefinition -> m ([Binder], t ConvertedDefinition)
+splitArgs cds = do
+  polyrec <- findM (\rd -> view $ edits.polyrecs.at (_convDefName rd)) cds
+  case polyrec of
+    Nothing -> pure (splitCommonPrefixOf convDefArgs cds)
+    Just _  -> pure ([], cds)
 
 --------------------------------------------------------------------------------
 

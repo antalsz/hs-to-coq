@@ -72,8 +72,9 @@ instance HasBV Qualid Name where
   bvOf UnderscoreName = mempty
 
 instance HasBV Qualid Binder where
-  bvOf (Inferred _ex x)       = bvOf x
-  bvOf (Typed _gen _ex xs ty) = foldMap bvOf xs <> fvOf' ty
+  bvOf (ExplicitBinder name)  = bvOf name
+  bvOf (ImplicitBinders names) = foldMap bvOf names
+  bvOf (Typed _ex _ei names ty) = foldMap bvOf names <> fvOf' ty
   bvOf (Generalized _ex ty)   = fvOf' ty
 
 instance HasBV Qualid MatchItem where

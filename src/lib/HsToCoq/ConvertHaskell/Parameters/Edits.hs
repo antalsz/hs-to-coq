@@ -9,12 +9,13 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, exceptInEdits, promotions,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits, exceptInEdits, promotions, polyrecs,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   anAssertionVariety,
   ScopePlace(..),
+  StructOrder_(..), WFOrder_(..), fromOrder, fromWFOrder,
   TerminationArgument(..),
   NormalizedPattern(), getNormalizedPattern, normalizePattern,
   Rewrite(..), Rewrites,
@@ -95,8 +96,34 @@ instance HasBV Qualid CoqDefinition where
 data ScopePlace = SPValue | SPConstructor
                 deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-data TerminationArgument = WellFounded Order | Deferred | Corecursive
-                deriving (Eq, Ord, Show, Read)
+data StructOrder_
+  = StructId_ Qualid  -- ^ Name of decreasing argument
+  | StructPos_ Int    -- ^ Position of decreasing argument, count from 1 (in Haskell, so excluding type arguments)
+  deriving (Eq, Ord, Show, Read)
+
+data WFOrder_
+  = MeasureOrder_ Term (Maybe Term)  -- ^@measure /term/ (/term/)?/
+  | WFOrder_ Term Qualid             -- ^@wf /term/ /ident//
+  deriving (Eq, Ord, Show, Read)
+
+fromWFOrder :: WFOrder_ -> Order
+fromWFOrder (MeasureOrder_ t u) = MeasureOrder t u
+fromWFOrder (WFOrder_ t u) = WFOrder t u
+
+fromOrder :: Order -> TerminationArgument
+fromOrder (StructOrder q) = StructOrderTA (StructId_ q)
+fromOrder (MeasureOrder t u) = WellFoundedTA (MeasureOrder_ t u)
+fromOrder (WFOrder t u) = WellFoundedTA (WFOrder_ t u)
+
+-- | 'StructOrderTA' and 'WellFoundedTA' correspond to 'Coq.Order', but
+-- we explicitily separate the 'StructOrder' case because it is used at a different
+-- place in the translation, and we also recognize a special syntax for unnamed arguments.
+data TerminationArgument
+  = StructOrderTA StructOrder_
+  | WellFoundedTA WFOrder_
+  | Deferred
+  | Corecursive
+  deriving (Eq, Ord, Show, Read)
 
 -- Used to match patterns that might disagree on the question of whether a name
 -- is an @ArgsPat qid []@ or a @QualidPat@; this is useful when reading from an edits file.
@@ -164,6 +191,7 @@ data Edit = TypeSynonymTypeEdit              Ident Ident
           | InEdit                           Qualid Edit
           | ExceptInEdit                     (NonEmpty Qualid) Edit
           | PromoteEdit                      Qualid
+          | PolyrecEdit                      Qualid
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -215,6 +243,7 @@ data Edits = Edits { _typeSynonymTypes               :: !(Map Ident Ident)
                    , _inEdits                        :: !(Map Qualid Edits)
                    , _exceptInEdits                  :: !(Map Qualid Edits)
                    , _promotions                     :: !(Set Qualid)
+                   , _polyrecs                       :: !(Set Qualid)
                    }
            deriving (Eq, Ord, Show, Generic)
 instance Semigroup Edits where (<>)   = (%<>)
@@ -268,6 +297,7 @@ subtractEdits edits1 edits2 =
   , _inEdits                        = edits1^.inEdits
   , _exceptInEdits                  = edits1^.exceptInEdits
   , _promotions                     = edits1^.promotions
+  , _polyrecs                       = (edits1^.polyrecs) S.\\ (edits2^.polyrecs)
   }
 
 -- Derived edits
@@ -278,7 +308,7 @@ useProgram name edits = or
     , name `M.member`_obligations edits
     ]
   where
-   isWellFounded (WellFounded {}) = True
+   isWellFounded (WellFoundedTA {}) = True
    isWellFounded _                = False
 
 -- Module-local'
@@ -338,6 +368,7 @@ descDuplEdit = \case
   InEdit                           _ _          -> error "In Edits are never duplicates"
   ExceptInEdit                     _ _          -> error "ExceptIn Edits are never duplicates"
   PromoteEdit                      _            -> error "Promote edits are never duplicates"
+  PolyrecEdit                      _            -> error "Polyrec edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -382,6 +413,7 @@ addEdit e = case e of
   RewriteEdit                      rewrite          -> return . (rewrites %~ (rewrite:))
   InEdit                           qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
   PromoteEdit                      qid              -> addFresh e promotions                             qid                         ()
+  PolyrecEdit                      qid              -> addFresh e polyrecs                               qid                         ()
   ExceptInEdit                     qids edit        -> addExceptInEdit qids edit
 
 
